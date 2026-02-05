@@ -403,19 +403,6 @@
     padding-bottom: 80px;
 }
 
-/* 카테고리 바 (Sticky) */
-.category-bar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 20px;
-    background: rgba(255, 255, 255, 0);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
 
 .cat-scroll {
     display: flex;
@@ -469,17 +456,6 @@
     background: rgba(255, 255, 255, 0);
 }
 
-.category-bar.search-mode .cat-scroll {
-    opacity: 0;
-    transform: translateX(-20px);
-    pointer-events: none;
-}
-
-.category-bar.search-mode .search-input-box {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateX(0);
-}
 
 .search-btn {
     font-size: 22px;

@@ -1,0 +1,146 @@
+<div class="detail-content no-scrollbar" th:fragment="div">
+
+
+    <div class="community-scroll-area">
+
+        <div class="category-bar2" id="categoryBar">
+            <div class="cat-scroll">
+                <div class="cat-chip active" onclick="selectCategory(this)">전체</div>
+                <div class="cat-chip" onclick="selectCategory(this)">소분</div>
+                <div class="cat-chip" onclick="selectCategory(this)">자취 꿀팁</div>
+                <div class="cat-chip" onclick="selectCategory(this)">유머게시판</div>
+                <div class="cat-chip" onclick="selectCategory(this)">자유게시판</div>
+            </div>
+            <div class="search-input-box">
+                <input type="text" class="real-search-input" id="searchInput" placeholder="검색어를 입력하세요">
+            </div>
+            <div class="search-btn" onclick="toggleSearchMode()">
+                <ion-icon name="search-outline" id="searchIcon"></ion-icon>
+            </div>
+        </div>
+
+        <div class="feed-list2" id="feedListContainer">
+
+            <a th:each="board : ${boardDtoList}" th:href="@{/community/view/{id}(id=${board.boardIdx})}"
+                class="feed-card">
+
+                <div class="feed-header">
+                    <div class="feed-user-group">
+                        <!-- <img th:src="${board.userImg != null ? board.userImg : '/images/default-profile.png'}"
+                            class="user-img-md"> -->
+                        <div class="user-info-text">
+                            <span class="user-name" th:text="${board.userNickname}">닉네임</span>
+                            <span class="post-time" th:text="${board.createdAt}">시간</span>
+                        </div>
+                    </div>
+                    <span class="post-tag" th:text="${board.boardCategory}">카테고리</span>
+                </div>
+
+                <div class="feed-body">
+                    <div class="feed-text-area">
+                        <div class="feed-title" th:text="${board.boardTitle}">제목</div>
+                        <div class="feed-preview" th:text="${board.boardContent}">내용</div>
+                    </div>
+                    <!-- <img th:if="${board.thumbnail != null}" th:src="${board.thumbnail}" class="feed-thumb"> -->
+                </div>
+
+                <div class="feed-footer">
+                    <div class="action-item">
+                        <ion-icon name="chatbubble-outline"></ion-icon>
+                        <span>0</span>
+                    </div>
+                    <div class="action-item">
+                        <ion-icon name="heart-outline"></ion-icon>
+                        <span th:text="${board.likeCount}">0</span>
+                    </div>
+                    <div class="action-item">
+                        <ion-icon name="eye-outline"></ion-icon>
+                        <span th:text="${board.viewCount}">0</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div id="loading-trigger" style="padding: 20px; text-align: center; color: #888;">
+            <span class="loading-text">Loading...</span>
+        </div>
+
+    </div>
+
+    <a href="community_write.html" class="fab-write">
+        <ion-icon name="pencil-outline"></ion-icon>
+    </a>
+
+
+    <div id="chatLayer" class="page-layer">
+        <div class="chat-header">
+            <button type="button" onclick="closeChat()" style="font-size: 28px;">
+                <ion-icon name="chevron-down"></ion-icon>
+            </button>
+            <div class="header-title">소라고동 AI</div>
+            <div style="width: 28px;"></div>
+        </div>
+
+        <div class="chat-body no-scrollbar" id="chatContainer"></div>
+
+        <div class="chat-input-area">
+            <input type="text" class="chat-input" placeholder="메시지를 입력하세요...">
+            <button type="button" class="btn-send">
+                <ion-icon name="paper-plane"></ion-icon>
+            </button>
+        </div>
+    </div>
+    <script>
+        // ==========================================
+        // ✅ [수정] 더미 데이터 & 스크롤 로직 전부 삭제
+        // 이제 UI 관련 기능(검색 토글, 채팅, 카테고리 클릭 효과)만 남았습니다.
+        // ==========================================
+
+        // 카테고리 클릭 시 색상만 변경 (데이터 로딩 X)
+        function selectCategory(element) {
+            document.querySelectorAll('.cat-chip').forEach(chip => chip.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+        // 검색 모드 토글
+        function toggleSearchMode() {
+            const bar = document.getElementById('categoryBar');
+            const icon = document.getElementById('searchIcon');
+            const input = document.getElementById('searchInput');
+            bar.classList.toggle('search-mode');
+            if (bar.classList.contains('search-mode')) {
+                icon.setAttribute('name', 'close-outline');
+                input.focus();
+            } else {
+                icon.setAttribute('name', 'search-outline');
+                input.value = '';
+            }
+        }
+
+        // // 채팅 관련 로직
+        // const chatDummyData = [
+        //     { sender: "ai", message: "무엇을 도와줄까? 🐚" },
+        //     { sender: "user", message: "전자레인지 선물을 받아서 기존의 것을 정리하고 싶은데 어떻게 하는게 좋을까" },
+        //     { sender: "ai", message: "네네네 찾아봐오오오 호에에에에에에에에엥 호에에에에엥 에?" }
+        // ];
+
+        // function openChat() {
+        //     const layer = document.getElementById('chatLayer');
+        //     const container = document.getElementById('chatContainer');
+        //     container.innerHTML = '';
+        //     chatDummyData.forEach(data => {
+        //         const isMe = data.sender === 'user';
+        //         const profileImg = `<img src="sora.png" class="chat-profile">`;
+        //         const html = `<div class="bubble-row ${isMe ? 'me' : ''}">
+        //                 ${!isMe ? profileImg : ''}<div class="bubble ${isMe ? 'me' : 'ai'}">${data.message}</div>
+        //             </div>`;
+        //         container.insertAdjacentHTML('beforeend', html);
+        //     });
+        //     layer.classList.add('active');
+        // }
+
+        // function closeChat() {
+        //     document.getElementById('chatLayer').classList.remove('active');
+        // }
+    </script>
+</div>
