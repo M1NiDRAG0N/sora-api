@@ -17,7 +17,8 @@ spring:
     password: ${DB_PASSWORD}
     hikari:
       auto-commit: false
-      idle-timeout: 600000
+      connection-timeout: 30000
+      idle-timeout: 60000
       max-lifetime: 1800000
       leak-detection-threshold: 60000
 
