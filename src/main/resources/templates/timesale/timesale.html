@@ -1,0 +1,212 @@
+<div class="sale-content" id="saleContent">
+    <div class="map-wrap">
+        <div class="map-box">
+            <div id="map" style="width: 100%; height: 100%;"></div>
+            <div class="map-placeholder" id="mapPlaceholder" style="display: none;">
+                Google Maps API 영역
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-wrap">
+        <div class="tabs">
+            <div class="tab-btn active" id="tabFood">음식</div>
+            <div class="tab-btn" id="tabStore">가게</div>
+        </div>
+    </div>
+
+    <div class="list-wrap" id="listWrap"></div>
+    <div class="list-status" id="listStatus"></div>
+    <div id="sentinel"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("✅ DOM 로드 완료");
+
+            const $ = (id) => document.getElementById(id);
+
+            // ===== 상태 관리 =====
+            const state = { activeTab: "food", cursor: 0, pageSize: 10, loading: false, ended: false, foodData: [], storeData: [] };
+
+            // ===== 컨트롤러에서 음식 데이터 가져오기 =====
+            async function fetchFoodData() {
+                try {
+                    setStatus("음식 데이터 로딩 중...");
+                    const data = await API.get('/food/list');
+                    state.foodData = data;
+                    console.log('✅ 음식 데이터 로드:', state.foodData.length, '개');
+                    return state.foodData;
+                } catch (error) {
+                    console.error('❌ 음식 데이터 로드 에러:', error);
+                    Utils.notify('음식 데이터 로드에 실패했습니다.', 'error');
+                    state.foodData = [];
+                    return [];
+                }
+            }
+
+            // ===== 컨트롤러에서 가게 데이터 가져오기 =====
+            async function fetchStoreData() {
+                try {
+                    setStatus("가게 데이터 로딩 중...");
+                    const data = await API.get('/store/list');
+                    state.storeData = data;
+                    console.log('✅ 가게 데이터 로드:', state.storeData.length, '개');
+                    return state.storeData;
+                } catch (error) {
+                    console.error('❌ 가게 데이터 로드 에러:', error);
+                    Utils.notify('가게 데이터 로드에 실패했습니다.', 'error');
+                    state.storeData = [];
+                    return [];
+                }
+            }
+
+            // ===== 현재 탭 데이터 가져오기 =====
+            function currentData() { return state.activeTab === "food" ? state.foodData : state.storeData; }
+
+            // ===== 상태 메시지 설정 =====
+            function setStatus(text) { const statusEl = $("listStatus"); if (statusEl) statusEl.textContent = text || ""; }
+
+            // ===== 리스트 초기화 =====
+            function resetList() { const listWrap = $("listWrap"); if (listWrap) listWrap.innerHTML = ""; state.cursor = 0; state.ended = false; setStatus(""); }
+
+            // ===== 아이템 렌더링 =====
+            function renderItems(items) {
+                const wrap = $("listWrap");
+                if (!wrap) return;
+                const frag = document.createDocumentFragment();
+
+                items.forEach((item) => {
+                    if (state.activeTab === "food") {
+                        const el = document.createElement("div");
+                        el.className = "food-card";
+                        el.innerHTML = `
+                    <div class="food-thumb"><img src="${item.imageUrl || item.img || '/images/default-food.jpg'}" alt="${item.foodName || '음식'}" onerror="this.src='/images/default-food.jpg'"/></div>
+                    <div class="food-lines">
+                        <div class="food-store">${item.storeName || item.store || '가게명 없음'}</div>
+                        <div><span class="muted">${item.saleStartTime || item.saleStart || '미정'}</span> 할인 시작</div>
+                        <div><span class="muted">${Utils.formatNumber(item.discountPrice || item.salePrice || 0)}원</span> / 원가 ${Utils.formatNumber(item.originalPrice || item.originPrice || 0)}원</div>
+                        <div class="muted">할인율: ${item.discountRate || item.saleRate || '0%'}</div>
+                    </div>
+                `;
+                        el.onclick = () => {
+                            if (window.openReservationModal) {
+                                window.openReservationModal({
+                                    id: item.foodId || item.id,
+                                    name: item.foodName || item.name || '도시락',
+                                    store: item.storeName || item.store,
+                                    storeName: item.storeName || item.store,
+                                    price: item.discountPrice || item.salePrice,
+                                    salePrice: item.discountPrice || item.salePrice,
+                                    originalPrice: item.originalPrice || item.originPrice,
+                                    originPrice: item.originalPrice || item.originPrice,
+                                    img: item.imageUrl || item.img || '/images/default-food.jpg',
+                                    maxQuantity: item.maxQuantity || item.stock || 10
+                                });
+                            }
+                        };
+                        el.style.cursor = 'pointer';
+                        frag.appendChild(el);
+                    } else {
+                        const el = document.createElement("div");
+                        el.className = "store-card";
+                        el.innerHTML = `
+                    <div>
+                        <div class="store-name">${item.storeName || item.name || '가게명 없음'}</div>
+                        <div class="store-times">
+                            <div>${item.businessHours || item.openTime || item.t1 || '영업시간 미정'}</div>
+                            <div>${item.saleHours || item.saleTime || item.t2 || '할인시간 미정'}</div>
+                        </div>
+                    </div>
+                    <div class="store-thumb"><img src="${item.imageUrl || item.img || '/images/default-store.jpg'}" alt="${item.storeName || '가게'}" onerror="this.src='/images/default-store.jpg'"/></div>
+                `;
+                        el.onclick = () => {
+                            const params = new URLSearchParams();
+                            params.set('type', 'store');
+                            params.set('id', item.storeId || item.id);
+                            params.set('storeName', item.storeName || item.name);
+                            params.set('storeTime', item.businessHours || item.openTime || item.t1);
+                            params.set('storeImg', item.imageUrl || item.img || '/images/default-store.jpg');
+                            window.location.href = `./detail.html?${params.toString()}`;
+                        };
+                        el.style.cursor = 'pointer';
+                        frag.appendChild(el);
+                    }
+                });
+
+                wrap.appendChild(frag);
+            }
+
+            // ===== 더 불러오기 (무한 스크롤) =====
+            async function loadMore() {
+                if (state.loading || state.ended) return;
+                state.loading = true;
+
+                const data = currentData();
+                const start = state.cursor;
+                const end = Math.min(start + state.pageSize, data.length);
+                const chunk = data.slice(start, end);
+
+                console.log(`[loadMore] tab=${state.activeTab}, cursor=${start}/${data.length}`);
+
+                if (chunk.length === 0) {
+                    state.ended = true;
+                    setStatus(data.length === 0 ? "데이터가 없습니다." : "더 이상 불러올 데이터가 없어요.");
+                    state.loading = false;
+                    return;
+                }
+
+                setStatus("불러오는 중...");
+                await Utils.delay(120);
+
+                renderItems(chunk);
+                state.cursor = end;
+
+                if (state.cursor >= data.length) {
+                    state.ended = true;
+                    setStatus("✅ 마지막 데이터까지 모두 불러왔어요.");
+                } else {
+                    setStatus(`✅ ${state.cursor}/${data.length} 로드됨`);
+                }
+
+                state.loading = false;
+            }
+
+            // ===== 탭 전환 =====
+            async function setTab(tab) {
+                if (state.activeTab === tab) return;
+                console.log(`[Tab 전환] ${state.activeTab} → ${tab}`);
+                state.activeTab = tab;
+
+                $("tabFood").classList.toggle("active", tab === "food");
+                $("tabStore").classList.toggle("active", tab === "store");
+
+                resetList();
+
+                if (tab === "food" && state.foodData.length === 0) await fetchFoodData();
+                else if (tab === "store" && state.storeData.length === 0) await fetchStoreData();
+
+                loadMore();
+            }
+
+            // ===== 초기화 =====
+            const foodTab = $("tabFood");
+            const storeTab = $("tabStore");
+
+            if (foodTab) foodTab.onclick = () => setTab("food");
+            if (storeTab) storeTab.onclick = () => setTab("store");
+
+            const sentinel = $("sentinel");
+            if (sentinel) {
+                const observer = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting) {
+                        console.log("🔍 Sentinel 감지 - 추가 로드");
+                        loadMore();
+                    }
+                }, { root: null, rootMargin: "200px", threshold: 0 });
+                observer.observe(sentinel);
+            }
+
+            // 초기 음식 데이터 로드 및 렌더링
+            fetchFoodData().then(() => loadMore());
+        });
+    </script>
+</div>
