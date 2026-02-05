@@ -1,0 +1,810 @@
+@charset "UTF-8";
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+/* 1. 변수 설정 */
+:root {
+    --primary: #B2A4FF;
+    --primary-dark: #8F7DF5;
+    --text-main: #333333;
+    --text-sub: #767676;
+    --white: #ffffff;
+    --border: rgba(255, 255, 255, 0.6);
+    --bg-start: #F3F5FF;
+    --bg-end: #EAE8FF;
+
+     /* 상태 컬러 */
+    --danger-red: #FF4B4B;
+    /* 출금 (빨강) */
+    --success-green: #00C46B;
+    /* 입금 (초록) - 수정됨 */
+    --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+/* 2. 초기화 */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Noto Sans KR', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #e0e0e0;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+button {
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+/* 3. 앱 컨테이너 */
+.app-container {
+    width: 100%;
+    max-width: 420px;
+    height: 100vh;
+    background: var(--white);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* 유틸리티 */
+.bg-gradient {
+    background: linear-gradient(180deg, var(--bg-start) 0%, var(--bg-end) 100%);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* 4. 헤더 */
+.page-header {
+    height: 60px;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 10;
+    margin-top: 10px;
+    flex-shrink: 0;
+}
+
+.page-header.transparent {
+    background: transparent;
+}
+
+.header-left {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    font-size: 28px;
+    color: var(--text-main);
+    cursor: pointer;
+    z-index: 20;
+}
+
+.header-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main);
+    text-align: center;
+}
+
+/* Header Profile Section */
+.header-profile-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-profile-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid #eee;
+}
+
+.header-profile-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.header-profile-greeting {
+    font-size: 12px;
+    color: var(--text-sub);
+}
+
+.header-nickname {
+    text-align: left;
+}
+
+/* Header Actions */
+.header-actions {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.header-icon {
+    font-size: 24px;
+    color: var(--text-main);
+    cursor: pointer;
+}
+
+/* 5. 시작 페이지 스타일 */
+.top-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding-top: 20px;
+}
+
+.mascot-img {
+    width: 180px;
+    height: 180px;
+    margin-bottom: 20px;
+    object-fit: contain;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-15px);
+    }
+}
+
+.title-text {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.3;
+    margin-bottom: 10px;
+}
+
+.highlight {
+    color: var(--primary-dark);
+    font-weight: 900;
+}
+
+.sub-text {
+    font-size: 14px;
+    color: var(--text-sub);
+}
+
+/* 슬라이더 영역 */
+.slider-section {
+    width: 100%;
+    padding: 20px 0;
+    margin-bottom: 20px;
+}
+
+.swiper {
+    width: 100%;
+    padding-bottom: 40px !important;
+}
+
+/* ✅ 카드 스타일 (중앙 정렬 강화) */
+.swiper-slide {
+    background: var(--white);
+    border-radius: 20px;
+    width: 260px !important;
+    height: 180px !important;
+    padding: 25px;
+    /* Flexbox 중앙 정렬 */
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    /* 텍스트 강제 중앙 */
+    box-shadow: 0 10px 20px rgba(178, 164, 255, 0.15);
+    transition: transform 0.3s;
+}
+
+.swiper-slide-active {
+    transform: scale(1.05);
+}
+
+.card-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #F0EDFF;
+    color: var(--primary-dark);
+    font-size: 24px;
+    margin-bottom: 15px;
+    /* 아이콘 내부 중앙 정렬 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: auto;
+    margin-right: auto;
+    /* 마진 오토로 한번 더 중앙 보장 */
+}
+
+.card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 8px;
+    width: 100%;
+}
+
+.card-desc {
+    font-size: 12px;
+    color: var(--text-sub);
+    line-height: 1.4;
+    word-break: keep-all;
+    width: 100%;
+}
+
+.swiper-pagination-bullet-active {
+    background: var(--primary-dark) !important;
+    width: 20px;
+    border-radius: 5px;
+    transition: width 0.3s;
+}
+
+/* 6. 입력 폼 & 버튼 */
+.form-area {
+    padding: 10px 25px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+}
+
+.label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #555;
+    margin-left: 5px;
+}
+
+.label span {
+    color: var(--primary-dark);
+}
+
+.input-field {
+    width: 100%;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 16px;
+    font-size: 15px;
+    outline: none;
+    transition: 0.2s;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+}
+
+.input-field:focus {
+    background: var(--white);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(178, 164, 255, 0.2);
+}
+
+.btn-mini {
+    position: absolute;
+    right: 10px;
+    top: 40px;
+    background: #333;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    opacity: 0.9;
+}
+
+/* 약관 박스 */
+.terms-box {
+    background: rgba(255, 255, 255, 0.5);
+    padding: 20px;
+    border-radius: 16px;
+    margin-top: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.check-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    cursor: pointer;
+}
+
+.check-row.all {
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    margin-bottom: 15px;
+    font-weight: 700;
+    color: #333;
+}
+
+input[type="checkbox"] {
+    accent-color: var(--primary-dark);
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.term-text {
+    font-size: 14px;
+    color: #666;
+    flex: 1;
+}
+
+.term-link {
+    font-size: 12px;
+    color: #999;
+    text-decoration: underline;
+}
+
+.bottom-section {
+    padding: 0 25px 40px 25px;
+    text-align: center;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 18px;
+    background-color: var(--primary);
+    color: var(--white);
+    border: none;
+    border-radius: 30px;
+    font-size: 16px;
+    font-weight: 700;
+    box-shadow: 0 5px 15px rgba(178, 164, 255, 0.4);
+    cursor: pointer;
+    transition: transform 0.1s;
+    margin-top: 10px;
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+    background-color: var(--primary-dark);
+}
+
+.login-link {
+    margin-top: 15px;
+    font-size: 13px;
+    color: var(--text-sub);
+}
+
+.login-link span {
+    color: var(--text-main);
+    font-weight: 700;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* =========================================
+   8. 로그인 페이지 (Login Page) 전용 스타일
+   ========================================= */
+/* 로그인 컨텐츠 중앙 정렬 */
+.login-content {
+    flex: 1;
+    /* 남은 공간 다 차지 */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    /* 수직 중앙 정렬 */
+    align-items: center;
+    /* 수평 중앙 정렬 */
+    padding: 30px 40px;
+    /* 좌우 여백을 좀 더 줌 */
+    padding-bottom: 80px;
+    /* 하단 여백 확보 */
+}
+
+/* 로그인용 작은 로고 */
+.login-logo {
+    width: 180px;
+    height: 180px;
+    /* 시작 페이지보다 작게 */
+    object-fit: contain;
+    margin-bottom: 25px;
+    animation: float 3s ease-in-out infinite;
+}
+
+/* 환영 문구 */
+.login-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 40px;
+    text-align: center;
+    line-height: 1.3;
+}
+
+/* 로그인 폼 영역 (기존 form-area와 다르게 중앙 집중형) */
+.login-form-area {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+/* 하단 링크들 (아이디찾기 / 회원가입) */
+.login-links {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    font-size: 13px;
+    color: var(--text-sub);
+    margin-top: 20px;
+}
+
+.link-item {
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.link-item:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+.link-divider {
+    color: var(--border);
+}
+
+/* =========================================
+   9. 메인 화면 (Main Page) 전용
+   ========================================= */
+/* 메인 컨텐츠 영역 */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 80px;
+    /* 네비게이션 바 높이만큼 여백 */
+}
+
+/* 메인 텍스트 */
+.main-greeting {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-top: 20px;
+    text-align: center;
+    line-height: 1.4;
+}
+
+/* =========================================
+   10. 하단 네비게이션 (움푹 파인 디자인)
+   ========================================= */
+.bottom-nav {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 80px;
+    z-index: 50;
+
+    /* 하단 네비게이션 바 곡률 수정*/
+    border-radius: 50px 50px 50px 50px;
+
+    /* ✅ 핵심 1: 가운데 구멍 뚫기 (배경 그라데이션 활용) */
+    /* circle at 50% -5px: 원의 중심을 약간 위로 올려서 자연스러운 곡선 만들기 */
+    background: radial-gradient(circle at 50% 6px, transparent 38px, var(--white) 38.5px);
+    /* ✅ 핵심 2: 구멍 모양대로 그림자 주기 */
+    filter: drop-shadow(0 -5px 10px rgba(0, 0, 0, 0.05));
+
+    /* 아이템 배치 */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 15px;
+    /* 양옆 여백 */
+}
+
+/* 네비게이션 아이템 (버튼들) */
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: #999;
+    font-size: 11px;
+    gap: 5px;
+    cursor: pointer;
+    width: 60px;
+    height: 100%;
+    /* 터치 영역 확보 */
+    margin-top: 10px;
+    /* 구멍 때문에 전체적으로 내용을 약간 내림 */
+}
+
+.nav-item.active {
+    color: var(--text-main);
+    font-weight: 700;
+}
+
+.nav-item ion-icon {
+    font-size: 24px;
+}
+
+/* 중앙 AI 버튼 (공중에 뜸) */
+.nav-center-btn {
+    position: absolute;
+    left: 50%;
+    top: -24px;
+    /* 네비게이션 바 위로 솟아오름 */
+    transform: translateX(-50%);
+    /* 정확한 중앙 정렬 */
+
+    width: 60px;
+    height: 60px;
+    background: var(--primary);
+    /* 보라색 */
+    border-radius: 50%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 28px;
+
+    /* 버튼 자체의 그림자 */
+    box-shadow: 0 5px 15px rgba(178, 164, 255, 0.6);
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.nav-center-btn:active {
+    transform: translateX(-50%) scale(0.95);
+}
+
+/* ... (이전 코드들 그대로 유지) ... */
+/* =========================================
+   11. 채팅 오버레이 & 디자인 (수정됨)
+   ========================================= */
+.page-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #F8F9FD;
+    /* 채팅방 배경색 */
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.page-layer.active {
+    transform: translateY(0);
+}
+
+/* 채팅 헤더 */
+.chat-header {
+    height: 60px;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--white);
+    border-bottom: 1px solid #f0f0f0;
+    flex-shrink: 0;
+}
+
+/* ✅ 채팅 내용 영역 */
+.chat-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    /* 말풍선 간격 넓힘 */
+    background: #F8F9FD;
+}
+
+/* ✅ 말풍선 공통 스타일 */
+.bubble-row {
+    display: flex;
+    gap: 10px;
+    max-width: 100%;
+    align-items: flex-start;
+}
+
+.bubble-row.me {
+    justify-content: flex-end;
+}
+
+.chat-profile {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid #eee;
+    background: white;
+    flex-shrink: 0;
+}
+
+.bubble {
+    max-width: 70%;
+    padding: 12px 18px;
+    border-radius: 20px;
+    /* 더 둥글게 */
+    font-size: 15px;
+    line-height: 1.5;
+    word-break: keep-all;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+}
+
+/* AI 말풍선 (왼쪽) */
+.bubble.ai {
+    background: var(--white);
+    color: var(--text-main);
+    border-top-left-radius: 4px;
+    /* 프로필 쪽 모서리만 살짝 각지게 */
+}
+
+/* 내 말풍선 (오른쪽) */
+.bubble.me {
+    background: var(--primary);
+    color: white;
+    border-top-right-radius: 4px;
+    /* 내 쪽 모서리만 살짝 각지게 */
+}
+
+
+/* ✅ 입력창 영역 (바닥에서 띄우기) */
+.chat-input-area {
+    padding: 15px 20px;
+    padding-bottom: 30px;
+    /* 아이폰 하단 바 고려 + 띄움 효과 */
+    background: transparent;
+    /* 배경 투명하게 */
+    flex-shrink: 0;
+}
+
+/* ✅ 둥근 입력 박스 (알약 모양 컨테이너) */
+.chat-input-box {
+    display: flex;
+    align-items: center;
+    background: var(--white);
+    border-radius: 30px;
+    /* 완전 둥글게 */
+    padding: 5px 5px 5px 20px;
+    /* 내부 여백 */
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    /* 그림자로 띄움 효과 */
+}
+
+/* 실제 입력 필드 */
+.chat-input {
+    flex: 1;
+    height: 40px;
+    background: none;
+    border: none;
+    outline: none;
+    /* 배경, 테두리 제거 */
+    font-size: 15px;
+    color: var(--text-main);
+}
+
+.chat-input::placeholder {
+    color: #aaa;
+}
+
+/* 아이콘 버튼들 */
+.btn-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 22px;
+    color: #999;
+    cursor: pointer;
+}
+
+/* 전송 버튼 (보라색 동그라미) */
+.btn-send-circle {
+    width: 40px;
+    height: 40px;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    cursor: pointer;
+    margin-left: 5px;
+    transition: transform 0.1s;
+}
+
+.btn-send-circle:active {
+    transform: scale(0.95);
+}
+
+/* ===== Main Page Styles ===== */
+
+
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow-y: auto;
+}
+
+.mascot-img-large {
+    width: 200px;
+    height: 200px;
+}
+
+.main-subtitle {
+    font-size: 16px;
+    font-weight: 400;
+    color: #666;
+    margin-top: 10px;
+    display: block;
+    text-align: center;
+}
+
+/* Chat Layer */
+.chat-header-spacer {
+    width: 28px;
+}
+
+.chat-close-btn {
+    font-size: 28px;
+    cursor: pointer;
+}

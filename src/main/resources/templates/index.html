@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>소라고동 - 시작하기</title>
+    
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+</head>
+<body>
+
+    <div class="app-container bg-gradient">
+        
+        <div class="top-section">
+            <img src="/images/logo.png" alt="소라고동" class="mascot-img">
+            <div class="title-text">
+                혼자서도 완벽하게,<br>
+                <span class="highlight">소라고동</span>이 도와줄게!
+            </div>
+            <div class="sub-text">
+                가계부부터 중고거래, 타임세일까지<br>자취생을 위한 AI 올인원 비서
+            </div>
+        </div>
+
+        <div class="slider-section">
+            <div class="swiper mySwiper">
+                <div class="swiper-wrapper">
+                    <div class="swiper-slide">
+                        <div class="card-icon"><ion-icon name="wallet"></ion-icon></div>
+                        <div class="card-title">AI 스마트 가계부</div>
+                        <div class="card-desc">"오니기리 5천원" 말만 하세요.<br>AI가 알아서 정리해 드려요.</div>
+                    </div>
+                    <div class="swiper-slide">
+                        <div class="card-icon"><ion-icon name="time"></ion-icon></div>
+                        <div class="card-title">우리동네 타임세일</div>
+                        <div class="card-desc">마트 마감 할인 정보를<br>놓치지 않고 알려드릴게요.</div>
+                    </div>
+                    <div class="swiper-slide">
+                        <div class="card-icon"><ion-icon name="cube"></ion-icon></div>
+                        <div class="card-title">초간편 중고거래</div>
+                        <div class="card-desc">사진만 찍어 올리면 끝!<br>판매글도 AI가 써줍니다.</div>
+                    </div>
+                </div>
+                <div class="swiper-pagination"></div>
+            </div>
+        </div>
+
+        <div class="bottom-section">
+            <button class="btn-primary" onclick="location.href='/auth/signup'">시작하기</button>
+            <div class="login-link">
+                이미 계정이 있나요? <span onclick="location.href='/auth/login'">로그인</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script>
+        var swiper = new Swiper(".mySwiper", {
+            effect: "coverflow", 
+            grabCursor: true, 
+            centeredSlides: true, 
+            slidesPerView: "auto", 
+            coverflowEffect: { 
+                rotate: 0, 
+                stretch: 0, 
+                depth: 100, 
+                modifier: 1, 
+                slideShadows: false 
+            },
+            spaceBetween: 20,
+            pagination: { el: ".swiper-pagination", clickable: true },
+            autoplay: { delay: 3000, disableOnInteraction: false }
+        });
+    </script>
+</body>
+</html>

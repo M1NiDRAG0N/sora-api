@@ -1,0 +1,137 @@
+<div class="detail-content no-scrollbar">
+    <div class="net-worth-label">순자산</div>
+    <div class="net-worth-amount">1억 582만 3,000원</div>
+    <div class="net-worth-diff">어제보다 20억 줄었어요</div>
+
+    <div class="dashboard-card">
+        <div class="charts-row">
+            <div class="chart-col">
+                <div class="chart-title">Last Month</div>
+                <div class="chart-box"><canvas id="chartLast"></canvas>
+                    <div class="chart-center-text"><span class="chart-center-value">Total</span></div>
+                </div>
+            </div>
+            <div class="chart-col">
+                <div class="chart-title">This Month</div>
+                <div class="chart-box"><canvas id="chartThis"></canvas>
+                    <div class="chart-center-text"><span class="chart-center-value">Total</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="budget-header">한 달 지출 목표 금액</div>
+        <div class="budget-bar-wrap">
+            <div class="bar-segment bg-red">68%</div>
+            <div class="bar-segment bg-green">32%</div>
+        </div>
+
+        <div class="budget-info-container">
+            <div class="budget-row">
+                <div class="row-left"><span class="dot-bullet"></span> 예산</div>
+                <div class="row-right">
+                    <div class="amount-text clickable" onclick="alert('기능 추가 예정입니다.')">2,500,000,000</div>
+                    <div class="sub-text">누르면 (설정 가능)</div>
+                </div>
+            </div>
+            <div class="budget-row">
+                <div class="row-left"><span class="dot-bullet"></span> 지출</div>
+                <div class="row-right">
+                    <div class="amount-text clickable" onclick="alert('기능 추가 예정입니다.')">1,700,000,000</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="calendar-sheet">
+        <div class="cal-header">
+            <span class="cal-title" onclick="toggleCalendarView()">January 2026</span>
+        </div>
+        <div id="calendarContainer" class="date-scroller"></div>
+    </div>
+    <div style="height: 100px;"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    Chart.register(ChartDataLabels);
+    const allCategories = ['식비', '통신비', '교통비', '여행비', '생활비', '경조사비', '이자비', '세금'];
+    function getRandomCategories() { return [...allCategories].sort(() => 0.5 - Math.random()).slice(0, 4); }
+    function getRandomData() { return Array.from({ length: 4 }, () => Math.floor(Math.random() * 30) + 10); }
+    const commonOpts = { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: { color: 'white', font: { weight: 'bold', size: 9 }, formatter: (v, c) => v > 15 ? c.chart.data.labels[c.dataIndex] : '' } }, elements: { arc: { borderWidth: 0 } } };
+    new Chart(document.getElementById('chartLast'), { type: 'doughnut', data: { labels: getRandomCategories(), datasets: [{ data: getRandomData(), backgroundColor: ['#EF4444', '#10B981', '#3B82F6', '#8B5CF6'] }] }, options: commonOpts });
+    new Chart(document.getElementById('chartThis'), { type: 'doughnut', data: { labels: getRandomCategories(), datasets: [{ data: getRandomData(), backgroundColor: ['#10B981', '#EF4444', '#3B82F6', '#F59E0B'] }] }, options: commonOpts });
+
+    // 달력 로직
+    const calendarContainer = document.getElementById('calendarContainer');
+    const today = new Date();
+    const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+    const dummyData = { 1: { inc: '+ 5,000', exp: '- 6,000' }, 4: { inc: '+ 50', exp: '- 999,950' } };
+
+    let isGridView = false; // 현재 뷰 상태
+
+    // 1. 가로 스크롤러
+    function renderScroller() {
+        calendarContainer.innerHTML = '';
+        calendarContainer.className = 'date-scroller';
+
+        for (let i = -10; i <= 10; i++) {
+            const d = new Date(today); d.setDate(today.getDate() + i);
+            const num = d.getDate();
+            const dayStr = dayNames[d.getDay()];
+            const data = dummyData[Math.abs(num) % 8] || { inc: '', exp: '' };
+
+            const el = document.createElement('div');
+            el.className = `date-card ${i === 0 ? 'active' : ''}`;
+            el.innerHTML = `<div style="font-size: 10px; color: #BBB; font-weight: 600; margin-bottom: 4px;">${dayStr}</div><div class="date-number">${num}</div><span class="money-tag money-inc">${data.inc}</span><span class="money-tag money-exp">${data.exp}</span>`;
+            el.onclick = () => { localStorage.setItem('selectedDate', num); location.href = 'details.html'; };
+            calendarContainer.appendChild(el);
+        }
+
+        const active = document.querySelector('.date-card.active');
+        if (active) calendarContainer.scrollLeft = active.offsetLeft - (calendarContainer.clientWidth / 2) + (active.clientWidth / 2);
+    }
+
+    // 2. 전체 그리드
+    function renderGrid() {
+        calendarContainer.innerHTML = '';
+        calendarContainer.className = 'calendar-grid';
+
+        let html = '<div class="grid-header-row">';
+        const gridDays = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+        gridDays.forEach(day => { html += `<div class="grid-header-cell">${day}</div>`; });
+        html += '</div><div class="grid-dates-container">';
+
+        // 2026년 1월 1일 = 목요일 (인덱스 3)
+        const emptyDays = 3;
+        for (let i = 0; i < emptyDays; i++) { html += `<div class="grid-date-cell"></div>`; }
+
+        for (let i = 1; i <= 31; i++) {
+            const data = dummyData[Math.abs(i) % 8] || { inc: '', exp: '' };
+            html += `
+            <div class="grid-date-cell" onclick="goDetails(${i})">
+                <div class="grid-date-num">${i}</div>
+                <div class="grid-money inc">${data.inc}</div>
+                <div class="grid-money exp">${data.exp}</div>
+            </div>
+        `;
+        }
+        html += '</div>';
+        calendarContainer.innerHTML = html;
+    }
+
+    function goDetails(day) {
+        localStorage.setItem('selectedDate', day);
+        location.href = 'details.html';
+    }
+
+    function toggleCalendarView() {
+        isGridView = !isGridView;
+        if (isGridView) renderGrid();
+        else renderScroller();
+    }
+
+    renderScroller(); // 초기 실행
+});
+</script>
+
+</div>
