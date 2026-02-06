@@ -683,3 +683,34 @@
 .btn-send-circle:active {
     background: #B2A4FF;
 }
+
+/* ✅ 앱 스타일 풀스크린 모달 */
+.full-screen-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    /* 배경색 */
+    z-index: 9999;
+    /* 제일 위에 뜨게 */
+
+    /* 처음엔 숨김 & 아래로 내려가 있음 */
+    visibility: hidden;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-in-out, visibility 0.3s;
+    overflow-y: auto;
+    /* 내용이 길면 스크롤 */
+}
+
+/* 활성화되면 올라옴 */
+.full-screen-modal.active {
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* 모달이 떴을 때 뒤에 있는 메인 화면 스크롤 막기 */
+body.modal-open {
+    overflow: hidden;
+}
