@@ -13,10 +13,9 @@ import com.scit.soragodong.domain.response.ApiResponse;
 import jakarta.servlet.http.HttpSession;
 
 
-
 @Controller
 public class MainController {
-    
+
     @GetMapping("/main")
     public String mainPage(Model model) {
         model.addAttribute("currentUri", "/main");
@@ -47,7 +46,7 @@ public class MainController {
         sessionData.put("creationTime", session.getCreationTime());
         sessionData.put("lastAccessedTime", session.getLastAccessedTime());
         sessionData.put("maxInactiveInterval", session.getMaxInactiveInterval());
-        
+
         return ApiResponse.success(sessionData);
     }
 }
