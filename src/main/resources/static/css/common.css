@@ -808,3 +808,101 @@ input[type="checkbox"] {
     font-size: 28px;
     cursor: pointer;
 }
+
+/* ========== Signup Form Styles ========== */
+
+/* 이메일 인증 섹션 */
+.email-section {
+    margin-bottom: 24px;
+}
+
+/* 인증 코드 입력 섹션 */
+.verification-section {
+    margin-bottom: 24px;
+    padding: 20px;
+    background: rgba(102, 126, 234, 0.08);
+    border-radius: 16px;
+    border-left: 4px solid var(--primary-dark);
+}
+
+/* 인증 코드 발송 버튼 */
+.btn-send-code {
+    width: 100%;
+    padding: 14px;
+    background: var(--primary-dark);
+    color: var(--white);
+    border: none;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 12px;
+}
+
+.btn-send-code:active {
+    transform: scale(0.98);
+    background: var(--primary);
+}
+
+.btn-send-code:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* 이메일 인증 버튼 */
+.btn-verify-code {
+    width: 100%;
+    padding: 14px;
+    background: var(--primary-dark);
+    color: var(--white);
+    border: none;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-verify-code:active {
+    transform: scale(0.98);
+    background: var(--primary);
+}
+
+/* 주소 검색 버튼 */
+.geocode_btn {
+    padding: 12px;
+    background: #555;
+    color: var(--white);
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.geocode_btn:active {
+    transform: scale(0.98);
+    background: #444;
+}
+
+/* 회원가입 폼 섹션 */
+.signup-form-section {
+    animation: slideUp 0.3s ease-out;
+    margin-bottom: 40px;
+}
+
+.signup-form-section .btn-primary {
+    margin-top: 20px;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
