@@ -44,11 +44,11 @@
 }
 
 /* 카테고리 바 (Sticky) */
-.category-bar {
+.category-bar2 {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 20px;
+    padding: 10px 0px;
     background: rgba(255, 255, 255, 0);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
@@ -123,21 +123,21 @@
 }
 
 /* 검색 모드 토글 */
-.category-bar.search-mode .cat-scroll {
+.category-bar2.search-mode .cat-scroll {
     opacity: 0;
     transform: translateX(-20px);
     pointer-events: none;
 }
 
-.category-bar.search-mode .search-input-box {
+.category-bar2.search-mode .search-input-box {
     opacity: 1;
     pointer-events: auto;
     transform: translateX(0);
 }
 
 /* 피드 리스트 */
-.feed-list {
-    padding: 15px 20px;
+.feed-list2 {
+    /* padding: 15px 20px; */
     display: flex;
     flex-direction: column;
     gap: 15px;
