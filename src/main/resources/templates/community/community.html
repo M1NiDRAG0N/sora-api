@@ -5,16 +5,16 @@
 
         <div class="category-bar2" id="categoryBar">
             <div class="cat-scroll">
-                <div class="cat-chip active" onclick="selectCategory(this)">전체</div>
-                <div class="cat-chip" onclick="selectCategory(this)">소분</div>
-                <div class="cat-chip" onclick="selectCategory(this)">자취 꿀팁</div>
-                <div class="cat-chip" onclick="selectCategory(this)">유머게시판</div>
-                <div class="cat-chip" onclick="selectCategory(this)">자유게시판</div>
+                <div class="cat-chip active" onclick="CommunityView.selectCategory(this)">전체</div>
+                <div class="cat-chip" onclick="CommunityView.selectCategory(this)">소분</div>
+                <div class="cat-chip" onclick="CommunityView.selectCategory(this)">자취 꿀팁</div>
+                <div class="cat-chip" onclick="CommunityView.selectCategory(this)">유머게시판</div>
+                <div class="cat-chip" onclick="CommunityView.selectCategory(this)">자유게시판</div>
             </div>
             <div class="search-input-box">
                 <input type="text" class="real-search-input" id="searchInput" placeholder="검색어를 입력하세요">
             </div>
-            <div class="search-btn" onclick="toggleSearchMode()">
+            <div class="search-btn" onclick="CommunityView.toggleSearchMode()">
                 <ion-icon name="search-outline" id="searchIcon"></ion-icon>
             </div>
         </div>
@@ -30,7 +30,7 @@
                             class="user-img-md"> -->
                         <div class="user-info-text">
                             <span class="user-name" th:text="${board.userNickname}">닉네임</span>
-                            <span class="post-time" th:text="${board.createdAt}">시간</span>
+                            <span class="post-time" th:text="${board.timeAgo}">시간</span>
                         </div>
                     </div>
                     <span class="post-tag" th:text="${board.boardCategory}">카테고리</span>
@@ -91,31 +91,158 @@
         </div>
     </div>
     <script>
-        // ==========================================
-        // ✅ [수정] 더미 데이터 & 스크롤 로직 전부 삭제
-        // 이제 UI 관련 기능(검색 토글, 채팅, 카테고리 클릭 효과)만 남았습니다.
-        // ==========================================
+        const CommunityView = {
+            /**
+             * 카테고리 칩 선택 UI 변경
+             * @param {HTMLElement} element - 클릭된 카테고리 요소(this)
+             */
+            selectCategory: (element) => {
+                // 모든 칩에서 active 제거
+                document.querySelectorAll('.cat-chip').forEach(chip => {
+                    chip.classList.remove('active');
+                });
+                // 클릭한 칩에 active 추가
+                element.classList.add('active');
+            },
 
-        // 카테고리 클릭 시 색상만 변경 (데이터 로딩 X)
-        function selectCategory(element) {
-            document.querySelectorAll('.cat-chip').forEach(chip => chip.classList.remove('active'));
-            element.classList.add('active');
-        }
+            /**
+             * 검색 모드 토글 (검색창 열기/닫기)
+             */
+            toggleSearchMode: () => {
+                const bar = document.getElementById('categoryBar');
+                const icon = document.getElementById('searchIcon');
+                const input = document.getElementById('searchInput');
 
-        // 검색 모드 토글
-        function toggleSearchMode() {
-            const bar = document.getElementById('categoryBar');
-            const icon = document.getElementById('searchIcon');
-            const input = document.getElementById('searchInput');
-            bar.classList.toggle('search-mode');
-            if (bar.classList.contains('search-mode')) {
-                icon.setAttribute('name', 'close-outline');
-                input.focus();
-            } else {
-                icon.setAttribute('name', 'search-outline');
-                input.value = '';
+                // 클래스 토글
+                bar.classList.toggle('search-mode');
+
+                // 상태에 따른 아이콘 및 포커스 처리
+                if (bar.classList.contains('search-mode')) {
+                    icon.setAttribute('name', 'close-outline');
+                    input.focus();
+                } else {
+                    icon.setAttribute('name', 'search-outline');
+                    input.value = '';
+                }
+            },
+
+            state: {
+                currentPage: 2,
+                isLoading: false, // 중복 로딩 방지용 깃발
+                isLastPage: false
+            },
+
+            // 2. 초기화 (이벤트 등록)
+            init: () => {
+                const scrollBox = document.querySelector('.detail-content');
+
+                if (scrollBox) {
+                    console.log("스크롤 박스 연결 성공!");
+                    scrollBox.addEventListener('scroll', CommunityView.pageLoading);
+                } else {
+                    console.error("어라? .detail-content를 못 찾겠어요!");
+                }
+            },
+
+            // 3. 스크롤 감지 함수 (계산 대상 변경)
+            pageLoading: (e) => {
+                if (CommunityView.state.isLoading || CommunityView.state.isLastPage) return;
+                const container = e.target;
+
+                const scrollTop = container.scrollTop;       // 현재 스크롤 위치
+                const clientHeight = container.clientHeight; // 화면에 보이는 높이
+                const scrollHeight = container.scrollHeight; // 전체 내용 높이
+
+                // 바닥 감지 (여유 50px)
+                if (scrollTop + clientHeight >= scrollHeight - 50) {
+                    CommunityView.loadMorePosts();
+                }
+            },
+
+            loadMorePosts: async () => {
+                CommunityView.state.isLoading = true;
+
+                try {
+                    const page = CommunityView.state.currentPage;
+                    const response = await API.get(`/community/list?page=${page}`);
+
+                    if (!response || response.length === 0) {
+                        CommunityView.state.isLastPage = true;
+                        // 하단 로딩바에 메시지 표시 (선택사항)
+                        const loader = document.getElementById('loading-trigger');
+                        if (loader) loader.innerText = "마지막 게시글입니다.";
+
+                        window.removeEventListener('scroll', CommunityView.pageLoading);
+                        return;
+                    }
+
+                    const container = document.getElementById('feedListContainer');
+                    response.forEach(dto => {
+                        const html = CommunityView.createFeedCardHTML(dto);
+                        container.insertAdjacentHTML('beforeend', html)
+                            ;
+                    });
+                    CommunityView.state.currentPage++;
+                }
+                catch (error) {
+                    console.error('로딩 실패:', error);
+                } finally {
+                    CommunityView.state.isLoading = false;
+                }
+            },
+
+            createFeedCardHTML: (dto) => {
+                let previewContent = dto.boardContent ? dto.boardContent : '';
+                if (previewContent.length > 50) {
+                    previewContent = previewContent.substring(0, 50) + '...';
+                }
+                return `
+            <a href="/community/view/${dto.boardIdx}" class="feed-card">
+                
+                <div class="feed-header">
+                    <div class="feed-user-group">
+                        <div class="user-info-text">
+                            <span class="user-name">${dto.userNickname}</span>
+                            <span class="post-time">${dto.timeAgo}</span>
+                        </div>
+                    </div>
+                    
+                    <span class="post-tag">${dto.boardCategory}</span>
+                </div>
+
+                <div class="feed-body">
+                    <div class="feed-text-area">
+                        <div class="feed-title">${dto.boardTitle}</div>
+                        
+                        <div class="feed-preview">${previewContent}</div>
+                    </div>
+                </div>
+
+                <div class="feed-footer">
+                    <div class="action-item">
+                        <ion-icon name="heart-outline"></ion-icon> 
+                        <span>    
+                            ${dto.likeCount}
+                        </span>
+                    </div>
+
+                        <div class="action-item">
+                            <ion-icon name="eye-outline"></ion-icon> 
+                            <sapn>
+                                ${dto.viewCount}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+                `;
             }
-        }
+        };
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', () => {
+            CommunityView.init();
+        });
+
 
         // // 채팅 관련 로직
         // const chatDummyData = [
