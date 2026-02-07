@@ -1,19 +1,17 @@
 package com.scit.soragodong.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Controller;
-
 import com.scit.soragodong.domain.dto.StoreDto;
 import com.scit.soragodong.domain.dto.StoreProductDto;
 import com.scit.soragodong.domain.entity.Store;
 import com.scit.soragodong.domain.entity.StoreProduct;
 import com.scit.soragodong.repository.StoreProductRepository;
 import com.scit.soragodong.repository.StoreRepository;
-
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Controller;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @AllArgsConstructor
@@ -128,5 +126,17 @@ public class TimesaleService {
             product.getProductPictureIdx()
         );
     }
-    
+
+    //상점 등록용
+    public boolean createStore(StoreDto storeDto) {
+        Store store = new Store().builder()
+                .storeName(storeDto.storeName())
+                .storeAddress(storeDto.storeAddress())
+                .storeOpenTime(storeDto.storeOpenTime())
+                .storeCloseTime(storeDto.storeCloseTime())
+                .build();
+        storeRepository.save(store);
+
+        return true;
+    }
 }
