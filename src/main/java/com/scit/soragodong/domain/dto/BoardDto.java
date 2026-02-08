@@ -17,5 +17,7 @@ public record BoardDto(
                 Integer viewCount,
                 String timeAgo,
                 LocalDateTime createdAt,
-                LocalDateTime updatedAt) {
+                LocalDateTime updatedAt,
+                Integer fileGrpIdx,
+                Integer replyCount) {
 }

@@ -4,25 +4,25 @@
 
         <div class="category-bar2" id="categoryBar">
             <div class="cat-scroll">
-                <div class="cat-chip active" onclick="CommunityView.selectCategory(this)">전체</div>
-                <div class="cat-chip" onclick="CommunityView.selectCategory(this)">소분/나눔</div>
-                <div class="cat-chip" onclick="CommunityView.selectCategory(this)">꿀팁/정보</div>
-                <div class="cat-chip" onclick="CommunityView.selectCategory(this)">자유/수다</div>
-                <div class="cat-chip" onclick="CommunityView.selectCategory(this)">요리/집밥</div>
-                <div class="cat-chip" onclick="CommunityView.selectCategory(this)">질문/고민</div>
+                <div class="cat-chip active" onclick="CommunityMain.selectCategory(this)">전체</div>
+                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)">소분/나눔</div>
+                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)">꿀팁/정보</div>
+                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)">자유/수다</div>
+                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)">요리/집밥</div>
+                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)">질문/고민</div>
             </div>
             <div class="search-input-box">
                 <input type="text" class="real-search-input" id="searchInput" placeholder="검색어를 입력하세요">
             </div>
-            <div class="search-btn" onclick="CommunityView.toggleSearchMode()">
+            <div class="search-btn" onclick="CommunityMain.toggleSearchMode()">
                 <ion-icon name="search-outline" id="searchIcon"></ion-icon>
             </div>
         </div>
 
         <div class="feed-list2" id="feedListContainer">
 
-            <a th:each="board : ${boardDtoList}" th:href="@{/community/view/{id}(id=${board.boardIdx})}"
-                class="feed-card">
+            <div th:each="board : ${boardDtoList}" class="feed-card" th:data-boardIdx="${board.boardIdx}"
+                onclick="CommunityView.openView(this)">
 
                 <div class="feed-header">
                     <div class="feed-user-group">
@@ -47,7 +47,7 @@
                 <div class="feed-footer">
                     <div class="action-item">
                         <ion-icon name="chatbubble-outline"></ion-icon>
-                        <span>0</span>
+                        <span th:text="${board.replyCount}">0</span>
                     </div>
                     <div class="action-item">
                         <ion-icon name="heart-outline"></ion-icon>
@@ -58,7 +58,7 @@
                         <span th:text="${board.viewCount}">0</span>
                     </div>
                 </div>
-            </a>
+            </div>
         </div>
 
         <div id="loading-trigger" style="padding: 20px; text-align: center; color: #888;">
@@ -78,19 +78,19 @@
 
         <div class="write-header">
             <div class="btn-cancel" onclick="CommunityWrite.close()">취소</div>
-            <div class="page-title">글쓰기</div>
+            <div class="page-title2">글쓰기</div>
             <div class="btn-done" onclick="CommunityWrite.submitPost()">완료</div>
         </div>
 
         <input type="hidden" id="loginUserIdx" th:value="${#authentication.principal.userIdx}">
 
         <div class="category-select-area">
-            <div class="select-chip selected" onclick="CommunityView.selectCategoryWrite(this)" data-value="소분/나눔">소분/나눔
+            <div class="select-chip selected" onclick="CommunityMain.selectCategoryWrite(this)" data-value="소분/나눔">소분/나눔
             </div>
-            <div class="select-chip" onclick="CommunityView.selectCategoryWrite(this)" data-value="꿀팁/정보">꿀팁/정보</div>
-            <div class="select-chip" onclick="CommunityView.selectCategoryWrite(this)" data-value="자유/수다">자유/수다</div>
-            <div class="select-chip" onclick="CommunityView.selectCategoryWrite(this)" data-value="요리/집밥">요리/집밥</div>
-            <div class="select-chip" onclick="CommunityView.selectCategoryWrite(this)" data-value="질문/고민">질문/고민</div>
+            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="꿀팁/정보">꿀팁/정보</div>
+            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="자유/수다">자유/수다</div>
+            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="요리/집밥">요리/집밥</div>
+            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="질문/고민">질문/고민</div>
         </div>
 
         <div class="write-card">
@@ -114,6 +114,73 @@
 
     <!-- 글쓰기 페이지 끗 -->
 
+    <!-- 게시글 상세보기 시작 -->
+    <div class="app-container bg-gradient" id="viewForm">
+
+        <div class="view-header">
+            <button type="button" class="header-btn-icon" onclick="CommunityView.closeView()">
+                <ion-icon name="chevron-back"></ion-icon>
+            </button>
+            <div>상세보기</div>
+            <button type="button" class="header-btn-icon">
+                <ion-icon name="ellipsis-horizontal"></ion-icon>
+            </button>
+        </div>
+
+        <div class="content-scroll-area">
+
+            <article class="post-card-full">
+                <div class="post-header-row">
+                    <a href="profile.user.html" class="writer-info">
+                        <img src="https://i.pravatar.cc/150?img=68" class="writer-img">
+                        <div class="writer-text">
+                            <span class="writer-name" id="view-writer"></span>
+                            <span class="write-time" id="view-time"></span>
+                        </div>
+                    </a>
+                    <span class="category-badge" id="view-category"></span>
+                </div>
+
+                <div class="post-text" id="view-content"></div>
+
+                <img src="" class="post-image" alt="양배추" id="view-image">
+
+                <div class="post-stats-row">
+                    <div class="stat-item">
+                        <ion-icon name="heart-outline"></ion-icon> <span id="view-like">2</span>
+                    </div>
+                    <div class="stat-item">
+                        <ion-icon name="eye-outline"></ion-icon> <span id="view-view">2</span>
+                    </div>
+                </div>
+            </article>
+
+            <section>
+                <div class="comment-section-title">댓글 <sapn id="reply-count"></sapn>
+                </div>
+
+                <!-- 댓글 목록 태그-->
+                <div class="comment-list" id="reply-card"></div>
+            </section>
+
+        </div>
+
+        <div class="input-container-floating">
+            <input type="text" class="input-field2" placeholder="메시지 입력...">
+
+            <button type="button" class="btn-mic">
+                <ion-icon name="mic-outline"></ion-icon>
+            </button>
+
+            <button type="button" class="btn-send-circle" onclick="CommunityReply.sendReply()">
+                <ion-icon name="paper-plane"></ion-icon>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- 게시글 상세보기 끗 -->
+
 
 
     <div id="chatLayer" class="page-layer">
@@ -135,7 +202,87 @@
         </div>
     </div>
     <script>
-        const CommunityView = {
+        // ✅ [전역 변수] 사용자가 선택한 파일들을 저장할 배열
+        let selectedFiles = [];
+
+        // ==========================================
+        //  1. 파일 처리 관련 함수들 (Global Scope)
+        // ==========================================
+
+        // 파일 선택 시 실행 (HTML onchange에서 호출)
+        function handleFileSelect(input) {
+            const files = Array.from(input.files);
+
+            // 1. 개수 제한 체크
+            if (selectedFiles.length + files.length > 10) {
+                alert("사진은 최대 10장까지 첨부할 수 있습니다.");
+                input.value = "";
+                return;
+            }
+
+            // 2. 배열에 파일 추가
+            files.forEach(file => {
+                if (!file.type.startsWith('image/')) return;
+                selectedFiles.push(file);
+            });
+
+            // 3. 화면 다시 그리기
+            renderPreview();
+
+            // 4. input 초기화 (같은 파일 다시 선택 가능하게)
+            input.value = "";
+        }
+
+        // 화면에 미리보기 그리기
+        function renderPreview() {
+            const container = document.getElementById('imageRow');
+
+            // 기존 미리보기 박스만 싹 지우기 (카메라 버튼은 건드리면 안 됨!)
+            const previews = container.querySelectorAll('.preview-box');
+            previews.forEach(box => box.remove());
+
+            // 배열에 있는 파일들로 다시 그리기
+            selectedFiles.forEach((file, index) => {
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    const imageUrl = e.target.result;
+
+                    const div = document.createElement('div');
+                    div.className = 'preview-box';
+                    div.innerHTML = `
+                    <img src="${imageUrl}" class="preview-img">
+                    <div class="btn-remove-img" onclick="removeImage(${index})">
+                        <ion-icon name="close"></ion-icon>
+                    </div>
+                `;
+
+                    // 컨테이너에 추가 (카메라 버튼 뒤로 붙음)
+                    container.appendChild(div);
+                };
+
+                reader.readAsDataURL(file);
+            });
+
+            // 카운트 업데이트
+            document.getElementById('imgCount').innerText = `${selectedFiles.length}/10`;
+        }
+
+        // 이미지 삭제 함수
+        function removeImage(index) {
+            selectedFiles.splice(index, 1); // 배열에서 삭제
+            renderPreview(); // 화면 갱신
+        }
+
+
+
+
+
+
+
+
+
+        const CommunityMain = {
             /**
              * 카테고리 칩 선택 UI 변경
              * @param {HTMLElement} element - 클릭된 카테고리 요소(this)
@@ -180,6 +327,8 @@
                 }
             },
 
+
+            // 무한 스크롤 시작
             state: {
                 currentPage: 2,
                 isLoading: false, // 중복 로딩 방지용 깃발
@@ -191,16 +340,13 @@
                 const scrollBox = document.querySelector('.detail-content');
 
                 if (scrollBox) {
-                    console.log("스크롤 박스 연결 성공!");
-                    scrollBox.addEventListener('scroll', CommunityView.pageLoading);
-                } else {
-                    console.error("어라? .detail-content를 못 찾겠어요!");
+                    scrollBox.addEventListener('scroll', CommunityMain.pageLoading);
                 }
             },
 
             // 3. 스크롤 감지 함수 (계산 대상 변경)
             pageLoading: (e) => {
-                if (CommunityView.state.isLoading || CommunityView.state.isLastPage) return;
+                if (CommunityMain.state.isLoading || CommunityMain.state.isLastPage) return;
                 const container = e.target;
 
                 const scrollTop = container.scrollTop;       // 현재 스크롤 위치
@@ -209,46 +355,47 @@
 
                 // 바닥 감지 (여유 50px)
                 if (scrollTop + clientHeight >= scrollHeight - 50) {
-                    CommunityView.loadMorePosts();
+                    CommunityMain.loadMorePosts();
                 }
             },
 
             loadMorePosts: async () => {
-                CommunityView.state.isLoading = true;
+                CommunityMain.state.isLoading = true;
 
                 try {
-                    const page = CommunityView.state.currentPage;
+                    const page = CommunityMain.state.currentPage;
                     const response = await API.get(`/community/list?page=${page}`);
 
                     if (!response || response.length === 0) {
-                        CommunityView.state.isLastPage = true;
+                        CommunityMain.state.isLastPage = true;
                         // 하단 로딩바에 메시지 표시 (선택사항)
                         const loader = document.getElementById('loading-trigger');
                         if (loader) loader.innerText = "마지막 게시글입니다.";
 
-                        window.removeEventListener('scroll', CommunityView.pageLoading);
+                        window.removeEventListener('scroll', CommunityMain.pageLoading);
                         return;
                     }
 
                     const container = document.getElementById('feedListContainer');
                     response.forEach(dto => {
-                        const html = CommunityView.createFeedCardHTML(dto);
+                        const html = CommunityMain.createFeedCardHTML(dto);
                         container.insertAdjacentHTML('beforeend', html);
                     });
-                    CommunityView.state.currentPage++;
+                    CommunityMain.state.currentPage++;
                 }
                 catch (error) {
                     console.error('로딩 실패:', error);
                 } finally {
-                    CommunityView.state.isLoading = false;
+                    CommunityMain.state.isLoading = false;
                 }
             },
 
             createFeedCardHTML: (dto) => {
 
                 return `
-            <a href="/community/view/${dto.boardIdx}" class="feed-card">
-                
+            <div class="feed-card" data-boardIdx="${dto.boardIdx}"
+                onclick="CommunityView.openView(this)">
+
                 <div class="feed-header">
                     <div class="feed-user-group">
                         <div class="user-info-text">
@@ -284,14 +431,15 @@
                         </div>
                     </div>
                 </div>
-            </a>
+            </div>
                 `;
             }
         };
         // 페이지 로드 시 실행
         document.addEventListener('DOMContentLoaded', () => {
-            CommunityView.init();
+            CommunityMain.init();
         });
+        // 무한 스크롤 끗
 
 
 
@@ -345,50 +493,96 @@
 
             // 글쓰기 완료 후 비동기 새로고침
             refreshAfterWrite: (response) => {
-                const board = response;
-                console.log(board);
+                const dto = response;
+                console.log(dto);
                 const container = document.getElementById('feedListContainer');
-                const html = `
-            <a href="/community/view/${board.boardIdx}" class="feed-card">
-                
-                <div class="feed-header">
-                    <div class="feed-user-group">
-                        <div class="user-info-text">
-                            <span class="user-name">${board.userNickname}</span>
-                            <span class="post-time">${board.timeAgo}</span>
-                        </div>
-                    </div>
-                    
-                    <span class="post-tag">${board.boardCategory}</span>
-                </div>
 
-                <div class="feed-body">
-                    <div class="feed-text-area">
-                        <div class="feed-title">${board.boardTitle}</div>
-                        
-                        <div class="feed-preview">${board.boardContent}</div>
-                    </div>
-                </div>
+                // CommunityMain에서 만든 카드 양식 
+                const html = CommunityMain.createFeedCardHTML(dto);
 
-                <div class="feed-footer">
-                    <div class="action-item">
-                        <ion-icon name="heart-outline"></ion-icon> 
-                        <span>    
-                            ${board.likeCount}
-                        </span>
-                    </div>
-
-                        <div class="action-item">
-                            <ion-icon name="eye-outline"></ion-icon> 
-                            <span>
-                                ${board.viewCount}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </a>
-                `
                 container.insertAdjacentHTML('afterbegin', html);
+            }
+        };
+
+        const CommunityView = {
+            openView: async (e) => {
+                const boardIdx = e.getAttribute('data-boardIdx');
+                console.log(boardIdx);
+                const viewForm = document.querySelector('#viewForm');
+
+                // th: href = "@{/community/view/{id}(id=${board.boardIdx})}"
+                const board = await API.get(`/community/view/${boardIdx}`);
+                const boardReply = await API.get(`/community/reply/${boardIdx}`);
+                console.log(boardReply);
+
+                const container = document.querySelector('#reply-card');
+                boardReply.forEach(dto => {
+                    const html = CommunityReply.createReplyCardHTML(dto);
+                    container.insertAdjacentHTML('beforeend', html);
+                });
+
+                // 텍스트 데이터 넣기 
+                document.querySelector('#reply-count').innerText = board.replyCount;
+                currentBoardIdx = boardIdx;
+                document.querySelector('#view-writer').innerText = board.userNickname;
+                document.querySelector('#view-time').innerText = board.timeAgo;
+                document.querySelector('#view-category').innerText = board.boardCategory;
+                document.querySelector('#view-content').innerText = board.boardContent; // 줄바꿈 처리가 필요하면 innerHTML 사용
+                document.querySelector('#view-like').innerText = board.likeCount;
+                document.querySelector('#view-view').innerText = board.viewCount;
+
+                // 이미지 처리 (이미지가 있으면 보여주고, 없으면 숨김)
+                const imgTag = document.querySelector('#view-image');
+                if (board.thumbnail) { // DTO에 이미지 경로 필드가 있다고 가정
+                    imgTag.src = board.thumbnail;
+                    imgTag.style.display = 'block';
+                } else {
+                    imgTag.style.display = 'none';
+                }
+
+                viewForm.classList.add('active');
+            },
+            closeView: () => {
+                const viewForm = document.querySelector('#viewForm');
+                viewForm.classList.remove('active');
+                document.querySelector('#reply-card').innerHTML = '';
+                document.querySelector('#reply-count').innerText = '';
+                document.querySelector('#view-writer').innerText = '';
+                document.querySelector('#view-time').innerText = '';
+                document.querySelector('#view-category').innerText = '';
+                document.querySelector('#view-content').innerText = '';
+                document.querySelector('#view-like').innerText = '';
+                document.querySelector('#view-view').innerText = '';
+            }
+
+        };
+
+
+        const CommunityReply = {
+            createReplyCardHTML: (dto) => {
+                return `
+                    <div class="comment-item">
+                        <img src="https://i.pravatar.cc/150?img=5" class="comment-user-img">
+                        <div class="comment-content">
+                            <span class="comment-user-name">${dto.userNickname}</span>
+                            <span class="comment-text">${dto.replyContent}</span>
+                        </div>
+                    </div>
+                `;
+            },
+
+            sendReply: async () => {
+                const replyContent = document.querySelector('.input-field2').value;
+                const boardIdx = currentBoardIdx;
+
+                const data = {
+                    replyContent: replyContent
+                };
+
+                console.log(replyContent);
+                console.log(boardIdx);
+
+                const response = await API.post(`/community/reply/${boardIdx}`, data);
             }
         };
 

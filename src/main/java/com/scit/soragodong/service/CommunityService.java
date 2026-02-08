@@ -10,11 +10,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.scit.soragodong.domain.dto.BoardDto;
+import com.scit.soragodong.domain.dto.BoardReplyDto;
 import com.scit.soragodong.domain.entity.Board;
+import com.scit.soragodong.domain.entity.BoardReply;
 import com.scit.soragodong.domain.entity.Users;
 import com.scit.soragodong.exception.CustomException;
 import com.scit.soragodong.exception.ErrorCode;
-import com.scit.soragodong.repository.CommunityRepository;
+import com.scit.soragodong.repository.BoardReplyRepository;
+import com.scit.soragodong.repository.BoardRepository;
 import com.scit.soragodong.repository.UserRepository;
 import com.scit.soragodong.util.DateTimeUtil;
 
@@ -27,8 +30,9 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional
 @RequiredArgsConstructor
 public class CommunityService {
-    private final CommunityRepository cr;
+    private final BoardRepository br;
     private final UserRepository ur;
+    private final BoardReplyRepository brr;
 
     /**
      * 게시글 10개씩 조회
@@ -43,7 +47,7 @@ public class CommunityService {
 
         Pageable pageable = PageRequest.of(pageNum, 10, Sort.Direction.DESC, "createdAt");
 
-        List<Board> boardEntityList = cr.findAll(pageable).getContent();
+        List<Board> boardEntityList = br.findAll(pageable).getContent();
 
         for (Board board : boardEntityList) {
 
@@ -59,6 +63,7 @@ public class CommunityService {
                     .likeCount(board.getLikeCount())
                     .viewCount(board.getViewCount())
                     .createdAt(board.getCreatedAt())
+                    .replyCount(board.getReplyCount())
                     .build();
 
             dtoList.add(dto);
@@ -86,7 +91,7 @@ public class CommunityService {
                     .boardContent(boardDto.boardContent())
                     .build();
 
-            Board savedBoard = cr.save(baordEntity);
+            Board savedBoard = br.save(baordEntity);
 
             return getBoardOne(savedBoard);
         } catch (Exception e) {
@@ -119,6 +124,45 @@ public class CommunityService {
                 .build();
 
         return dto;
+    }
+
+    public BoardDto getBoardOne(Integer boardIdx) {
+        Board entity = br.findById(boardIdx)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        BoardDto boardDto = BoardDto.builder()
+                .boardIdx(entity.getBoardIdx())
+                .userIdx(entity.getUser().getUserIdx())
+                .userNickname(entity.getUser().getUserNickname())
+                .boardCategory(entity.getBoardCategory())
+                .boardTitle(entity.getBoardTitle())
+                .boardContent(entity.getBoardContent())
+                .isUse(entity.getIsUse())
+                .timeAgo(DateTimeUtil.calculateTimeAgo(entity.getCreatedAt()))
+                .likeCount(entity.getLikeCount())
+                .viewCount(entity.getViewCount())
+                .createdAt(entity.getCreatedAt())
+                .replyCount(entity.getReplyCount())
+                .build();
+
+        return boardDto;
+    }
+
+    public List<BoardReplyDto> getReplyList(Integer boardIdx) {
+        List<BoardReply> replyEntityList = brr.findAllByBoard_BoardIdxOrderByCreatedAtAsc(boardIdx);
+        List<BoardReplyDto> dtoList = new ArrayList<>();
+
+        for (BoardReply boardReply : replyEntityList) {
+
+            BoardReplyDto dto = BoardReplyDto.builder()
+                    .replyIdx(boardReply.getReplyIdx())
+                    .userNickname(boardReply.getUser().getUserNickname())
+                    .replyContent(boardReply.getReplyContent())
+                    .timeAgo(DateTimeUtil.calculateTimeAgo(boardReply.getCreatedAt()))
+                    .build();
+
+            dtoList.add(dto);
+        }
+        return dtoList;
     }
 
 }
