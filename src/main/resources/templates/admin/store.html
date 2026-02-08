@@ -446,6 +446,7 @@ body {
         <li class="menu-item" onclick="location.reload()">새로 고침(E)</li>
         <li class="menu-item" onclick="handleRename()">이름 바꾸기(M)</li>
         <li class="menu-item" onclick="handleDelete()">삭제(D)</li>
+        <li class="menu-item" onclick="handleEdit()">속성/수정(R)</li>
         <hr>
         <li class="menu-item has-submenu">
             새로 만들기(W) <span class="arrow">▶</span>
@@ -936,6 +937,66 @@ function openProductModal() {
 }
 function closeProductModal() {
     document.getElementById('product-modal').style.display = 'none';
+}
+function handleEdit() {
+    console.log("수정 함수 진입!");
+    if (!targetStore){
+        console.error("수정할 대상(targetStore)이 없습니다!");
+        return;
+        }
+        console.log("수정 대상 IDX:", targetStore.idx);
+    // 1. 서버에서 해당 점포의 상세 데이터를 가져옵니다.
+    fetch(`/admin/api/store/${targetStore.idx}`)
+        .then(res => res.json())
+        .then(data => {
+            // 2. 모달창의 입력칸에 기존 데이터를 채웁니다.
+            document.getElementById('reg-storeName').value = data.storeName;
+            document.getElementById('reg-storeAddress').value = data.storeAddress;
+            document.getElementById('reg-storeOpenTime').value = data.storeOpenTime;
+            document.getElementById('reg-storeCloseTime').value = data.storeCloseTime;
+            document.getElementById('reg-eventContent').value = data.eventContent || "";
+            document.getElementById('reg-eventStartTime').value = data.eventStartTime || "";
+            document.getElementById('reg-eventEndTime').value = data.eventEndTime || "";
+
+            // 3. 사진 미리보기 처리 (기존 사진이 있다면)
+            if(data.storePictureIdx) {
+                document.getElementById('image-preview').src = `/images?filename=${data.storePictureIdx}`;
+                document.getElementById('image-preview-container').style.display = 'block';
+            }
+
+            // 4. 모달 제목 변경 및 확인 버튼의 함수를 수정용으로 변경
+            document.querySelector('#register-modal .title-text').innerText = "점포 속성 수정 - " + data.storeName;
+            const confirmBtn = document.querySelector('#register-modal .xp-button[onclick="registerStore()"]');
+            confirmBtn.setAttribute('onclick', `updateStore(${data.storeIdx})`);
+
+            // 5. 모달 열기
+            document.getElementById('register-modal').style.display = 'block';
+        });
+}
+function updateStore(storeIdx) {
+    const formData = new FormData();
+
+    // 수정된 값들 수집
+    formData.append('storeName', document.getElementById('reg-storeName').value);
+    // ... 나머지 event 정보들도 append ...
+    formData.append('eventContent', document.getElementById('reg-eventContent').value);
+
+    // 새 사진을 올렸을 경우에만 추가
+    const imageFile = document.getElementById('reg-storeImage').files[0];
+    if (imageFile) {
+        formData.append('uploadFile', imageFile);
+    }
+
+    fetch(`/admin/api/store/${storeIdx}`, {
+        method: 'PATCH',
+        body: formData
+    })
+    .then(res => {
+        if (res.ok) {
+            alert("정보가 성공적으로 수정되었습니다.");
+            location.reload();
+        }
+    });
 }
 </script>
 </body>

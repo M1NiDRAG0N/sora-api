@@ -8,6 +8,7 @@ import com.scit.soragodong.util.FileUploadUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -133,6 +134,15 @@ public class AdminController {
         timeSaleService.updateStoreName(dto.storeIdx(), dto.storeName());
         return "success";
     }
+    // 수정
+    @PatchMapping("api/store/{idx}")
+    @ResponseBody
+    public ResponseEntity<?> updateStore(@PathVariable int idx, StoreDto dto, @RequestParam(required = false) MultipartFile uploadFile) {
+        timeSaleService.updateStore(idx, dto, uploadFile);
+        return ResponseEntity.ok().build();
+    }
+
+
     @PostMapping("api/product")
     @ResponseBody
     public String insertProduct(@RequestBody StoreProductDto productDto) {

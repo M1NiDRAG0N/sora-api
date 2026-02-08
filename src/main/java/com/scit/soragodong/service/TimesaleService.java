@@ -6,10 +6,13 @@ import com.scit.soragodong.domain.entity.Store;
 import com.scit.soragodong.domain.entity.StoreProduct;
 import com.scit.soragodong.repository.StoreProductRepository;
 import com.scit.soragodong.repository.StoreRepository;
+import com.scit.soragodong.util.FileUploadUtil;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -175,5 +178,29 @@ public class TimesaleService {
                 .store(store)
                 .build();
         storeProductRepository.save(storeProduct);
+    }
+
+    public void updateStore(int idx, StoreDto dto, MultipartFile uploadFile) {
+        Store store = storeRepository.findById(idx)
+                .orElseThrow(() -> new IllegalArgumentException("해당 점포가 없다"));
+        // 2. 값 변경 (Setter나 별도 메서드 사용)
+        store.setStoreName(dto.storeName());
+        store.setStoreAddress(dto.storeAddress());
+        store.setStoreOpenTime(dto.storeOpenTime());
+        store.setStoreCloseTime(dto.storeCloseTime());
+        store.setEventNote(dto.eventNote());
+        store.setEventStartTime(dto.eventStartTime());
+        store.setEventEndTime(dto.eventEndTime());
+
+        // 3. 사진을 새로 올렸을 때만 교체
+        if (uploadFile != null && !uploadFile.isEmpty()) {
+            String savedFileName = null;
+            try {
+                savedFileName = FileUploadUtil.uploadFile(uploadFile);
+            } catch (
+                    IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }
