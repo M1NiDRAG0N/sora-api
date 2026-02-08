@@ -137,7 +137,7 @@ public class AdminController {
     @ResponseBody
     public String insertProduct(@RequestBody StoreProductDto productDto) {
         // DB에 상품 정보 저장 (storeIdx 외래키 연결)
-
+        log.debug(productDto.toString());
         timeSaleService.insertProduct(productDto);
         return "success";
     }
