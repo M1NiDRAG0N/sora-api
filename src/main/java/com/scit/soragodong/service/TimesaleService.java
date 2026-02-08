@@ -134,6 +134,7 @@ public class TimesaleService {
                 .storeAddress(storeDto.storeAddress())
                 .storeOpenTime(storeDto.storeOpenTime())
                 .storeCloseTime(storeDto.storeCloseTime())
+                .storePictureIdx(storeDto.storePictureIdx())
                 .build();
         storeRepository.save(store);
 
@@ -153,5 +154,17 @@ public class TimesaleService {
                 .orElseThrow(()-> new RuntimeException());
         store.setStoreName(name);
         storeRepository.save(store);
+    }
+
+    public void insertProduct(StoreProductDto productDto) {
+        StoreProduct storeProduct = new StoreProduct().builder()
+                .productNum(productDto.productNum())
+                .productName(productDto.productName())
+                .productQuantity(productDto.productQuantity())
+                .productPictureIdx(productDto.productPictureIdx())
+                .price(productDto.price())
+                .eventPrice(productDto.eventPrice())
+                .build();
+        storeProductRepository.save(storeProduct);
     }
 }

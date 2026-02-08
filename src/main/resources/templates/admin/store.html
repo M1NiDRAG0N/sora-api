@@ -321,6 +321,51 @@ body {
     background-color: #316ac5;
     color: white;
 }
+/* 상품(파일) 아이콘 */
+.product-file .product-icon {
+    width: 48px;
+    height: 48px;
+    background: url('https://img.icons8.com/color/48/box--v1.png') no-repeat center;
+    margin-bottom: 5px;
+}
+
+/* 상품의 가격 정보를 보여주는 스타일 */
+.product-price {
+    font-size: 11px;
+    color: #555;
+}
+
+/* XP 스타일 모달 내부 상품 입력 폼 */
+.modal-body .input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.modal-body .input-row input {
+    flex: 1;
+}
+
+/* CSS에 이 부분을 추가하거나 수정하세요 */
+.store-icon {
+    width: 48px;
+    height: 48px;
+    /* 고전적인 상점 아이콘 URL (Icons8 제공) */
+    background-image: url('https://img.icons8.com/color/48/shop.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    margin-bottom: 5px;
+}
+
+/* 이미지가 등록된 점포의 사진 스타일 */
+.store-thumb {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border: 1px solid #ccc;
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
     </style>
 </head>
 <body>
@@ -359,22 +404,39 @@ body {
     </div>
 
     <div id="folder-container" class="folder-view">
-
+        <th:block th:if="${viewMode == 'STORE'}">
         <div th:each="folder : ${subFolders}" class="folder-item"
              th:onclick="|location.href='@{/admin/store(path=${currentPath} + ' ' + ${folder})}'|">
             <div class="folder-icon"></div>
-            <div class="folder-name" th:text="${folder}">강남구</div>
+            <div class="folder-name" th:text="${folder}">>구/동</div>
         </div>
 
         <div th:each="store : ${currentStores}" class="folder-item store-file"
              th:data-idx="${store.storeIdx}"
              th:data-name="${store.storeName}"
-             oncontextmenu="setTarget(this)"
+             th:onclick="enterStore([[${store.storeIdx}]], [[${store.storeName}]])"
+             th:oncontextmenu="|setTarget(this); return false;|"
              th:title="|영업시간: ${store.storeOpenTime} ~ ${store.storeCloseTime}|">
-            <div class="store-icon"></div>
-            <div class="folder-name" th:text="${store.storeName}">스타벅스 강남점</div>
+            <div class="store-icon-container">
+                <img th:if="${store.storePictureIdx != null}"
+                     th:src="@{/images(filename=${store.storePictureIdx})}"
+                     style="width:48px; height:48px; object-fit:cover; border-radius:3px;">
+                <div class="store-icon" th:style="${store.storePictureIdx == null ? 'display:block;' : 'display:none;'}"></div>
+            </div>
+            <div class="folder-name" th:text="${store.storeName}">점포명</div>
         </div>
-
+        </th:block>
+        <th:block th:if="${viewMode == 'PRODUCT'}">
+            <div th:each="product : ${productList}" class="folder-item product-file"
+                 th:oncontextmenu="|setTargetProduct(this); return false;|">
+                <div class="icon-wrapper">
+                    <img th:if="${product.productPictureIdx != null}" th:src="@{/images(filename=${product.productPictureIdx})}" class="product-thumb">
+                    <div class="product-icon" th:style="${product.productPictureIdx == null ? 'display:block;' : 'display:none;'}"></div>
+                </div>
+                <div class="folder-name" th:text="${product.productName}">상품명</div>
+                <div class="product-price" th:text="${#numbers.formatInteger(product.price, 0, 'COMMA') + '원'}">가격</div>
+            </div>
+        </th:block>
     </div>
 </div>
 <div id="context-menu" class="xp-context-menu" style="display:none;">
@@ -388,8 +450,9 @@ body {
         <li class="menu-item has-submenu">
             새로 만들기(W) <span class="arrow">▶</span>
             <ul class="submenu">
-                <li onclick="addNewAddress()">📁 주소 추가(A)</li>
-                <li onclick="openRegisterModal()">🏪 새 점포 등록(S)</li>
+                <li id="menu-new-address" onclick="addNewAddress()">📁 주소 추가(A)</li>
+                <li id="menu-new-store" onclick="openRegisterModal()">🏪 새 점포 등록(S)</li>
+                <li id="menu-new-product" onclick="openProductModal()" style="display:none;">📦 새 상품 등록(P)</li>
             </ul>
         </li>
         <hr>
@@ -403,6 +466,15 @@ body {
         <div class="title-buttons"><span onclick="closeModal()" style="cursor:pointer;">×</span></div>
     </div>
     <div class="modal-body">
+        <div class="input-group">
+            <label>점포 아이콘/사진(P):</label>
+            <div class="xp-file-input">
+                <input type="file" id="reg-storeImage" accept="image/*" onchange="previewImage(this)">
+            </div>
+            <div id="image-preview-container" style="margin-top:5px; display:none;">
+                <img id="image-preview" src="" style="width:48px; height:48px; border:1px inset #fff;">
+            </div>
+        </div>
         <div class="input-group">
             <label>점포명:</label>
             <input type="text" id="reg-storeName" placeholder="예: 소라고동 강남점">
@@ -423,9 +495,39 @@ body {
         </div>
     </div>
 </div>
+<div id="product-modal" class="xp-window modal" style="display:none;">
+    <div class="title-bar">
+        <div class="title-text">새 상품 등록 - StoreProductDto</div>
+        <div class="title-buttons"><span onclick="closeProductModal()" style="cursor:pointer;">×</span></div>
+    </div>
+    <div class="modal-body">
+        <div class="input-group">
+            <label>상품 카테고리:</label>
+            <input type="text" id="prod-category" placeholder="예: 음료, 베이커리">
+        </div>
+        <div class="input-group">
+            <label>상품명:</label>
+            <input type="text" id="prod-productName">
+        </div>
+        <div class="input-row">
+            <div>
+                <label>가격:</label>
+                <input type="number" id="prod-price" value="0">
+            </div>
+            <div>
+                <label>수량:</label>
+                <input type="number" id="prod-productQuantity" value="100">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="xp-button" onclick="registerProduct()">확인</button>
+            <button class="xp-button" onclick="closeProductModal()">취소</button>
+        </div>
+    </div>
+</div>
 <!-- 하위 메뉴-->
 
-<script>
+<script th:inline="javascript">
     // 현재 경로를 관리하는 배열 (예: ['C:', 'SoraGodong', 'Seoul'])
 let currentPath = ['C:', 'SoraGodong'];
 
@@ -467,10 +569,30 @@ document.getElementById('btn-go').addEventListener('click', () => {
 const folderView = document.getElementById('folder-container');
 const contextMenu = document.getElementById('context-menu');
 const registerModal = document.getElementById('register-modal');
+const viewMode = [[${viewMode}]];
+const currentPathStr = [[${currentPath}]]; // 서버에서 넘어온 경로 문자열
 
 // 1. 우클릭 시 메뉴 보이기
 folderView.addEventListener('contextmenu', (e) => {
     e.preventDefault();
+
+    // 1. Thymeleaf에서 넘겨준 viewMode 값을 JS 변수로 안전하게 가져옵니다.
+    // 만약 인라인 모드가 안된다면 HTML 어딘가에 hidden input으로 저장해두고 가져와야 합니다.
+
+
+    // 2. 메뉴 엘리먼트들 가져오기
+    const menuStore = document.getElementById('menu-new-store');
+    const menuProduct = document.getElementById('menu-new-product');
+
+    if (viewMode === 'PRODUCT') {
+        if(menuStore) menuStore.style.display = 'none';
+        if(menuProduct) menuProduct.style.display = 'block';
+    } else {
+        if(menuStore) menuStore.style.display = 'block';
+        if(menuProduct) menuProduct.style.display = 'none';
+    }
+
+    // 4. 메뉴 띄우기
     contextMenu.style.display = 'block';
     contextMenu.style.left = `${e.pageX}px`;
     contextMenu.style.top = `${e.pageY}px`;
@@ -571,7 +693,7 @@ function registerStore() {
 
 // 상위 폴더로 이동하는 함수
 function navigateUp() {
-    let currentPath = "[[${currentPath}]]"; // Thymeleaf에서 현재 경로를 가져옴
+    let currentPath = [[${currentPath}]]; // Thymeleaf에서 현재 경로를 가져옴
 
     // "전체지역"이 루트인 경우 더 이상 올라갈 곳이 없음
     if (currentPath === "전체지역" || !currentPath.includes(" ")) {
@@ -592,29 +714,35 @@ function navigateUp() {
 }
     // 주소 업데이트 및 서버 이동 함수
 function navigateTo(pathString) {
-    // 1. 역슬래시를 공백으로 변환 (서버 조회용)
-    // 예: "C:\전체지역\서울시" -> "전체지역 서울시"
-    let serverPath = pathString
-        .replace("C:\\", "") // 루트 표시 제거
-        .replaceAll("\\", " "); // 모든 역슬래시를 공백으로
+        // 주소창의 "C:\전체지역\서울" 형태를 "전체지역 서울" 형태로 변환
+        let serverPath = pathString
+            .replace("C:\\", "")
+            .replaceAll("\\", " ")
+            .trim();
 
-    // 2. 서버로 이동
-    location.href = '/admin/store?path=' + encodeURIComponent(serverPath.trim());
+        if(!serverPath) serverPath = "전체지역";
+        location.href = '/admin/store?path=' + encodeURIComponent(serverPath);
 }
 
 // 상위 폴더로 이동 (Up 버튼)
 function navigateUp() {
-    let currentPath = "[[${currentPath}]]"; // 서버에서 넘어온 공백 구분 주소
-    let parts = currentPath.split(" ");
+        // currentPathStr이 "전체지역 서울시 광진구" 라면
+        let parts = currentPathStr.trim().split(" ");
 
-    if (parts.length > 1) {
-        parts.pop(); // 마지막 주소 마디 제거
-        let parentPath = parts.join(" ");
-        location.href = '/admin/store?path=' + encodeURIComponent(parentPath);
+        if (parts.length > 1) {
+            parts.pop(); // 마지막 마디 제거
+            let parentPath = parts.join(" ");
+            location.href = '/admin/store?path=' + encodeURIComponent(parentPath);
+        } else {
+            // 더 이상 올라갈 곳이 없으면 루트로
+            location.href = '/admin/store?path=전체지역';
+        }
     }
-}
 
     function registerStore() {
+
+    const formData = new FormData();
+
     // 1. 현재 입력창에 있는 주소 가져오기 (예: "C:\전체지역\서울시\강남구")
     let rawAddress = document.getElementById('reg-storeAddress').value;
 
@@ -626,51 +754,50 @@ function navigateUp() {
         .replaceAll("\\", " ")     // 모든 역슬래시를 공백으로
         .trim();                   // 최종 앞뒤 공백 제거
 
-    // 결과 예시: "서울시 강남구"
+    // 1. 일반 데이터 추가
+    formData.append('storeName', document.getElementById('reg-storeName').value);
+    formData.append('storeAddress', cleanAddress);
+    formData.append('storeOpenTime', document.getElementById('reg-storeOpenTime').value);
+    formData.append('storeCloseTime', document.getElementById('reg-storeCloseTime').value);
+    formData.append('isUse', 1);
 
-    const storeData = {
-        storeName: document.getElementById('reg-storeName').value,
-        storeAddress: cleanAddress, // 가공된 주소 전달
-        storeOpenTime: document.getElementById('reg-storeOpenTime').value,
-        storeCloseTime: document.getElementById('reg-storeCloseTime').value,
-        isUse: 1,
-        storeLat: 37.5665,
-        storeLng: 126.9780
-    };
-
-    if (!storeData.storeName) {
-        alert("점포 이름을 입력해야 합니다.");
-        return;
+    // 2. 이미지 파일 추가
+    const imageFile = document.getElementById('reg-storeImage').files[0];
+    if (imageFile) {
+        formData.append('uploadFile', imageFile);
     }
 
-    // 2. 서버로 POST 요청 전송
+
+// 서버로 전송 (FormData 전송 시 headers 설정 주의: Content-Type을 직접 설정하지 않음)
     fetch('/admin/api/store', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(storeData)
+        body: formData
     })
     .then(response => {
         if (response.ok) {
             alert("점포가 성공적으로 등록되었습니다.");
-            closeModal();
-            // 현재 페이지 새로고침 (등록된 점포 폴더를 보여주기 위함)
             location.reload();
-        } else {
-            alert("등록에 실패했습니다.");
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert("서버 통신 오류가 발생했습니다.");
     });
+}
+
+// 미리보기 함수
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('image-preview').src = e.target.result;
+            document.getElementById('image-preview-container').style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
 }
 
 let targetStore = null;
 
 function setTarget(el) {
     // 우클릭한 요소의 정보를 전역 변수에 저장
+    console.log("우클릭 대상 설정:", el.getAttribute('data-name'));
     targetStore = {
         idx: el.getAttribute('data-idx'),
         name: el.getAttribute('data-name'),
@@ -729,6 +856,66 @@ function handleRename() {
 
     input.onkeydown = (e) => { if(e.key === 'Enter') updateName(); };
     input.onblur = updateName;
+}
+// 점포 더블 클릭 시 호출 (Thymeleaf에서 storeIdx를 인자로 넘김)
+function enterStore(storeIdx, storeName) {
+    // 1. 주소창 업데이트 (현재 주소 뒤에 점포명 추가)
+    const currentAddr = document.getElementById('address-input').value;
+    const nextPath = currentAddr + "\\" + storeName;
+
+    // 2. 상품 페이지로 이동 (점포 고유 번호와 함께)
+    location.href = `/admin/store?storeIdx=${storeIdx}&path=${encodeURIComponent(nextPath)}`;
+}
+function registerProduct() {
+    // 1. 현재 URL 쿼리스트링에서 storeIdx를 가져옵니다.
+    const urlParams = new URLSearchParams(window.location.search);
+    const storeIdx = urlParams.get('storeIdx');
+
+    if (!storeIdx) {
+        alert("점포 정보(storeIdx)를 찾을 수 없습니다.");
+        return;
+    }
+
+    const productData = {
+        storeIdx: parseInt(storeIdx),
+        category: document.getElementById('prod-category').value,
+        productName: document.getElementById('prod-productName').value,
+        price: parseInt(document.getElementById('prod-price').value),
+        productQuantity: parseInt(document.getElementById('prod-productQuantity').value),
+        // 나머지 eventPrice 등은 기본값 처리
+    };
+
+    if (!productData.productName) {
+        alert("상품명을 입력해주세요!");
+        return;
+    }
+
+    fetch('/admin/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productData)
+    })
+    .then(res => {
+        if(res.ok) {
+            alert("상품이 등록되었습니다.");
+            location.reload();
+        }   else {
+            alert("상품 등록에 실패했습니다.");
+        }
+    }).catch(err => {
+        console.error("에러 발생:", err);
+        alert("서버 통신 중 오류가 발생했습니다.");
+    });
+}
+function openProductModal() {
+    // 상품 등록 모달을 표시
+    const productModal = document.getElementById('product-modal');
+    if (productModal) {
+        productModal.style.display = 'block';
+    }
+}
+function closeProductModal() {
+    document.getElementById('product-modal').style.display = 'none';
 }
 </script>
 </body>
