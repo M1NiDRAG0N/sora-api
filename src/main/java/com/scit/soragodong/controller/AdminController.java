@@ -79,4 +79,20 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
+    // 삭제 (isUse를 0으로 변경)
+    @DeleteMapping("api/store/{idx}")
+    @ResponseBody
+    public String deleteStore(@PathVariable Integer idx) {
+        timeSaleService.updateIsUse(idx, (byte)0);
+        return "success";
+    }
+
+    // 이름 수정
+    @PatchMapping("api/store/rename")
+    @ResponseBody
+    public String renameStore(@RequestBody StoreDto dto) {
+        // dto.storeIdx와 dto.storeName만 사용하여 업데이트
+        timeSaleService.updateStoreName(dto.storeIdx(), dto.storeName());
+        return "success";
+    }
 }

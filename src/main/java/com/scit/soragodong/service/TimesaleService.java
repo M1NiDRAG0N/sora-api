@@ -139,4 +139,19 @@ public class TimesaleService {
 
         return true;
     }
+
+    public void updateIsUse(Integer idx, byte b) {
+        Store store = storeRepository.findById(idx)
+                    .orElseThrow(()-> new RuntimeException());
+        store.setIsUse(b);
+        storeRepository.save(store);
+
+    }
+
+    public void updateStoreName(Integer idx, String name) {
+        Store store = storeRepository.findById(idx)
+                .orElseThrow(()-> new RuntimeException());
+        store.setStoreName(name);
+        storeRepository.save(store);
+    }
 }

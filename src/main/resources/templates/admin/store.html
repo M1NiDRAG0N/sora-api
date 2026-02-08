@@ -367,6 +367,9 @@ body {
         </div>
 
         <div th:each="store : ${currentStores}" class="folder-item store-file"
+             th:data-idx="${store.storeIdx}"
+             th:data-name="${store.storeName}"
+             oncontextmenu="setTarget(this)"
              th:title="|영업시간: ${store.storeOpenTime} ~ ${store.storeCloseTime}|">
             <div class="store-icon"></div>
             <div class="folder-name" th:text="${store.storeName}">스타벅스 강남점</div>
@@ -377,8 +380,10 @@ body {
 <div id="context-menu" class="xp-context-menu" style="display:none;">
     <ul>
         <li class="menu-item disabled">보기(V)</li>
-        <li class="menu-item disabled">아이콘 정렬 순서(I)</li>
+
         <li class="menu-item" onclick="location.reload()">새로 고침(E)</li>
+        <li class="menu-item" onclick="handleRename()">이름 바꾸기(M)</li>
+        <li class="menu-item" onclick="handleDelete()">삭제(D)</li>
         <hr>
         <li class="menu-item has-submenu">
             새로 만들기(W) <span class="arrow">▶</span>
@@ -660,6 +665,70 @@ function navigateUp() {
         console.error('Error:', error);
         alert("서버 통신 오류가 발생했습니다.");
     });
+}
+
+let targetStore = null;
+
+function setTarget(el) {
+    // 우클릭한 요소의 정보를 전역 변수에 저장
+    targetStore = {
+        idx: el.getAttribute('data-idx'),
+        name: el.getAttribute('data-name'),
+        element: el
+    };
+}
+
+function handleDelete() {
+    if (!targetStore) return;
+
+    if (confirm(`'${targetStore.name}' 점포를 정말로 삭제하시겠습니까?`)) {
+        fetch(`/admin/api/store/${targetStore.idx}`, {
+            method: 'DELETE'
+        })
+        .then(response => {
+            if (response.ok) {
+                alert("삭제되었습니다.");
+                location.reload();
+            }
+        });
+    }
+}
+
+function handleRename() {
+    if (!targetStore) return;
+
+    const nameDiv = targetStore.element.querySelector('.folder-name');
+    const oldName = nameDiv.innerText;
+
+    // 입력창 생성
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'folder-name-input';
+    input.value = oldName;
+
+    targetStore.element.replaceChild(input, nameDiv);
+    input.focus();
+    input.select();
+
+    const updateName = () => {
+        const newName = input.value.trim();
+        if (newName && newName !== oldName) {
+            // 서버에 이름 수정 요청 (StoreDto의 storeName 업데이트)
+            fetch(`/admin/api/store/rename`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    storeIdx: targetStore.idx,
+                    storeName: newName
+                })
+            }).then(res => { if(res.ok) location.reload(); });
+        } else {
+            targetStore.element.replaceChild(nameDiv, input);
+        }
+    };
+
+    input.onkeydown = (e) => { if(e.key === 'Enter') updateName(); };
+    input.onblur = updateName;
 }
 </script>
 </body>
