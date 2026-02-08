@@ -489,6 +489,16 @@ body {
             <label>영업 종료:</label>
             <input type="time" id="reg-storeCloseTime">
         </div>
+        <div class="input-group">
+            <label>이벤트 내용(E):</label>
+            <input type="text" id="reg-eventContent" placeholder="예: 아메리카노 1+1 행사 중!">
+        </div>
+        <div class="input-group inline">
+            <label>이벤트 시작:</label>
+            <input type="time" id="reg-eventStartTime">
+            <label>이벤트 종료:</label>
+            <input type="time" id="reg-eventEndTime">
+        </div>
         <div class="modal-footer">
             <button class="xp-button" onclick="registerStore()">확인</button>
             <button class="xp-button" onclick="closeModal()">취소</button>
@@ -763,6 +773,10 @@ function navigateUp() {
     formData.append('storeAddress', cleanAddress);
     formData.append('storeOpenTime', document.getElementById('reg-storeOpenTime').value);
     formData.append('storeCloseTime', document.getElementById('reg-storeCloseTime').value);
+    formData.append('eventContent', document.getElementById('reg-eventContent').value);
+    formData.append('eventStartTime', document.getElementById('reg-eventStartTime').value);
+    formData.append('eventEndTime', document.getElementById('reg-eventEndTime').value);
+
     formData.append('isUse', 1);
 
     // 2. 이미지 파일 추가
