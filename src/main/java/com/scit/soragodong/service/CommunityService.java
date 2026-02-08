@@ -11,7 +11,11 @@ import org.springframework.stereotype.Service;
 
 import com.scit.soragodong.domain.dto.BoardDto;
 import com.scit.soragodong.domain.entity.Board;
+import com.scit.soragodong.domain.entity.Users;
+import com.scit.soragodong.exception.CustomException;
+import com.scit.soragodong.exception.ErrorCode;
 import com.scit.soragodong.repository.CommunityRepository;
+import com.scit.soragodong.repository.UserRepository;
 import com.scit.soragodong.util.DateTimeUtil;
 
 import jakarta.transaction.Transactional;
@@ -24,13 +28,20 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class CommunityService {
     private final CommunityRepository cr;
+    private final UserRepository ur;
 
-    public List<BoardDto> getBoardListAll(int page) {
+    /**
+     * 게시글 10개씩 조회
+     * 
+     * @param page
+     * @return
+     */
+    public List<BoardDto> getBoardList10(int page) {
         List<BoardDto> dtoList = new ArrayList<>();
 
         int pageNum = (page < 1) ? 0 : page - 1;
 
-        Pageable pageable = PageRequest.of(0, 10, Sort.Direction.DESC, "createdAt");
+        Pageable pageable = PageRequest.of(pageNum, 10, Sort.Direction.DESC, "createdAt");
 
         List<Board> boardEntityList = cr.findAll(pageable).getContent();
 
@@ -55,39 +66,59 @@ public class CommunityService {
         return dtoList;
     }
 
-    public List<BoardDto> getBoardList(int page) { // ✅ int page 추가
-        List<BoardDto> dtoList = new ArrayList<>();
+    /**
+     * 글쓰기
+     * 
+     * @param boardDto
+     * @return
+     */
+    public BoardDto writeBoard(BoardDto boardDto) {
 
-        // 🚨 중요: 프론트는 1페이지부터 시작하지만, DB(PageRequest)는 0페이지부터 시작합니다.
-        // 그래서 들어온 값에서 -1을 해줘야 합니다. (1 -> 0, 2 -> 1)
-        int pageNum = (page < 1) ? 0 : page - 1;
+        // user를 못찾으면 에러 던짐
+        Users user = ur.findById(boardDto.userIdx())
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        // 받아온 pageNum을 여기에 넣습니다.
-        Pageable pageable = PageRequest.of(pageNum, 10, Sort.Direction.DESC, "createdAt");
-
-        // ... (나머지 로직은 그대로) ...
-        List<Board> boardEntityList = cr.findAll(pageable).getContent();
-        log.debug("여기까지 왔나?");
-        for (Board board : boardEntityList) {
-
-            BoardDto dto = BoardDto.builder()
-                    .boardIdx(board.getBoardIdx())
-                    .userIdx(board.getUser().getUserIdx())
-                    .userNickname(board.getUser().getUserNickname())
-                    .boardCategory(board.getBoardCategory())
-                    .boardTitle(board.getBoardTitle())
-                    .boardContent(board.getBoardContent())
-                    .isUse(board.getIsUse())
-                    .timeAgo(DateTimeUtil.calculateTimeAgo(board.getCreatedAt()))
-                    .likeCount(board.getLikeCount())
-                    .viewCount(board.getViewCount())
-                    .createdAt(board.getCreatedAt())
+        try {
+            Board baordEntity = Board.builder()
+                    .user(user)
+                    .boardCategory(boardDto.boardCategory())
+                    .boardTitle(boardDto.boardTitle())
+                    .boardContent(boardDto.boardContent())
                     .build();
 
-            dtoList.add(dto);
+            Board savedBoard = cr.save(baordEntity);
+
+            return getBoardOne(savedBoard);
+        } catch (Exception e) {
+            // 저장 실패하면 에러를 던짐
+            throw new CustomException(ErrorCode.INTERNAL_ERROR);
         }
 
-        return dtoList;
+    }
+
+    /**
+     * 글쓰기 후 비동기 새로고침을 위한 서비스
+     * 
+     * @param savedBoard
+     * @return
+     */
+    private BoardDto getBoardOne(Board savedBoard) {
+
+        BoardDto dto = BoardDto.builder()
+                .boardIdx(savedBoard.getBoardIdx())
+                .userIdx(savedBoard.getUser().getUserIdx())
+                .userNickname(savedBoard.getUser().getUserNickname())
+                .boardCategory(savedBoard.getBoardCategory())
+                .boardTitle(savedBoard.getBoardTitle())
+                .boardContent(savedBoard.getBoardContent())
+                .isUse(savedBoard.getIsUse())
+                .timeAgo(DateTimeUtil.calculateTimeAgo(savedBoard.getCreatedAt()))
+                .likeCount(savedBoard.getLikeCount())
+                .viewCount(savedBoard.getViewCount())
+                .createdAt(savedBoard.getCreatedAt())
+                .build();
+
+        return dto;
     }
 
 }
