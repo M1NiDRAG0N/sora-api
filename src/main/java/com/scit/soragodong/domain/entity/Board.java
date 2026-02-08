@@ -33,7 +33,8 @@ public class Board extends BaseEntity {
     private String boardContent;
 
     @Column(name = "IS_USE", nullable = false)
-    private Boolean isUse;
+    @Builder.Default // 빌더 쓸 때도 이 값이 기본으로 들어가게 해줌
+    private Boolean isUse = true;
 
     @Builder.Default
     @Column(name = "LIKE_COUNT", nullable = false)
@@ -43,11 +44,5 @@ public class Board extends BaseEntity {
     @Builder.Default
     @Column(name = "VIEW_COUNT", nullable = false)
     private Integer viewCount = 0;
-
-    @PrePersist
-    protected void onCreate() {
-        if (this.isUse == null)
-            this.isUse = true;
-    }
 
 }

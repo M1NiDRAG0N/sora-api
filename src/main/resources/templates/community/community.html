@@ -1,15 +1,15 @@
 <div class="detail-content no-scrollbar" th:fragment="div">
 
-
-    <div class="community-scroll-area">
+    <div class="community-scroll-area" id="communityMain">
 
         <div class="category-bar2" id="categoryBar">
             <div class="cat-scroll">
                 <div class="cat-chip active" onclick="CommunityView.selectCategory(this)">전체</div>
-                <div class="cat-chip" onclick="CommunityView.selectCategory(this)">소분</div>
-                <div class="cat-chip" onclick="CommunityView.selectCategory(this)">자취 꿀팁</div>
-                <div class="cat-chip" onclick="CommunityView.selectCategory(this)">유머게시판</div>
-                <div class="cat-chip" onclick="CommunityView.selectCategory(this)">자유게시판</div>
+                <div class="cat-chip" onclick="CommunityView.selectCategory(this)">소분/나눔</div>
+                <div class="cat-chip" onclick="CommunityView.selectCategory(this)">꿀팁/정보</div>
+                <div class="cat-chip" onclick="CommunityView.selectCategory(this)">자유/수다</div>
+                <div class="cat-chip" onclick="CommunityView.selectCategory(this)">요리/집밥</div>
+                <div class="cat-chip" onclick="CommunityView.selectCategory(this)">질문/고민</div>
             </div>
             <div class="search-input-box">
                 <input type="text" class="real-search-input" id="searchInput" placeholder="검색어를 입력하세요">
@@ -67,9 +67,53 @@
 
     </div>
 
-    <a href="community_write.html" class="fab-write">
+    <!-- 글쓰기 버튼 -->
+    <button class="fab-write" onclick="CommunityWrite.open()">
         <ion-icon name="pencil-outline"></ion-icon>
-    </a>
+    </button>
+
+
+    <!-- 글쓰기 페이지 시작 -->
+    <div class="app-container bg-gradient" id="writeForm">
+
+        <div class="write-header">
+            <div class="btn-cancel" onclick="CommunityWrite.close()">취소</div>
+            <div class="page-title">글쓰기</div>
+            <div class="btn-done" onclick="CommunityWrite.submitPost()">완료</div>
+        </div>
+
+        <input type="hidden" id="loginUserIdx" th:value="${#authentication.principal.userIdx}">
+
+        <div class="category-select-area">
+            <div class="select-chip selected" onclick="CommunityView.selectCategoryWrite(this)" data-value="소분/나눔">소분/나눔
+            </div>
+            <div class="select-chip" onclick="CommunityView.selectCategoryWrite(this)" data-value="꿀팁/정보">꿀팁/정보</div>
+            <div class="select-chip" onclick="CommunityView.selectCategoryWrite(this)" data-value="자유/수다">자유/수다</div>
+            <div class="select-chip" onclick="CommunityView.selectCategoryWrite(this)" data-value="요리/집밥">요리/집밥</div>
+            <div class="select-chip" onclick="CommunityView.selectCategoryWrite(this)" data-value="질문/고민">질문/고민</div>
+        </div>
+
+        <div class="write-card">
+            <input type="text" id="title-input" placeholder="제목을 입력하세요.">
+            <div class="divider"></div>
+            <textarea id="content-textarea" placeholder="내용을 입력하세요."></textarea>
+
+            <div class="image-attach-row" id="imageRow">
+                <div class="camera-btn" onclick="document.getElementById('fileInput').click()">
+                    <ion-icon name="camera" class="camera-icon"></ion-icon>
+                    <span class="camera-count" id="imgCount">0/10</span>
+                </div>
+                <input type="file" id="fileInput" style="display: none;" accept="image/*" multiple
+                    onchange="handleFileSelect(this)">
+            </div>
+        </div>
+
+        <div class="bottom-spacer"></div>
+
+    </div>
+
+    <!-- 글쓰기 페이지 끗 -->
+
 
 
     <div id="chatLayer" class="page-layer">
@@ -103,6 +147,16 @@
                 });
                 // 클릭한 칩에 active 추가
                 element.classList.add('active');
+            },
+
+            selectCategoryWrite: (element) => {
+                // 모든 칩에서 active 제거
+                document.querySelectorAll('.select-chip').forEach(chip => {
+                    chip.classList.remove('selected');
+                });
+                // 클릭한 칩에 active 추가
+                element.classList.add('selected');
+                console.log(element.getAttribute('data-value'));
             },
 
             /**
@@ -179,8 +233,7 @@
                     const container = document.getElementById('feedListContainer');
                     response.forEach(dto => {
                         const html = CommunityView.createFeedCardHTML(dto);
-                        container.insertAdjacentHTML('beforeend', html)
-                            ;
+                        container.insertAdjacentHTML('beforeend', html);
                     });
                     CommunityView.state.currentPage++;
                 }
@@ -192,10 +245,7 @@
             },
 
             createFeedCardHTML: (dto) => {
-                let previewContent = dto.boardContent ? dto.boardContent : '';
-                if (previewContent.length > 50) {
-                    previewContent = previewContent.substring(0, 50) + '...';
-                }
+
                 return `
             <a href="/community/view/${dto.boardIdx}" class="feed-card">
                 
@@ -214,7 +264,7 @@
                     <div class="feed-text-area">
                         <div class="feed-title">${dto.boardTitle}</div>
                         
-                        <div class="feed-preview">${previewContent}</div>
+                        <div class="feed-preview">${dto.boardContent}</div>
                     </div>
                 </div>
 
@@ -228,7 +278,7 @@
 
                         <div class="action-item">
                             <ion-icon name="eye-outline"></ion-icon> 
-                            <sapn>
+                            <span>
                                 ${dto.viewCount}
                             </span>
                         </div>
@@ -244,30 +294,104 @@
         });
 
 
-        // // 채팅 관련 로직
-        // const chatDummyData = [
-        //     { sender: "ai", message: "무엇을 도와줄까? 🐚" },
-        //     { sender: "user", message: "전자레인지 선물을 받아서 기존의 것을 정리하고 싶은데 어떻게 하는게 좋을까" },
-        //     { sender: "ai", message: "네네네 찾아봐오오오 호에에에에에에에에엥 호에에에에엥 에?" }
-        // ];
 
-        // function openChat() {
-        //     const layer = document.getElementById('chatLayer');
-        //     const container = document.getElementById('chatContainer');
-        //     container.innerHTML = '';
-        //     chatDummyData.forEach(data => {
-        //         const isMe = data.sender === 'user';
-        //         const profileImg = `<img src="sora.png" class="chat-profile">`;
-        //         const html = `<div class="bubble-row ${isMe ? 'me' : ''}">
-        //                 ${!isMe ? profileImg : ''}<div class="bubble ${isMe ? 'me' : 'ai'}">${data.message}</div>
-        //             </div>`;
-        //         container.insertAdjacentHTML('beforeend', html);
-        //     });
-        //     layer.classList.add('active');
-        // }
+        const CommunityWrite = {
+            open: () => {
+                const writeDiv = document.querySelector('#writeForm');
 
-        // function closeChat() {
-        //     document.getElementById('chatLayer').classList.remove('active');
-        // }
+                if (writeDiv) {
+                    writeDiv.classList.add('active');
+                }
+            },
+
+            close: () => {
+                const writeDiv = document.querySelector('#writeForm');
+
+                if (writeDiv) {
+                    writeDiv.classList.remove('active');
+                }
+            },
+
+            submitPost: async () => {
+                const cate = document.querySelector(".selected").getAttribute('data-value');
+                const title = document.querySelector("#title-input");
+                const content = document.querySelector("#content-textarea");
+                const loginUserIdx = document.querySelector("#loginUserIdx").value;
+                console.log(cate);
+                console.log(title.value);
+                console.log(content.value);
+                console.log(loginUserIdx);
+
+                const boardDto = {
+                    userIdx: loginUserIdx,
+                    boardCategory: cate,
+                    boardTitle: title.value,
+                    boardContent: content.value
+                }
+                console.log(boardDto);
+
+                const response = await API.post('/community/write', boardDto);
+
+                console.log(response);
+                Utils.notify('게시글을 등록했습니다!', 'success', 4000);
+                title.value = '';
+                content.value = '';
+
+
+                document.querySelector('#writeForm').classList.remove('active');
+                CommunityWrite.refreshAfterWrite(response);
+            },
+
+
+            // 글쓰기 완료 후 비동기 새로고침
+            refreshAfterWrite: (response) => {
+                const board = response;
+                console.log(board);
+                const container = document.getElementById('feedListContainer');
+                const html = `
+            <a href="/community/view/${board.boardIdx}" class="feed-card">
+                
+                <div class="feed-header">
+                    <div class="feed-user-group">
+                        <div class="user-info-text">
+                            <span class="user-name">${board.userNickname}</span>
+                            <span class="post-time">${board.timeAgo}</span>
+                        </div>
+                    </div>
+                    
+                    <span class="post-tag">${board.boardCategory}</span>
+                </div>
+
+                <div class="feed-body">
+                    <div class="feed-text-area">
+                        <div class="feed-title">${board.boardTitle}</div>
+                        
+                        <div class="feed-preview">${board.boardContent}</div>
+                    </div>
+                </div>
+
+                <div class="feed-footer">
+                    <div class="action-item">
+                        <ion-icon name="heart-outline"></ion-icon> 
+                        <span>    
+                            ${board.likeCount}
+                        </span>
+                    </div>
+
+                        <div class="action-item">
+                            <ion-icon name="eye-outline"></ion-icon> 
+                            <span>
+                                ${board.viewCount}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+                `
+                container.insertAdjacentHTML('afterbegin', html);
+            }
+        };
+
+
     </script>
 </div>

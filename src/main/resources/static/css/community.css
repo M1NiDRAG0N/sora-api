@@ -351,7 +351,7 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
 }
 
-.title-input {
+#title-input {
     width: 100%;
     border: none;
     outline: none;
@@ -367,7 +367,7 @@
     margin-bottom: 20px;
 }
 
-.content-textarea {
+#content-textarea {
     width: 100%;
     flex: 1;
     border: none;
@@ -713,4 +713,30 @@
 /* 모달이 떴을 때 뒤에 있는 메인 화면 스크롤 막기 */
 body.modal-open {
     overflow: hidden;
+}
+
+/* 글쓰기 폼을 화면 위에 붕 띄우기 */
+#writeForm {
+    position: absolute;
+    /* 화면 기준 고정 */
+    top: 100%;
+    /* 처음엔 화면 아래쪽(100%)에 숨겨둠 */
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* 화면 꽉 차게 */
+    z-index: 9999;
+    /* 다른 모든 요소보다 위에 오도록 (헤더, 네비보다 높게) */
+    background-color: #fff;
+    /* 배경색 필수 (투명하면 뒤가 비침) */
+    transition: top 0.3s ease-in-out;
+    /* 부드럽게 올라오는 애니메이션 */
+    overflow-y: auto;
+    /* 내용이 길면 스크롤 가능하게 */
+}
+
+/* 이 클래스가 붙으면 화면에 나타남 */
+#writeForm.active {
+    top: 0;
+    /* 화면 맨 위로 이동 */
 }

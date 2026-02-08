@@ -10,10 +10,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.scit.soragodong.domain.dto.BoardDto;
+import com.scit.soragodong.domain.response.ApiResponse;
 import com.scit.soragodong.service.CommunityService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @Controller
 @Slf4j
@@ -25,7 +27,7 @@ public class CommunityController {
     public String communityPage(Model model) {
         model.addAttribute("currentUri", "/community");
         int page = 0;
-        List<BoardDto> boardDtoList = cs.getBoardListAll(page);
+        List<BoardDto> boardDtoList = cs.getBoardList10(page);
         log.debug("{}", boardDtoList);
 
         model.addAttribute("boardDtoList", boardDtoList);
@@ -37,7 +39,18 @@ public class CommunityController {
     public List<BoardDto> getBoardListAll(@RequestParam(name = "page", defaultValue = "1") int page) {
         log.info("AJAX 게시글 요청 페이지: {}", page);
 
-        return cs.getBoardList(page);
+        return cs.getBoardList10(page);
+    }
+
+    @PostMapping("/community/write")
+    @ResponseBody
+    public BoardDto write(@RequestBody BoardDto boardDto) {
+        log.info("글쓰기 확인 {}", boardDto);
+        BoardDto newBoardDto = cs.writeBoard(boardDto);
+        log.info("글쓰기 후 newBoardDto 확인 {}", newBoardDto);
+        // // ApiResponse 활용.
+        // return ApiResponse.success("글 등록에 성공", savedBoardIdx);
+        return newBoardDto;
     }
 
 }
