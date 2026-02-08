@@ -134,6 +134,9 @@ public class TimesaleService {
                 .storeAddress(storeDto.storeAddress())
                 .storeOpenTime(storeDto.storeOpenTime())
                 .storeCloseTime(storeDto.storeCloseTime())
+                .eventStartTime(storeDto.eventStartTime())
+                .eventEndTime(storeDto.eventEndTime())
+                .eventNote(storeDto.eventNote())
                 .storePictureIdx(storeDto.storePictureIdx())
                 .build();
         storeRepository.save(store);
