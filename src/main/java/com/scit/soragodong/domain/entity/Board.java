@@ -1,5 +1,7 @@
 package com.scit.soragodong.domain.entity;
 
+import org.hibernate.annotations.Formula;
+
 import com.scit.soragodong.common.BaseEntity;
 import com.scit.soragodong.domain.enums.UserRole;
 
@@ -44,5 +46,11 @@ public class Board extends BaseEntity {
     @Builder.Default
     @Column(name = "VIEW_COUNT", nullable = false)
     private Integer viewCount = 0;
+
+    @Column(name = "FILE_GRP_IDX")
+    private Integer fileGrpIdx;
+
+    @Formula("(SELECT count(1) FROM BOARD_REPLY r WHERE r.BOARD_IDX = BOARD_IDX)")
+    private int replyCount;
 
 }
