@@ -890,7 +890,7 @@ function registerProduct() {
         return;
     }
 
-    fetch('/admin/api/products', {
+    fetch('/admin/api/product', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(productData)

@@ -133,10 +133,11 @@ public class AdminController {
         timeSaleService.updateStoreName(dto.storeIdx(), dto.storeName());
         return "success";
     }
-    @PostMapping("/api/products")
+    @PostMapping("api/product")
     @ResponseBody
     public String insertProduct(@RequestBody StoreProductDto productDto) {
         // DB에 상품 정보 저장 (storeIdx 외래키 연결)
+
         timeSaleService.insertProduct(productDto);
         return "success";
     }

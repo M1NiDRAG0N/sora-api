@@ -157,6 +157,10 @@ public class TimesaleService {
     }
 
     public void insertProduct(StoreProductDto productDto) {
+        // 1. 먼저 해당 storeIdx를 가진 Store 엔티티를 찾습니다.
+        Store store = storeRepository.findById(productDto.storeIdx())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 점포입니다."));
+
         StoreProduct storeProduct = new StoreProduct().builder()
                 .productNum(productDto.productNum())
                 .productName(productDto.productName())
@@ -164,6 +168,8 @@ public class TimesaleService {
                 .productPictureIdx(productDto.productPictureIdx())
                 .price(productDto.price())
                 .eventPrice(productDto.eventPrice())
+                .category(productDto.category())
+                .store(store)
                 .build();
         storeProductRepository.save(storeProduct);
     }
