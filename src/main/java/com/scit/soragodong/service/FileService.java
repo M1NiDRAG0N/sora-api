@@ -36,7 +36,12 @@ public class FileService {
 
         FileGrp group = fileGroupRepository
                 .findByRefTypeAndRefId(refType, refId)
-                .orElseGet(() -> fileGroupRepository.save(new FileGrp(refType, refId)));
+                .orElseGet(() -> fileGroupRepository.save(
+                        FileGrp.builder()
+                                .refType(refType)
+                                .refId(refId)
+                                .build()
+                ));
 
         List<FileRes> responses = new ArrayList<>();
         int order = 0;
@@ -48,15 +53,16 @@ public class FileService {
                 
                 // DB에 저장
                 File saved = fileRepository.save(
-                        new File(
-                                group,
-                                getFilenameWithoutExt(file.getOriginalFilename()),
-                                file.getOriginalFilename(),
-                                getFileExtension(file.getOriginalFilename()),
-                                (int) file.getSize(),
-                                relativePath,
-                                order++
-                        )
+                        File.builder()
+                                .fileGroup(group)
+                                .fileName(getFilenameWithoutExt(file.getOriginalFilename()))
+                                .originalName(file.getOriginalFilename())
+                                .fileExt(getFileExtension(file.getOriginalFilename()))
+                                .fileSize((int) file.getSize())
+                                .filePath(relativePath)
+                                .fileOrder(order++)
+                                .isUse(true)
+                                .build()
                 );
 
                 responses.add(new FileRes(

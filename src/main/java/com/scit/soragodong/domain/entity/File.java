@@ -1,8 +1,8 @@
 package com.scit.soragodong.domain.entity;
 
-import java.time.LocalDateTime;
+import com.scit.soragodong.common.BaseEntity;
 
-
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -11,19 +11,23 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "FILE")
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class File {
+@Builder
+public class File extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "FILE_IDX")
     private Integer fileIdx;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -36,24 +40,9 @@ public class File {
     private Integer fileSize;
     private String filePath;
     private Integer fileOrder;
-    private Boolean isUse;
-
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-
-    /**
-     * 파일 업로드 생성자
-     */
-    public File(FileGrp fileGroup, String fileName, String originalName, String fileExt, 
-                int fileSize, String filePath, int fileOrder) {
-        this.fileGroup = fileGroup;
-        this.fileName = fileName;
-        this.originalName = originalName;
-        this.fileExt = fileExt;
-        this.fileSize = fileSize;
-        this.filePath = filePath;
-        this.fileOrder = fileOrder;
-        this.isUse = true;
-    }
+    
+    @Builder.Default
+    @Column(name = "IS_USE", nullable = false)
+    private Boolean isUse = true;
 
 }
