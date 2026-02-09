@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>소라고동</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/finance.css">
     <link rel="stylesheet" href="/css/chat.css">
@@ -29,6 +30,7 @@
 
         <th:block th:if="${currentUri == '/main'}" th:insert="~{main/main :: div}"></th:block>
         <th:block th:if="${currentUri == '/finance'}" th:insert="~{finance/finance :: div}"></th:block>
+        <th:block th:if="${currentUri == '/community'}" th:insert="~{community/community :: div}"></th:block>
         <th:block th:if="${currentUri == '/timesale'}" th:insert="~{timesale/timesale :: div}"></th:block>
 
         <div th:replace="~{layout/nav :: nav}"></div>
