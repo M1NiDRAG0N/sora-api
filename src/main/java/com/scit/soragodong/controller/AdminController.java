@@ -95,7 +95,7 @@ public class AdminController {
     public String registerStore(
             @ModelAttribute StoreDto storeDto, // @RequestBody 대신 @ModelAttribute 사용
             @RequestParam(value="uploadFile", required=false) MultipartFile uploadFile) {
-
+			log.debug(storeDto.toString());
         if (uploadFile != null && !uploadFile.isEmpty()) {
             // 1. 파일 저장 로직 (예: 설정된 경로에 저장 후 저장된 파일명 반환)
             String savedFileName = null;
@@ -105,14 +105,7 @@ public class AdminController {
                 throw new RuntimeException(e);
             }
 
-            // 2. DTO에 파일명 설정 (record라면 새로운 객체 생성 필요)
-            storeDto = new StoreDto(
-                    null, storeDto.storeName(), storeDto.storeAddress(),
-                    storeDto.storeOpenTime(), storeDto.storeCloseTime(),
-                    null, null, null, null,
-                    savedFileName, // 이미지 경로/아이디 저장
-                    (byte)1, null, 37.5, 126.9
-            );
+            
         }
 
         timeSaleService.createStore(storeDto);
@@ -134,6 +127,21 @@ public class AdminController {
         timeSaleService.updateStoreName(dto.storeIdx(), dto.storeName());
         return "success";
     }
+	
+	@GetMapping("api/store/{idx}")
+	@ResponseBody
+	public ResponseEntity<StoreDto> getStoreDetail(@PathVariable("idx") int idx) {
+		// 1. DB에서 해당 ID로 점포를 찾습니다.
+		// 서비스에서 해당 로직을 처리하도록 구현하는 것이 좋습니다.
+		StoreDto storeDto = timeSaleService.getStoreById(idx);
+		
+		if (storeDto != null) {
+			return ResponseEntity.ok(storeDto); // 200 OK와 함께 데이터 반환
+		} else {
+			return ResponseEntity.notFound().build(); // 404 에러 반환
+		}
+	}
+	
     // 수정
     @PatchMapping("api/store/{idx}")
     @ResponseBody

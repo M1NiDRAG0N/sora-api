@@ -203,4 +203,10 @@ public class TimesaleService {
             }
         }
     }
+	
+	public StoreDto getStoreById(int idx) {
+		Store store = storeRepository.findById(idx)
+				.orElseThrow(() -> new IllegalArgumentException("해당 점포가 없다"));
+		return convertToDto(store);
+	}
 }
