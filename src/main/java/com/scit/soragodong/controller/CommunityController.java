@@ -9,11 +9,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.scit.soragodong.domain.dto.BoardDto;
 import com.scit.soragodong.domain.dto.BoardReplyDto;
 import com.scit.soragodong.domain.entity.BoardReply;
+import com.scit.soragodong.domain.enums.FileRefType;
 import com.scit.soragodong.domain.response.ApiResponse;
 import com.scit.soragodong.security.CustomUserDetails;
 import com.scit.soragodong.service.CommunityService;
@@ -78,24 +81,24 @@ public class CommunityController {
 
     @PostMapping("/community/reply/{boardIdx}")
     @ResponseBody
-    public String writeReply(@PathVariable("boardIdx") Integer boardIdx,
+    public BoardReplyDto writeReply(@PathVariable("boardIdx") Integer boardIdx,
             @RequestBody BoardReplyDto replyDto,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         log.info("댓글 작성용 boardIdx {}", boardIdx);
         log.info("댓글 작성용 userDetails {}", userDetails.getUserIdx());
         log.info("댓글 작성용 replyDto {}", replyDto);
 
-        BoardReplyDto newDto = replyDto.builder()
+        BoardReplyDto newDto = BoardReplyDto.builder()
                 .boardIdx(boardIdx)
+                .replyContent(replyDto.replyContent())
                 .userIdx(userDetails.getUserIdx())
                 .build();
-        // 지금 content가 안들어옴
+        // 지금 content가 안들어옴 (해결)
         log.info("댓글 작성 dto 완성 {}", newDto);
-        log.info("댓글 작성 dto 완성 {}", newDto);
-        // List<BoardReplyDto> replyList = cs.writeReply(boardIdx);
 
-        // log.info("댓글 리스트 {}", replyList);
-        return "d";
+        BoardReplyDto boardReplyDto = cs.writeReply(newDto);
+        log.info("view로 보내기 전 dto 확인 {}", boardReplyDto);
+        return boardReplyDto;
     }
 
 }

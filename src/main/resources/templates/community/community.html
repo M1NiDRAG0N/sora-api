@@ -166,7 +166,7 @@
         </div>
 
         <div class="input-container-floating">
-            <input type="text" class="input-field2" placeholder="메시지 입력...">
+            <input type="text" class="input-field2" placeholder="메시지 입력..." onkeypress="handleEnter(event)">
 
             <button type="button" class="btn-mic">
                 <ion-icon name="mic-outline"></ion-icon>
@@ -359,6 +359,7 @@
                 }
             },
 
+            // 스크롤 내리면 비동기로 10개 로딩
             loadMorePosts: async () => {
                 CommunityMain.state.isLoading = true;
 
@@ -391,7 +392,6 @@
             },
 
             createFeedCardHTML: (dto) => {
-
                 return `
             <div class="feed-card" data-boardIdx="${dto.boardIdx}"
                 onclick="CommunityView.openView(this)">
@@ -416,6 +416,11 @@
                 </div>
 
                 <div class="feed-footer">
+                    <div class="action-item">
+                        <ion-icon name="chatbubble-outline"></ion-icon>
+                        <span>${dto.replyCount}</span>
+                    </div>
+
                     <div class="action-item">
                         <ion-icon name="heart-outline"></ion-icon> 
                         <span>    
@@ -469,6 +474,18 @@
                 console.log(title.value);
                 console.log(content.value);
                 console.log(loginUserIdx);
+
+
+                // 필수 검증
+                if (!Validation.required(title.value.trim())) {
+                    Utils.notify('제목을 입력하세요.', 'error');
+                    return;
+                }
+                if (!Validation.required(content.value.trim())) {
+                    Utils.notify('내용을 입력하세요', 'error');
+                    return;
+                }
+
 
                 const boardDto = {
                     userIdx: loginUserIdx,
@@ -574,7 +591,7 @@
             sendReply: async () => {
                 const replyContent = document.querySelector('.input-field2').value;
                 const boardIdx = currentBoardIdx;
-
+                document.querySelector('.input-field2').value = '';
                 const data = {
                     replyContent: replyContent
                 };
@@ -583,8 +600,26 @@
                 console.log(boardIdx);
 
                 const response = await API.post(`/community/reply/${boardIdx}`, data);
+                const html = CommunityReply.createReplyCardHTML(response)
+                const container = document.querySelector('#reply-card');
+
+                container.insertAdjacentHTML('beforeend', html);
+                Utils.notify('댓글을 등록했습니다.', 'success');
+
+                // document.querySelector('#reply-count').innerText = 1;
+                const countReply = document.querySelector('#reply-count').innerText;
+
+                console.log(countReply);
+                console.log(Number(countReply) + 1);
+                document.querySelector('#reply-count').innerText = Number(countReply) + 1;
             }
         };
+
+        function handleEnter(event) {
+            if (event.key === 'Enter') {
+                CommunityReply.sendReply();
+            }
+        }
 
 
     </script>

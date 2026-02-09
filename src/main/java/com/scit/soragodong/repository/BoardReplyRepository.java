@@ -10,4 +10,5 @@ import com.scit.soragodong.domain.entity.BoardReply;
 @Repository
 public interface BoardReplyRepository extends JpaRepository<BoardReply, Integer> {
     List<BoardReply> findAllByBoard_BoardIdxOrderByCreatedAtAsc(Integer boardIdx);
+
 }

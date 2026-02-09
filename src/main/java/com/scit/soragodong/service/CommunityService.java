@@ -3,6 +3,7 @@ package com.scit.soragodong.service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
@@ -13,7 +14,9 @@ import com.scit.soragodong.domain.dto.BoardDto;
 import com.scit.soragodong.domain.dto.BoardReplyDto;
 import com.scit.soragodong.domain.entity.Board;
 import com.scit.soragodong.domain.entity.BoardReply;
+import com.scit.soragodong.domain.entity.FileGrp;
 import com.scit.soragodong.domain.entity.Users;
+import com.scit.soragodong.domain.enums.FileRefType;
 import com.scit.soragodong.exception.CustomException;
 import com.scit.soragodong.exception.ErrorCode;
 import com.scit.soragodong.repository.BoardReplyRepository;
@@ -89,6 +92,7 @@ public class CommunityService {
                     .boardCategory(boardDto.boardCategory())
                     .boardTitle(boardDto.boardTitle())
                     .boardContent(boardDto.boardContent())
+                    .replyCount(0)
                     .build();
 
             Board savedBoard = br.save(baordEntity);
@@ -120,6 +124,7 @@ public class CommunityService {
                 .timeAgo(DateTimeUtil.calculateTimeAgo(savedBoard.getCreatedAt()))
                 .likeCount(savedBoard.getLikeCount())
                 .viewCount(savedBoard.getViewCount())
+                .replyCount(savedBoard.getReplyCount())
                 .createdAt(savedBoard.getCreatedAt())
                 .build();
 
@@ -163,6 +168,42 @@ public class CommunityService {
             dtoList.add(dto);
         }
         return dtoList;
+    }
+
+    public BoardReplyDto writeReply(BoardReplyDto boardReplyDto) {
+        // 1. 게시글 번호(Integer)로 -> 진짜 게시글 객체(Board) 찾아오기
+        Board board = br.findById(boardReplyDto.boardIdx())
+                .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
+
+        // 2. 유저 번호(Integer)로 -> 진짜 유저 객체(Users) 찾아오기
+        Users user = ur.findById(boardReplyDto.userIdx())
+                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+
+        try {
+            BoardReply baordReplyEntity = BoardReply.builder()
+                    .board(board)
+                    .user(user)
+                    .replyContent(boardReplyDto.replyContent())
+                    .build();
+
+            brr.save(baordReplyEntity);
+
+            BoardReplyDto boardReplyDto2 = BoardReplyDto.builder()
+                    .boardIdx(baordReplyEntity.getBoard().getBoardIdx())
+                    .userIdx(baordReplyEntity.getUser().getUserIdx())
+                    .userNickname(
+                            baordReplyEntity.getUser().getUserNickname())
+                    .replyContent(baordReplyEntity.getReplyContent())
+                    .isUse(baordReplyEntity.getIsUse())
+                    .createdAt(baordReplyEntity.getCreatedAt())
+                    .build();
+
+            return boardReplyDto2;
+
+        } catch (Exception e) {
+            // 저장 실패하면 에러를 던짐
+            throw new CustomException(ErrorCode.INTERNAL_ERROR);
+        }
     }
 
 }
