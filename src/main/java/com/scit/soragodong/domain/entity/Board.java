@@ -3,7 +3,6 @@ package com.scit.soragodong.domain.entity;
 import org.hibernate.annotations.Formula;
 
 import com.scit.soragodong.common.BaseEntity;
-import com.scit.soragodong.domain.enums.UserRole;
 
 import jakarta.persistence.*;
 import lombok.*;
