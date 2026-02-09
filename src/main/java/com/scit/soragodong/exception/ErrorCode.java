@@ -15,6 +15,9 @@ public enum ErrorCode {
     USER_NOT_FOUND(404, "사용자를 찾을 수 없습니다."),
     DUPLICATE_EMAIL(409, "이미 사용 중인 이메일입니다."),
 
+    // ===== 파일 =====
+    RESOURCE_NOT_FOUND(404, "요청한 리소스를 찾을 수 없습니다."),
+
     // ===== 요청 / 입력 =====
     INVALID_INPUT(400, "입력값이 올바르지 않습니다."),
     REQUIRED_VALUE_MISSING(400, "필수 입력값이 누락되었습니다."),
