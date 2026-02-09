@@ -20,4 +20,11 @@ public interface UserRepository extends JpaRepository<Users, Integer> {
      * @return
      */
     boolean existsByUserEmail(String email);
+    
+    /**
+     * 닉네임 중복 확인
+     * @param nickname
+     * @return
+     */
+    boolean existsByUserNickname(String nickname);
 }
