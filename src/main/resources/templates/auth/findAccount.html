@@ -5,104 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>소라고동 - 계정 찾기</title>
-
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/findAccount.css">
-    <script type="module" src="/js/ionicons.esm.js"></script>
-</head>
-
-<body>
-
-    <div class="app-container bg-gradient">
-
-        <div class="page-header transparent">
-            <button class="header-btn-icon" onclick="history.back()">
-                <ion-icon name="chevron-back"></ion-icon>
-            </button>
-            <div class="header-title-center">계정찾기</div>
-            <button class="header-btn-icon" style="opacity: 0; cursor: default;">
-                <ion-icon name="ellipsis-horizontal"></ion-icon>
-            </button>
-        </div>
-
-        <div class="account-tabs">
-            <button class="tab-btn active" onclick="switchTab('findId')" id="tab-id">아이디 찾기</button>
-            <button class="tab-btn" onclick="switchTab('findPw')" id="tab-pw">비밀번호 찾기</button>
-        </div>
-
-        <div class="community-scroll-area">
-
-            <div id="section-findId">
-                <div id="findId-form" class="form-container">
-                    <div>
-                        <label class="input-label">이메일</label>
-                        <input type="email" class="input-field-styled" placeholder="example@email.com">
-                    </div>
-                    <div>
-                        <label class="input-label">전화번호</label>
-                        <input type="tel" class="input-field-styled" placeholder="하이픈(-) 없이 입력">
-                    </div>
-                    <button class="btn-primary" style="margin-top: 20px;" onclick="showIdResult()">아이디 찾기</button>
-                </div>
-
-                <div id="findId-result" class="result-box hidden">
-                    <div class="result-text">정보와 일치하는 아이디입니다.</div>
-                    <div class="id-display-card">sora_godong_123</div>
-                    <button class="btn-primary" onclick="alert('로그인 페이지로 이동')">로그인</button>
-                </div>
-            </div>
-
-            <div id="section-findPw" class="hidden">
-                <div id="pw-step1" class="form-container">
-                    <div>
-                        <label class="input-label">아이디</label>
-                        <input type="text" class="input-field-styled" placeholder="아이디를 입력하세요">
-                    </div>
-                    <div>
-                        <label class="input-label">이메일</label>
-                        <input type="email" class="input-field-styled" placeholder="가입한 이메일 입력">
-                    </div>
-                    <div>
-                        <label class="input-label">전화번호</label>
-                        <input type="tel" class="input-field-styled" placeholder="전화번호 입력">
-                    </div>
-
-                    <div id="auth-code-row" class="hidden">
-                        <label class="input-label">인증번호</label>
-                        <div class="auth-row">
-                            <div class="input-with-timer">
-                                <input type="number" id="authInput" class="input-field-styled" placeholder="인증번호 6자리"
-                                    oninput="checkAuthCode()">
-
-                                <span class="timer-text" id="timer" onclick="handleTimerClick()">03:00</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button id="mainActionBtn" class="btn-primary" style="margin-top: 20px;"
-                        onclick="handleMainButton()">
-                        이메일 인증번호 전송
-                    </button>
-                </div>
-
-                <div id="pw-step2" class="form-container hidden">
-                    <div style="text-align:center; margin: 20px 0; font-weight:700; color:#333;">비밀번호를 재설정해주세요.</div>
-                    <div>
-                        <label class="input-label">새 비밀번호</label>
-                        <input type="password" class="input-field-styled" placeholder="새 비밀번호 입력">
-                    </div>
-                    <div>
-                        <label class="input-label">새 비밀번호 확인</label>
-                        <input type="password" class="input-field-styled" placeholder="비밀번호 다시 입력">
-                    </div>
-                    <button class="btn-primary" style="margin-top: 20px;"
-                        onclick="alert('비밀번호가 변경되었습니다!'); location.reload();">비밀번호 변경완료</button>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
+    <script type="module" src="https://unpkg.com/ionicons@7/dist/ionicons/ionicons.esm.js"></script>
     <script>
         // --- 탭 및 아이디 찾기 로직 (동일) ---
         function switchTab(mode) {
@@ -200,6 +106,99 @@
             }
         }
     </script>
+</head>
+
+<body>
+
+    <div class="app-container bg-gradient">
+
+        <div class="page-header transparent">
+            <button class="header-btn-icon" onclick="history.back()">
+                <ion-icon name="chevron-back"></ion-icon>
+            </button>
+            <div class="header-title-center">계정찾기</div>
+            <button class="header-btn-icon" style="opacity: 0; cursor: default;">
+                <ion-icon name="ellipsis-horizontal"></ion-icon>
+            </button>
+        </div>
+
+        <div class="account-tabs">
+            <button class="tab-btn active" onclick="switchTab('findId')" id="tab-id">아이디 찾기</button>
+            <button class="tab-btn" onclick="switchTab('findPw')" id="tab-pw">비밀번호 찾기</button>
+        </div>
+
+        <div class="community-scroll-area">
+
+            <div id="section-findId">
+                <div id="findId-form" class="form-container">
+                    <div>
+                        <label class="input-label">이메일</label>
+                        <input type="email" class="input-field-styled" placeholder="example@email.com">
+                    </div>
+                    <div>
+                        <label class="input-label">전화번호</label>
+                        <input type="tel" class="input-field-styled" placeholder="하이픈(-) 없이 입력">
+                    </div>
+                    <button class="btn-primary" style="margin-top: 20px;" onclick="showIdResult()">아이디 찾기</button>
+                </div>
+
+                <div id="findId-result" class="result-box hidden">
+                    <div class="result-text">정보와 일치하는 아이디입니다.</div>
+                    <div class="id-display-card">sora_godong_123</div>
+                    <button class="btn-primary" onclick="alert('로그인 페이지로 이동')">로그인</button>
+                </div>
+            </div>
+
+            <div id="section-findPw" class="hidden">
+                <div id="pw-step1" class="form-container">
+                    <div>
+                        <label class="input-label">아이디</label>
+                        <input type="text" class="input-field-styled" placeholder="아이디를 입력하세요">
+                    </div>
+                    <div>
+                        <label class="input-label">이메일</label>
+                        <input type="email" class="input-field-styled" placeholder="가입한 이메일 입력">
+                    </div>
+                    <div>
+                        <label class="input-label">전화번호</label>
+                        <input type="tel" class="input-field-styled" placeholder="전화번호 입력">
+                    </div>
+
+                    <div id="auth-code-row" class="hidden">
+                        <label class="input-label">인증번호</label>
+                        <div class="auth-row">
+                            <div class="input-with-timer">
+                                <input type="number" id="authInput" class="input-field-styled" placeholder="인증번호 6자리"
+                                    oninput="checkAuthCode()">
+
+                                <span class="timer-text" id="timer" onclick="handleTimerClick()">03:00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="mainActionBtn" class="btn-primary" style="margin-top: 20px;"
+                        onclick="handleMainButton()">
+                        이메일 인증번호 전송
+                    </button>
+                </div>
+
+                <div id="pw-step2" class="form-container hidden">
+                    <div style="text-align:center; margin: 20px 0; font-weight:700; color:#333;">비밀번호를 재설정해주세요.</div>
+                    <div>
+                        <label class="input-label">새 비밀번호</label>
+                        <input type="password" class="input-field-styled" placeholder="새 비밀번호 입력">
+                    </div>
+                    <div>
+                        <label class="input-label">새 비밀번호 확인</label>
+                        <input type="password" class="input-field-styled" placeholder="비밀번호 다시 입력">
+                    </div>
+                    <button class="btn-primary" style="margin-top: 20px;"
+                        onclick="alert('비밀번호가 변경되었습니다!'); location.reload();">비밀번호 변경완료</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
 
 </body>
 
