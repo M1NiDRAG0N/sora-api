@@ -21,4 +21,7 @@ public interface StoreProductRepository extends JpaRepository<StoreProduct, Inte
      * 카테고리별 상품 조회
      */
     List<StoreProduct> findByCategory(String category);
-}
+    // 특정 가게의 상품 조회
+
+    // 특정 가게의 재고가 있는 상품만 조회
+    List<StoreProduct> findByStoreStoreIdxAndProductQuantityGreaterThan(Integer storeIdx, Integer minQuantity);}

@@ -33,7 +33,12 @@ public class MainController {
         model.addAttribute("currentUri", "/timesale");
         return "common";
     }
-    
+
+    @GetMapping("/timesale/detail")
+    public String getTimesaleDetailPage(Model model) {
+        model.addAttribute("currentUri", "/timesale/detail");
+        return "common";
+    }
 
     /**
      * 세션 정보 확인 (테스트용)

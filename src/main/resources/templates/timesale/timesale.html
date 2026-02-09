@@ -18,10 +18,81 @@
     <div class="list-wrap" id="listWrap"></div>
     <div class="list-status" id="listStatus"></div>
     <div id="sentinel"></div>
+    <!-- 예약 모달 -->
+    <div class="reservation-modal" id="reservationModal">
+        <div class="modal-overlay" onclick="closeReservationModal()"></div>
+        <div class="modal-content">
+            <!-- 헤더 -->
+            <div class="modal-header">
+                <div class="modal-back-btn" id="modalCloseBtn">
+                    <ion-icon name="arrow-back-outline"></ion-icon>
+                </div>
+                <h2 class="modal-title">상품 예약</h2>
+                <div class="modal-spacer"></div>
+            </div>
+
+            <!-- 스크롤 영역 -->
+            <div class="modal-body">
+                <!-- 가게 정보 -->
+                <div class="modal-store-info">
+                    <ion-icon name="storefront-outline"></ion-icon>
+                    <span id="modalStoreName">로딩 중...</span>
+                </div>
+
+                <!-- 상품 정보 -->
+                <div class="modal-product-card">
+                    <img src="" alt="상품 이미지" class="modal-product-img" id="modalProductImg">
+                    <div class="modal-product-info">
+                        <h3 class="modal-product-name" id="modalProductName">상품명</h3>
+                        <div class="modal-price-wrap">
+                            <span class="modal-price-current" id="modalPrice">0엔</span>
+                            <span class="modal-price-original" id="modalOriginalPrice">0엔</span>
+                        </div>
+                        <div class="modal-sale-time" id="modalSaleTime">제고 0개 남음</div>
+                    </div>
+                </div>
+
+                <!-- 예약할 수량 -->
+                <div class="modal-section">
+                    <h4 class="modal-section-title">예약할 수량</h4>
+                    <div class="modal-quantity-control">
+                        <button class="quantity-btn" id="decreaseBtn">
+                            <ion-icon name="remove-outline"></ion-icon>
+                        </button>
+                        <input type="number" class="quantity-input" id="quantityInput" value="1" min="1" max="10"
+                            readonly>
+                        <button class="quantity-btn" id="increaseBtn">
+                            <ion-icon name="add-outline"></ion-icon>
+                        </button>
+                    </div>
+                    <div class="modal-quantity-note">최대 10개 예약 가능</div>
+                </div>
+
+                <!-- 이 예약 금액 -->
+                <div class="modal-section">
+                    <h4 class="modal-section-title">이 예약 금액</h4>
+                    <div class="modal-total-price" id="modalTotalPrice">1,500엔</div>
+                </div>
+
+                <!-- 안내 문구 -->
+                <div class="modal-notice">
+                    <p>예약 후 타임세일을 통해 재고가 남아 있지 않는다면</p>
+                    <p>30분 내 찾아가지 않으면 예약이 자동 취소됩니다.</p>
+                </div>
+            </div>
+
+            <!-- 예약 버튼 -->
+            <div class="modal-footer">
+                <button class="modal-reserve-btn" id="confirmBtn">
+                    <span id="reserveButtonText">1개 예약하기</span>
+                </button>
+            </div>
+        </div>
+    </div>
     <script>
         /**
-     * 타임세일 페이지 관리
-     */
+         * 타임세일 페이지 관리
+         */
         const TimeSale = {
             // 현재 활성화된 탭
             currentTab: 'food',
@@ -255,11 +326,11 @@
             },
 
             /**
-                   * 음식 카드 생성
-                   */
+             * 음식 카드 생성
+             */
             createFoodCard: function (food) {
                 const card = document.createElement('div');
-                card.className = 'food-card';  // 👈 item-card → food-card
+                card.className = 'food-card';
                 card.dataset.productNum = food.productNum;
                 card.dataset.storeIdx = food.storeIdx;
 
@@ -268,19 +339,24 @@
                 const salePrice = Utils.formatNumber(food.eventPrice);
 
                 card.innerHTML = `
-        <div class="food-thumb">
-            ${food.productPictureIdx
+            <div class="food-thumb">
+                ${food.productPictureIdx
                         ? `<img src="/upload/${food.productPictureIdx}" alt="이미지 없음">`
                         : '<div class="no-image">이미지 없음</div>'}
-        </div>
-        <div class="food-lines">
-            <div class="food-store">${food.storeName}</div>
-            <div>${food.productName}</div>
-            <div class="muted">미정 할인 시작</div>
-            <div>${salePrice}원 / 원가 ${originalPrice}원</div>
-            <div>할인율: ${discountRate}%</div>
-        </div>
-    `;
+            </div>
+            <div class="food-lines">
+                <div class="food-store">${food.storeName}</div>
+                <div>${food.productName}</div>
+                <div class="muted">미정 할인 시작</div>
+                <div>${salePrice}원 / 원가 ${originalPrice}원</div>
+                <div>할인율: ${discountRate}%</div>
+            </div>
+        `;
+
+                // 음식 카드 클릭 시 해당 가게의 상세 페이지로 이동
+                card.addEventListener('click', () => {
+                    this.goToStoreDetail(food.storeIdx);
+                });
 
                 return card;
             },
@@ -290,7 +366,7 @@
              */
             createStoreCard: function (store) {
                 const card = document.createElement('div');
-                card.className = 'store-card';  // 👈 item-card → store-card
+                card.className = 'store-card';
                 card.dataset.storeIdx = store.storeIdx;
 
                 const openTime = store.openTime || '영업시간 미정';
@@ -299,22 +375,44 @@
                     : '할인시간 미정';
 
                 card.innerHTML = `
-        <div>
-            <div class="store-name">${store.storeName}</div>
-            <div class="store-times">
-                <div class="muted">${store.category || '기타'}</div>
-                <div>${openTime}</div>
-                <div>${saleTime}</div>
+            <div>
+                <div class="store-name">${store.storeName}</div>
+                <div class="store-times">
+                    <div class="muted">${store.category || '기타'}</div>
+                    <div>${openTime}</div>
+                    <div>${saleTime}</div>
+                </div>
             </div>
-        </div>
-        <div class="store-thumb">
-            ${store.storePictureIdx
+            <div class="store-thumb">
+                ${store.storePictureIdx
                         ? `<img src="/upload/${store.storePictureIdx}" alt="이미지 없음">`
                         : '<div class="no-image">이미지 없음</div>'}
-        </div>
-    `;
+            </div>
+        `;
+
+                // 가게 카드 클릭 시 상세 페이지로 이동
+                card.addEventListener('click', () => {
+                    this.goToStoreDetail(store.storeIdx);
+                });
 
                 return card;
+            },
+
+            /**
+             * 가게 상세 페이지로 이동
+             * @param {number} storeIdx - 가게 인덱스
+             */
+            goToStoreDetail: function (storeIdx) {
+                if (!storeIdx) {
+                    Utils.notify('가게 정보를 찾을 수 없습니다.', 'error');
+                    console.error('[상세페이지] storeIdx가 없습니다:', storeIdx);
+                    return;
+                }
+
+                console.log(`[상세페이지] 이동 - storeIdx: ${storeIdx}`);
+
+                // 상세 페이지로 이동 (쿼리 파라미터로 STORE_IDX 전달)
+                window.location.href = `/timesale/detail?storeIdx=${storeIdx}`;
             },
 
             /**
