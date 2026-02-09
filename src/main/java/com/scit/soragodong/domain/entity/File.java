@@ -34,11 +34,22 @@ public class File extends BaseEntity {
     @JoinColumn(name = "FILE_GRP_IDX")
     private FileGrp fileGroup;
 
+    @Column(name = "FILE_NAME")
     private String fileName;
+    
+    @Column(name = "ORIGINAL_NAME")
     private String originalName;
+    
+    @Column(name = "FILE_EXT")
     private String fileExt;
+    
+    @Column(name = "FILE_SIZE")
     private Integer fileSize;
+    
+    @Column(name = "FILE_PATH")
     private String filePath;
+    
+    @Column(name = "FILE_ORDER")
     private Integer fileOrder;
     
     @Builder.Default
