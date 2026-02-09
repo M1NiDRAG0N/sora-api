@@ -66,6 +66,10 @@ spring:
     redis:
       time-to-live: 600000
 
+  file:
+    upload:
+      path: ${UPLOAD_PATH:/upload}
+
 server:
   port: 8080
   shutdown: graceful
