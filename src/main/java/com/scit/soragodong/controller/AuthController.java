@@ -47,6 +47,14 @@ public class AuthController {
         return ApiResponse.success(Map.of("isDuplicate", isDuplicate));
     }
 
+    @PostMapping("/check-nickname")
+    @ResponseBody
+    public ApiResponse<?> checkNickname(@RequestBody Map<String, String> request) {
+        String nickname = request.get("userNickname");
+        boolean isDuplicate = us.existsByUserNickname(nickname);
+        return ApiResponse.success(Map.of("isDuplicate", isDuplicate));
+    }
+
     @PostMapping("/send-verification-code")
     @ResponseBody
     public ApiResponse<?> sendVerificationCode(@RequestBody Map<String, String> request) {

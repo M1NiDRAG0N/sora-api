@@ -23,6 +23,7 @@
                 document.querySelector('.geocode_btn').addEventListener('click', () => signup.getGoogleGeocode());
                 document.querySelector('.btn-send-code').addEventListener('click', () => signup.sendVerificationCode());
                 document.querySelector('.btn-verify-code').addEventListener('click', () => signup.verifyEmail());
+                document.querySelector('.btn-check-nickname').addEventListener('click', () => signup.checkNickname());
                 document.querySelector('.btn-primary').addEventListener('click', () => signup.submitForm());
             },
             getGoogleGeocode: () => {
@@ -103,6 +104,32 @@
                 }
             },
 
+            checkNickname: async () => {
+                const userNickname = document.querySelector('[name="userNickname"]').value;
+
+                if (!Validation.required(userNickname)) {
+                    Utils.notify('닉네임을 입력해주세요', 'warning');
+                    return;
+                }
+
+                try {
+                    const res = await API.post('/auth/check-nickname', { userNickname });
+                    
+                    const statusEl = document.querySelector('.nickname-status');
+                    if (res.data.isDuplicate) {
+                        statusEl.textContent = '이미 사용 중인 닉네임입니다';
+                        statusEl.style.color = '#FF4B4B';
+                        Utils.notify('이미 사용 중인 닉네임입니다', 'warning');
+                    } else {
+                        statusEl.textContent = '사용 가능한 닉네임입니다';
+                        statusEl.style.color = '#00C46B';
+                        Utils.notify('사용 가능한 닉네임입니다', 'success');
+                    }
+                } catch (error) {
+                    Utils.notify('닉네임 확인 실패: ' + error.message, 'error');
+                }
+            },
+
             submitForm: async () => {
                 const userEmail = document.querySelector('[name="userEmail"]').value;
                 const password = document.querySelector('[name="password"]').value;
@@ -136,6 +163,13 @@
                 }
                 if (!userLat || !userLng) {
                     Utils.notify('주소 검색을 완료해주세요', 'warning');
+                    return;
+                }
+
+                // 닉네임 중복 검증
+                const nicknameStatus = document.querySelector('.nickname-status').textContent;
+                if (!nicknameStatus.includes('사용 가능')) {
+                    Utils.notify('닉네임 중복확인을 해주세요', 'warning');
                     return;
                 }
 
@@ -230,7 +264,11 @@
 
                 <div class="input-group">
                     <label class="label">닉네임 <span>*</span></label>
-                    <input type="text" name="userNickname" class="input-field" placeholder="활동명 입력">
+                    <div style="display:flex; gap: 8px;">
+                        <input type="text" name="userNickname" class="input-field" placeholder="활동명 입력">
+                        <button type="button" class="btn-check-nickname">중복확인</button>
+                    </div>
+                    <span class="nickname-status"></span>
                 </div>
 
                 <div class="input-group">

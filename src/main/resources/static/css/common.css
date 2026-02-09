@@ -886,6 +886,31 @@ input[type="checkbox"] {
     background: #444;
 }
 
+/* 닉네임 중복확인 버튼 */
+.btn-check-nickname {
+    padding: 12px;
+    background: #555;
+    color: var(--white);
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-check-nickname:active {
+    transform: scale(0.98);
+    background: #444;
+}
+
+/* 닉네임 상태 메시지 */
+.nickname-status {
+    display: block;
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
 /* 회원가입 폼 섹션 */
 .signup-form-section {
     animation: slideUp 0.3s ease-out;

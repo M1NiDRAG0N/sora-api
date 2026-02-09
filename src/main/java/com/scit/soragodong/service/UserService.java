@@ -34,6 +34,10 @@ public class UserService {
         return ur.existsByUserEmail(userEmail);
     }
     
+    public boolean existsByUserNickname(String userNickname) {
+        return ur.existsByUserNickname(userNickname);
+    }
+    
     /**
      * 이메일 인증 코드 발송
      */
