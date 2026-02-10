@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.scit.soragodong.domain.dto.BoardDto;
 import com.scit.soragodong.domain.dto.BoardReplyDto;
+import com.scit.soragodong.domain.dto.FileRes;
 import com.scit.soragodong.domain.entity.BoardReply;
 import com.scit.soragodong.domain.enums.FileRefType;
 import com.scit.soragodong.domain.response.ApiResponse;
@@ -52,9 +53,10 @@ public class CommunityController {
 
     @PostMapping("/community/write")
     @ResponseBody
-    public BoardDto write(@RequestBody BoardDto boardDto) {
+    public BoardDto write(@RequestPart("board") BoardDto boardDto, 
+                          @RequestPart(value = "files", required = false) List<MultipartFile> files) {
         log.info("글쓰기 확인 {}", boardDto);
-        BoardDto newBoardDto = cs.writeBoard(boardDto);
+        BoardDto newBoardDto = cs.writeBoard(boardDto, files);
         log.info("글쓰기 후 newBoardDto 확인 {}", newBoardDto);
         // // ApiResponse 활용.
         // return ApiResponse.success("글 등록에 성공", savedBoardIdx);
@@ -68,6 +70,12 @@ public class CommunityController {
 
         BoardDto boardDto = cs.getBoardOne(boardIdx);
         return boardDto;
+    }
+    
+    @GetMapping("/community/files/{boardIdx}")
+    @ResponseBody
+    public List<FileRes> getBoardFiles(@PathVariable("boardIdx") Integer boardIdx) {
+        return cs.getBoardFiles(boardIdx);
     }
 
     @GetMapping("/community/reply/{boardIdx}")

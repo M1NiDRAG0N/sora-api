@@ -41,7 +41,8 @@
                         <div class="feed-title" th:text="${board.boardTitle}">제목</div>
                         <div class="feed-preview" th:text="${board.boardContent}">내용</div>
                     </div>
-                    <!-- <img th:if="${board.thumbnail != null}" th:src="${board.thumbnail}" class="feed-thumb"> -->
+                    <img th:if="${board.fileGrpIdx != null}" th:src="@{/img/group/{idx}(idx=${board.fileGrpIdx})}"
+                        class="feed-thumb">
                 </div>
 
                 <div class="feed-footer">
@@ -143,7 +144,8 @@
 
                 <div class="post-text" id="view-content"></div>
 
-                <img src="" class="post-image" alt="양배추" id="view-image">
+                <img src="" class="post-image" alt="이미지" id="view-image" style="display: none;">
+                <div id="dynamic-image-container"></div>
 
                 <div class="post-stats-row">
                     <div class="stat-item">
@@ -413,6 +415,7 @@
                         
                         <div class="feed-preview">${dto.boardContent}</div>
                     </div>
+                    ${dto.fileGrpIdx ? `<img src="/img/group/${dto.fileGrpIdx}" class="feed-thumb">` : ''}
                 </div>
 
                 <div class="feed-footer">
@@ -463,6 +466,13 @@
                 if (writeDiv) {
                     writeDiv.classList.remove('active');
                 }
+
+                document.querySelector("#title-input").value = '';
+                document.querySelector("#content-textarea").value = '';
+                // 파일 선택 초기화
+                selectedFiles = [];
+                document.getElementById('imgCount').innerText = "0/10";
+                renderPreview();
             },
 
             submitPost: async () => {
@@ -495,16 +505,43 @@
                 }
                 console.log(boardDto);
 
-                const response = await API.post('/community/write', boardDto);
+                // FormData 생성
+                const formData = new FormData();
+                formData.append("board", new Blob([JSON.stringify(boardDto)], { type: "application/json" }));
 
-                console.log(response);
-                Utils.notify('게시글을 등록했습니다!', 'success', 4000);
-                title.value = '';
-                content.value = '';
+                selectedFiles.forEach(file => {
+                    formData.append("files", file);
+                });
+
+                try {
+                    // API.js는 multipart/form-data를 지원하지 않으므로 직접 fetch 사용
+                    const response = await fetch('/community/write', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const resultDto = await response.json();
+
+                    console.log(resultDto);
+                    Utils.notify('게시글을 등록했습니다!', 'success', 4000);
+                    title.value = '';
+                    content.value = '';
+                    // 파일 초기화
+                    selectedFiles = [];
+                    document.getElementById('imgCount').innerText = "0/10";
+                    renderPreview();
 
 
-                document.querySelector('#writeForm').classList.remove('active');
-                CommunityWrite.refreshAfterWrite(response);
+                    document.querySelector('#writeForm').classList.remove('active');
+                    CommunityWrite.refreshAfterWrite(resultDto);
+                } catch (error) {
+                    console.error('글쓰기 실패:', error);
+                    Utils.notify('글 등록 중 오류가 발생했습니다.', 'error');
+                }
             },
 
 
@@ -533,11 +570,13 @@
                 console.log(boardReply);
 
                 const container = document.querySelector('#reply-card');
+                container.innerHTML = ''; // 댓글 목록 초기화
+
                 boardReply.forEach(dto => {
                     const html = CommunityReply.createReplyCardHTML(dto);
                     container.insertAdjacentHTML('beforeend', html);
                 });
-
+                viewForm.classList.add('active');
                 // 텍스트 데이터 넣기 
                 document.querySelector('#reply-count').innerText = board.replyCount;
                 currentBoardIdx = boardIdx;
@@ -548,16 +587,24 @@
                 document.querySelector('#view-like').innerText = board.likeCount;
                 document.querySelector('#view-view').innerText = board.viewCount;
 
-                // 이미지 처리 (이미지가 있으면 보여주고, 없으면 숨김)
+                // 이미지 처리
                 const imgTag = document.querySelector('#view-image');
-                if (board.thumbnail) { // DTO에 이미지 경로 필드가 있다고 가정
-                    imgTag.src = board.thumbnail;
-                    imgTag.style.display = 'block';
-                } else {
-                    imgTag.style.display = 'none';
+                const dynContainer = document.getElementById('dynamic-image-container');
+                imgTag.style.display = 'none';
+                imgTag.src = '';
+                dynContainer.innerHTML = ''; // 기존 동적 이미지 제거
+
+                if (board.fileGrpIdx) {
+                    const files = await API.get(`/community/files/${boardIdx}`);
+                    
+                    if (files && files.length > 0) {
+                        const sliderHtml = CommunitySlider.createHTML(files);
+                        dynContainer.innerHTML = sliderHtml;
+                        CommunitySlider.init(dynContainer, files.length);
+                    }
                 }
 
-                viewForm.classList.add('active');
+
             },
             closeView: () => {
                 const viewForm = document.querySelector('#viewForm');
@@ -570,8 +617,83 @@
                 document.querySelector('#view-content').innerText = '';
                 document.querySelector('#view-like').innerText = '';
                 document.querySelector('#view-view').innerText = '';
+
+                document.querySelector('#view-image').src = '';
+                document.getElementById('dynamic-image-container').innerHTML = '';
             }
 
+        };
+
+        // --- 이미지 슬라이더 로직 ---
+        const CommunitySlider = {
+            currentIndex: 0,
+            totalSlides: 0,
+            
+            createHTML: (files) => {
+                let slides = '';
+                let dots = '';
+                
+                files.forEach((file, index) => {
+                    slides += `
+                        <div class="slider-slide">
+                            <img src="/img/${file.fileIdx}" alt="Slide ${index}">
+                        </div>
+                    `;
+                    dots += `<div class="slider-dot ${index === 0 ? 'active' : ''}" onclick="CommunitySlider.goToSlide(${index})"></div>`;
+                });
+
+                const showNav = files.length > 1;
+
+                return `
+                    <div class="slider-container">
+                        <div class="slider-wrapper">
+                            ${slides}
+                        </div>
+                        ${showNav ? `
+                            <button class="slider-btn prev" onclick="CommunitySlider.moveSlide(-1)">
+                                <ion-icon name="chevron-back"></ion-icon>
+                            </button>
+                            <button class="slider-btn next" onclick="CommunitySlider.moveSlide(1)">
+                                <ion-icon name="chevron-forward"></ion-icon>
+                            </button>
+                            <div class="slider-dots">
+                                ${dots}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            },
+
+            init: (container, count) => {
+                CommunitySlider.currentIndex = 0;
+                CommunitySlider.totalSlides = count;
+                // 초기화 시 첫 슬라이드 위치로 확실히 이동 (혹시 모를 잔상 방지)
+                const wrapper = container.querySelector('.slider-wrapper');
+                if(wrapper) wrapper.style.transform = `translateX(0)`;
+            },
+
+            moveSlide: (direction) => {
+                const newIndex = CommunitySlider.currentIndex + direction;
+                
+                if (newIndex >= 0 && newIndex < CommunitySlider.totalSlides) {
+                    CommunitySlider.goToSlide(newIndex);
+                }
+            },
+
+            goToSlide: (index) => {
+                CommunitySlider.currentIndex = index;
+                const wrapper = document.querySelector('.slider-wrapper');
+                const dots = document.querySelectorAll('.slider-dot');
+
+                if (wrapper) {
+                    wrapper.style.transform = `translateX(-${index * 100}%)`;
+                }
+                
+                if (dots.length > 0) {
+                    dots.forEach(dot => dot.classList.remove('active'));
+                    if(dots[index]) dots[index].classList.add('active');
+                }
+            }
         };
 
 
