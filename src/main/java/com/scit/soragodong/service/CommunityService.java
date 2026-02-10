@@ -61,7 +61,7 @@ public class CommunityService {
 
         Pageable pageable = PageRequest.of(pageNum, 10, Sort.Direction.DESC, "createdAt");
 
-        List<Board> boardEntityList = br.findAll(pageable).getContent();
+        List<Board> boardEntityList = br.findByIsUseTrue(pageable).getContent();
 
         for (Board board : boardEntityList) {
 
@@ -219,7 +219,9 @@ public class CommunityService {
 
             BoardReplyDto dto = BoardReplyDto.builder()
                     .replyIdx(boardReply.getReplyIdx())
+                    .boardIdx(boardReply.getBoard().getBoardIdx())
                     .userNickname(boardReply.getUser().getUserNickname())
+                    .userIdx(boardReply.getUser().getUserIdx())
                     .replyContent(boardReply.getReplyContent())
                     .timeAgo(DateTimeUtil.calculateTimeAgo(boardReply.getCreatedAt()))
                     .build();
@@ -262,6 +264,22 @@ public class CommunityService {
         } catch (Exception e) {
             // 저장 실패하면 에러를 던짐
             throw new CustomException(ErrorCode.INTERNAL_ERROR);
+        }
+    }
+
+    @Transactional // ★ 변경 감지(Dirty Checking)를 위해 필수!
+    public void boardDelete(Integer boardIdx) {
+        // 1. 게시글 찾기 (없으면 커스텀 예외 발생 -> 핸들러가 잡아서 처리함)
+        Board board = br.findById(boardIdx)
+                .orElseThrow(() -> new CustomException(ErrorCode.BOARD_NOT_FOUND));
+
+        board.delete();
+
+        // 3. 해당 게시글에 달린 댓글들도 모두 찾기
+        List<BoardReply> replyList = brr.findAllByBoard_BoardIdx(boardIdx);
+
+        for (BoardReply reply : replyList) {
+            reply.delete();
         }
     }
 

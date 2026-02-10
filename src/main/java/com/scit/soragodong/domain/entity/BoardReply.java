@@ -36,4 +36,9 @@ public class BoardReply extends BaseEntity {
     @Column(name = "IS_USE", nullable = false)
     @Builder.Default // 빌더 쓸 때도 이 값이 기본으로 들어가게 해줌
     private Boolean isUse = true;
+
+    // ★ 댓글 삭제 편의 메서드
+    public void delete() {
+        this.isUse = false;
+    }
 }
