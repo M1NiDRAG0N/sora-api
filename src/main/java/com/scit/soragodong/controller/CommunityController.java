@@ -2,9 +2,11 @@ package com.scit.soragodong.controller;
 
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,8 +55,8 @@ public class CommunityController {
 
     @PostMapping("/community/write")
     @ResponseBody
-    public BoardDto write(@RequestPart("board") BoardDto boardDto, 
-                          @RequestPart(value = "files", required = false) List<MultipartFile> files) {
+    public BoardDto write(@RequestPart("board") BoardDto boardDto,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files) {
         log.info("글쓰기 확인 {}", boardDto);
         BoardDto newBoardDto = cs.writeBoard(boardDto, files);
         log.info("글쓰기 후 newBoardDto 확인 {}", newBoardDto);
@@ -71,7 +73,7 @@ public class CommunityController {
         BoardDto boardDto = cs.getBoardOne(boardIdx);
         return boardDto;
     }
-    
+
     @GetMapping("/community/files/{boardIdx}")
     @ResponseBody
     public List<FileRes> getBoardFiles(@PathVariable("boardIdx") Integer boardIdx) {
@@ -107,6 +109,17 @@ public class CommunityController {
         BoardReplyDto boardReplyDto = cs.writeReply(newDto);
         log.info("view로 보내기 전 dto 확인 {}", boardReplyDto);
         return boardReplyDto;
+    }
+
+    @DeleteMapping("/community/delete/{boardIdx}")
+    public ResponseEntity<ApiResponse<?>> delete(@PathVariable("boardIdx") Integer boardIdx) {
+        log.info("삭제 요청 boardIdx: {}", boardIdx);
+
+        // 서비스 호출 (여기서 에러 나면 GlobalExceptionHandler로 자동 이동)
+        cs.boardDelete(boardIdx);
+
+        // 성공 시 응답 (ApiResponse 사용)
+        return ResponseEntity.ok(ApiResponse.success("게시글이 삭제되었습니다."));
     }
 
 }

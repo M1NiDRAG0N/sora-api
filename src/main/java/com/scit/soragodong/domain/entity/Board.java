@@ -53,4 +53,8 @@ public class Board extends BaseEntity {
     @Formula("(SELECT count(1) FROM BOARD_REPLY r WHERE r.BOARD_IDX = BOARD_IDX)")
     private int replyCount;
 
+    public void delete() {
+        this.isUse = false;
+    }
+
 }
