@@ -1,0 +1,225 @@
+/* =========================================
+   [findAccount.css] 계정 찾기 스타일 (타이머 변신 버전)
+   ========================================= */
+
+/* 1. 헤더 & 탭 (기존 유지) */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 60px;
+    padding: 0 20px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: transparent;
+}
+
+.header-btn-icon {
+    font-size: 24px;
+    color: #333;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.header-title-center {
+    position: absolute;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.account-tabs {
+    display: flex;
+    background: transparent;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.tab-btn {
+    flex: 1;
+    text-align: center;
+    padding: 15px 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #999;
+    cursor: pointer;
+    background: none;
+    border: none;
+    position: relative;
+    transition: 0.2s;
+}
+
+.tab-btn.active {
+    color: #333;
+    font-weight: 700;
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #333;
+}
+
+/* 2. 폼 & 입력창 */
+.form-container {
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.input-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 8px;
+    margin-left: 4px;
+}
+
+.input-field-styled {
+    width: 100%;
+    padding: 16px;
+    border-radius: 16px;
+    border: none;
+    background: white;
+    font-size: 15px;
+    color: #333;
+    outline: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    box-sizing: border-box;
+}
+
+.input-field-styled::placeholder {
+    color: #ccc;
+}
+
+/* 3. 버튼 스타일 */
+.btn-primary {
+    width: 100%;
+    padding: 16px;
+    border-radius: 16px;
+    background: #b2a4ff;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(165, 147, 224, 0.4);
+    transition: 0.3s;
+    margin-top: 10px;
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+/* 비활성화 버튼 (회색) */
+.btn-disabled {
+    background: #E0E0E0 !important;
+    color: #999 !important;
+    box-shadow: none !important;
+    cursor: default !important;
+}
+
+/* 4. 타이머 & 재전송 버튼 변신 로직 */
+.auth-row {
+    margin-top: 5px;
+    animation: slideDown 0.3s ease-out;
+}
+
+.input-with-timer {
+    position: relative;
+    width: 100%;
+}
+
+/* 타이머 텍스트 (기본 상태) */
+.timer-text {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: #FF6B6B;
+    font-weight: 700;
+    pointer-events: none;
+    /* 시간일 땐 클릭 불가 */
+    transition: 0.2s;
+}
+
+/* ✅ 재전송 버튼 상태 (시간 초과 시 변신) */
+.timer-text.is-resend {
+    pointer-events: auto;
+    /* 클릭 가능해짐 */
+    cursor: pointer;
+    background: #F3F0FF;
+    /* 연한 보라 배경 */
+    color: #b2a4ff;
+    /* 보라색 글씨 */
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+}
+
+.timer-text.is-resend:hover {
+    background: #EBE5FF;
+}
+
+/* 5. 유틸 */
+.result-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.result-text {
+    font-size: 15px;
+    color: #333;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.id-display-card {
+    width: 100%;
+    /* background: #f5f5f5; */
+    padding: 40px 0;
+    border-radius: 12px;
+    border: 1px solid #d9d9d9;
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 30px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

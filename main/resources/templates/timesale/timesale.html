@@ -1,0 +1,802 @@
+<div class="sale-content" id="saleContent">
+    <div class="map-wrap">
+        <div class="map-box">
+            <div id="map" style="width: 100%; height: 100%;"></div>
+            <div class="map-placeholder" id="mapPlaceholder" style="display: none;">
+                Google Maps API 영역
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-wrap">
+        <div class="tabs">
+            <div class="tab-btn active" id="tabFood">음식</div>
+            <div class="tab-btn" id="tabStore">가게</div>
+        </div>
+    </div>
+
+    <div class="list-wrap" id="listWrap"></div>
+    <div class="list-status" id="listStatus"></div>
+    <div id="sentinel"></div>
+    <!-- 예약 모달 -->
+    <div class="reservation-modal" id="reservationModal">
+        <div class="modal-overlay" onclick="closeReservationModal()"></div>
+        <div class="modal-content">
+            <!-- 헤더 -->
+            <div class="modal-header">
+                <div class="modal-back-btn" id="modalCloseBtn">
+                    <ion-icon name="arrow-back-outline"></ion-icon>
+                </div>
+                <h2 class="modal-title">상품 예약</h2>
+                <div class="modal-spacer"></div>
+            </div>
+
+            <!-- 스크롤 영역 -->
+            <div class="modal-body">
+                <!-- 가게 정보 -->
+                <div class="modal-store-info">
+                    <ion-icon name="storefront-outline"></ion-icon>
+                    <span id="modalStoreName">로딩 중...</span>
+                </div>
+
+                <!-- 상품 정보 -->
+                <div class="modal-product-card">
+                    <img src="" alt="상품 이미지" class="modal-product-img" id="modalProductImg">
+                    <div class="modal-product-info">
+                        <h3 class="modal-product-name" id="modalProductName">상품명</h3>
+                        <div class="modal-price-wrap">
+                            <span class="modal-price-current" id="modalPrice">0엔</span>
+                            <span class="modal-price-original" id="modalOriginalPrice">0엔</span>
+                        </div>
+                        <div class="modal-sale-time" id="modalSaleTime">제고 0개 남음</div>
+                    </div>
+                </div>
+
+                <!-- 예약할 수량 -->
+                <div class="modal-section">
+                    <h4 class="modal-section-title">예약할 수량</h4>
+                    <div class="modal-quantity-control">
+                        <button class="quantity-btn" id="decreaseBtn">
+                            <ion-icon name="remove-outline"></ion-icon>
+                        </button>
+                        <input type="number" class="quantity-input" id="quantityInput" value="1" min="1" max="10"
+                            readonly>
+                        <button class="quantity-btn" id="increaseBtn">
+                            <ion-icon name="add-outline"></ion-icon>
+                        </button>
+                    </div>
+                    <div class="modal-quantity-note">최대 10개 예약 가능</div>
+                </div>
+
+                <!-- 이 예약 금액 -->
+                <div class="modal-section">
+                    <h4 class="modal-section-title">이 예약 금액</h4>
+                    <div class="modal-total-price" id="modalTotalPrice">1,500엔</div>
+                </div>
+
+                <!-- 안내 문구 -->
+                <div class="modal-notice">
+                    <p>예약 후 타임세일을 통해 재고가 남아 있지 않는다면</p>
+                    <p>30분 내 찾아가지 않으면 예약이 자동 취소됩니다.</p>
+                </div>
+            </div>
+
+            <!-- 예약 버튼 -->
+            <div class="modal-footer">
+                <button class="modal-reserve-btn" id="confirmBtn">
+                    <span id="reserveButtonText">1개 예약하기</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <script>
+        /**
+         * 타임세일 페이지 관리
+         */
+        const TimeSale = {
+            // 현재 활성화된 탭
+            currentTab: 'food',
+
+            // 데이터 캐시
+            cache: {
+                food: null,
+                store: null
+            },
+
+            // 무한 스크롤 설정
+            scroll: {
+                page: 0,
+                itemsPerPage: 10,
+                loading: false,
+                hasMore: true,
+                observer: null
+            },
+
+            /**
+             * 초기화
+             */
+            init: function () {
+                console.log('[TimeSale] 초기화 시작');
+                this.bindEvents();
+                this.setupIntersectionObserver();
+                this.loadData('food'); // 초기 로딩 (음식 탭)
+                console.log('[TimeSale] 초기화 완료');
+            },
+
+            /**
+             * 이벤트 바인딩
+             */
+            bindEvents: function () {
+                // 음식 탭 클릭
+                document.getElementById('tabFood').addEventListener('click', () => {
+                    this.switchTab('food');
+                });
+
+                // 가게 탭 클릭
+                document.getElementById('tabStore').addEventListener('click', () => {
+                    this.switchTab('store');
+                });
+            },
+
+            /**
+             * 탭 전환
+             */
+            switchTab: function (tab) {
+                // 현재 탭과 동일하면 아무것도 하지 않음
+                if (this.currentTab === tab) {
+                    console.log(`[탭] 이미 ${tab} 탭이 활성화되어 있습니다`);
+                    return;
+                }
+
+                console.log(`[탭] ${this.currentTab} → ${tab} 전환`);
+                this.currentTab = tab;
+
+                // 탭 UI 업데이트
+                document.getElementById('tabFood').classList.toggle('active', tab === 'food');
+                document.getElementById('tabStore').classList.toggle('active', tab === 'store');
+
+                // 리스트 초기화
+                this.resetScroll();
+
+                // 데이터 로드 (캐시가 있으면 API 호출 안함)
+                this.loadData(tab);
+            },
+
+            /**
+             * 스크롤 상태 초기화
+             */
+            resetScroll: function () {
+                console.log('[스크롤] 상태 초기화');
+                this.scroll.page = 0;
+                this.scroll.hasMore = true;
+                this.scroll.loading = false;
+                document.getElementById('listWrap').innerHTML = '';
+                document.getElementById('listStatus').innerHTML = '';
+            },
+
+            /**
+             * Intersection Observer 설정 (무한 스크롤)
+             */
+            setupIntersectionObserver: function () {
+                const options = {
+                    root: null,
+                    rootMargin: '200px', // 화면 하단 200px 전에 트리거
+                    threshold: 0
+                };
+
+                this.scroll.observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        // sentinel이 화면에 보이고, 더 로드할 데이터가 있고, 로딩 중이 아닐 때만
+                        if (entry.isIntersecting && this.scroll.hasMore && !this.scroll.loading) {
+                            console.log('[Observer] 무한스크롤 트리거');
+                            this.loadMoreItems();
+                        }
+                    });
+                }, options);
+
+                // Sentinel 요소 관찰 시작
+                const sentinel = document.getElementById('sentinel');
+                if (sentinel) {
+                    this.scroll.observer.observe(sentinel);
+                    console.log('[Observer] Sentinel 관찰 시작');
+                } else {
+                    console.error('[Observer] Sentinel 요소를 찾을 수 없습니다');
+                }
+            },
+
+            /**
+             * 데이터 로드 (캐시 우선)
+             */
+            loadData: async function (tab) {
+                // 캐시된 데이터가 있으면 사용 (API 호출 안함)
+                if (this.cache[tab]) {
+                    console.log(`[${tab}] 캐시된 데이터 사용`);
+                    this.renderItems(tab, this.cache[tab]);
+                    return;
+                }
+
+                // 로딩 상태 표시
+                this.showLoading();
+
+                try {
+                    console.log(`[${tab}] API 호출 시작`);
+                    const endpoint = tab === 'food' ? '/timesale/food/list' : '/timesale/store/list';
+                    const data = await API.get(endpoint);
+
+                    console.log(`[${tab}] API 응답 받음:`, data.length, '개');
+
+                    // 캐시 저장
+                    this.cache[tab] = data;
+
+                    // 렌더링
+                    this.renderItems(tab, data);
+
+                } catch (error) {
+                    console.error('데이터 로드 실패:', error);
+                    Utils.notify('데이터를 불러오는데 실패했습니다.', 'error');
+                    this.showError();
+                }
+            },
+
+            /**
+             * 더 많은 아이템 로드 (무한 스크롤)
+             */
+            loadMoreItems: function () {
+                // 이미 로딩 중이거나 더 이상 데이터가 없으면 중단
+                if (this.scroll.loading || !this.scroll.hasMore) {
+                    return;
+                }
+
+                const data = this.cache[this.currentTab];
+                if (!data) return;
+
+                // 로딩 시작
+                this.scroll.loading = true;
+                console.log(`[무한스크롤] 페이지 ${this.scroll.page + 1} 로딩 시작`);
+
+                // 다음 페이지 계산
+                this.scroll.page++;
+                const start = this.scroll.page * this.scroll.itemsPerPage;
+                const end = start + this.scroll.itemsPerPage;
+                const items = data.slice(start, end);
+
+                if (items.length === 0) {
+                    this.scroll.hasMore = false;
+                    this.scroll.loading = false;
+                    this.showNoMoreData();
+                    console.log('[무한스크롤] 모든 데이터 로드 완료');
+                    return;
+                }
+
+                // 약간의 지연으로 자연스러운 로딩 효과
+                setTimeout(() => {
+                    this.appendItems(this.currentTab, items);
+
+                    // 마지막 페이지 확인
+                    if (end >= data.length) {
+                        this.scroll.hasMore = false;
+                        this.showNoMoreData();
+                        console.log('[무한스크롤] 마지막 페이지 도달');
+                    }
+
+                    this.scroll.loading = false;
+                    console.log(`[무한스크롤] 페이지 ${this.scroll.page} 로딩 완료`);
+                }, 300);
+            },
+
+            /**
+             * 아이템 렌더링
+             */
+            renderItems: function (tab, data) {
+                const listWrap = document.getElementById('listWrap');
+                listWrap.innerHTML = '';
+
+                if (!data || data.length === 0) {
+                    this.showEmpty();
+                    return;
+                }
+
+                // 첫 페이지 아이템만 렌더링
+                const items = data.slice(0, this.scroll.itemsPerPage);
+                this.appendItems(tab, items);
+
+                // 더 많은 데이터가 있는지 확인
+                if (data.length <= this.scroll.itemsPerPage) {
+                    this.scroll.hasMore = false;
+                    this.showNoMoreData();
+                }
+            },
+
+            /**
+             * 아이템 추가 (무한 스크롤용)
+             */
+            appendItems: function (tab, items) {
+                const listWrap = document.getElementById('listWrap');
+                const fragment = document.createDocumentFragment();
+
+                items.forEach(item => {
+                    const element = tab === 'food'
+                        ? this.createFoodCard(item)
+                        : this.createStoreCard(item);
+                    fragment.appendChild(element);
+                });
+
+                listWrap.appendChild(fragment);
+                this.hideLoading();
+            },
+
+            /**
+             * 음식 카드 생성
+             */
+            createFoodCard: function (food) {
+                const card = document.createElement('div');
+                card.className = 'food-card';
+                card.dataset.productNum = food.productNum;
+                card.dataset.storeIdx = food.storeIdx;
+
+                const discountRate = Math.round((1 - food.eventPrice / food.price) * 100);
+                const originalPrice = Utils.formatNumber(food.price);
+                const salePrice = Utils.formatNumber(food.eventPrice);
+
+                card.innerHTML = `
+            <div class="food-thumb">
+                ${food.productPictureIdx
+                        ? `<img src="/upload/${food.productPictureIdx}" alt="이미지 없음">`
+                        : '<div class="no-image">이미지 없음</div>'}
+            </div>
+            <div class="food-lines">
+                <div class="food-store">${food.storeName}</div>
+                <div>${food.productName}</div>
+                <div class="muted">미정 할인 시작</div>
+                <div>${salePrice}원 / 원가 ${originalPrice}원</div>
+                <div>할인율: ${discountRate}%</div>
+            </div>
+        `;
+
+                // 음식 카드 클릭 시 해당 가게의 상세 페이지로 이동
+                card.addEventListener('click', () => {
+                    openReservationModal(food.productNum);
+                });
+
+                return card;
+            },
+
+            /**
+             * 가게 카드 생성
+             */
+            createStoreCard: function (store) {
+                const card = document.createElement('div');
+                card.className = 'store-card';
+                card.dataset.storeIdx = store.storeIdx;
+
+                const openTime = store.openTime || '영업시간 미정';
+                const saleTime = store.eventStartTime && store.eventEndTime
+                    ? `${store.eventStartTime} ~ ${store.eventEndTime}`
+                    : '할인시간 미정';
+
+                card.innerHTML = `
+            <div>
+                <div class="store-name">${store.storeName}</div>
+                <div class="store-times">
+                    <div class="muted">${store.category || '기타'}</div>
+                    <div>${openTime}</div>
+                    <div>${saleTime}</div>
+                </div>
+            </div>
+            <div class="store-thumb">
+                ${store.storePictureIdx
+                        ? `<img src="/upload/${store.storePictureIdx}" alt="이미지 없음">`
+                        : '<div class="no-image">이미지 없음</div>'}
+            </div>
+        `;
+
+                // 가게 카드 클릭 시 상세 페이지로 이동
+                card.addEventListener('click', () => {
+                    this.goToStoreDetail(store.storeIdx);
+                });
+
+                return card;
+            },
+
+            /**
+             * 가게 상세 페이지로 이동
+             * @param {number} storeIdx - 가게 인덱스
+             */
+            goToStoreDetail: function (storeIdx) {
+                if (!storeIdx) {
+                    Utils.notify('가게 정보를 찾을 수 없습니다.', 'error');
+                    console.error('[상세페이지] storeIdx가 없습니다:', storeIdx);
+                    return;
+                }
+
+                console.log(`[상세페이지] 이동 - storeIdx: ${storeIdx}`);
+
+                // 상세 페이지로 이동 (쿼리 파라미터로 STORE_IDX 전달)
+                window.location.href = `/timesale/detail?storeIdx=${storeIdx}`;
+            },
+
+            /**
+             * 로딩 표시
+             */
+            showLoading: function () {
+                this.scroll.loading = true;
+                const listStatus = document.getElementById('listStatus');
+                listStatus.innerHTML = `
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p>데이터를 불러오는 중...</p>
+            </div>
+        `;
+            },
+
+            /**
+             * 로딩 숨기기
+             */
+            hideLoading: function () {
+                this.scroll.loading = false;
+                document.getElementById('listStatus').innerHTML = '';
+            },
+
+            /**
+             * 에러 표시
+             */
+            showError: function () {
+                const listWrap = document.getElementById('listWrap');
+                listWrap.innerHTML = `
+            <div class="empty-state">
+                <p class="error-icon">⚠️</p>
+                <p class="error-message">데이터를 불러오는데 실패했습니다.</p>
+                <button onclick="location.reload()" class="retry-btn">다시 시도</button>
+            </div>
+        `;
+                this.hideLoading();
+            },
+
+            /**
+             * 빈 상태 표시
+             */
+            showEmpty: function () {
+                const listWrap = document.getElementById('listWrap');
+                const message = this.currentTab === 'food'
+                    ? '현재 할인 중인 음식이 없습니다.'
+                    : '현재 할인 중인 가게가 없습니다.';
+
+                listWrap.innerHTML = `
+            <div class="empty-state">
+                <p class="empty-icon">🔍</p>
+                <p class="empty-message">${message}</p>
+            </div>
+        `;
+                this.hideLoading();
+            },
+
+            /**
+             * 더 이상 데이터 없음 표시
+             */
+            showNoMoreData: function () {
+                const listStatus = document.getElementById('listStatus');
+                listStatus.innerHTML = `
+            <div class="no-more-data">
+                <p>모든 항목을 불러왔습니다.</p>
+            </div>
+        `;
+            },
+
+            /**
+             * 캐시 새로고침 (페이지 새로고침 시 또는 수동 호출)
+             */
+            refreshData: async function () {
+                this.cache = {
+                    food: null,
+                    store: null
+                };
+                this.resetScroll();
+                await this.loadData(this.currentTab);
+                Utils.notify('데이터를 새로고침했습니다.', 'success');
+            }
+        };
+
+        // DOM 로드 완료 후 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+            TimeSale.init();
+        });
+        /**
+ * 예약 모달 관리
+ * timesale.html과 timesaledetail.html 공통 사용
+ */
+const ReservationModal = {
+    // 현재 선택된 상품 정보
+    currentProduct: null,
+    currentStore: null,
+    
+    // 수량 설정
+    quantity: 1,
+    maxQuantity: 10,
+
+    /**
+     * 예약 모달 열기
+     * @param {number} productNum - 상품 번호
+     */
+    open: async function(productNum) {
+        console.log('[예약모달] 열기 시작 - productNum:', productNum);
+        
+        if (!productNum) {
+            Utils.notify('상품 정보를 찾을 수 없습니다.', 'error');
+            return;
+        }
+
+        try {
+            // 상품 상세 정보 조회
+            const product = await API.get(`/timesale/product/${productNum}`);
+            
+            if (!product) {
+                Utils.notify('상품 정보를 불러올 수 없습니다.', 'error');
+                return;
+            }
+
+            console.log('[예약모달] 상품 정보:', product);
+
+            // 가게 상세 정보 조회 (할인 시간 정보 필요)
+            const store = await API.get(`/timesale/detail/${product.storeIdx}`);
+            
+            console.log('[예약모달] 가게 정보:', store);
+
+            // 데이터 저장
+            this.currentProduct = product;
+            this.currentStore = store;
+
+            // 최대 수량 설정 (재고와 10 중 작은 값)
+            this.maxQuantity = Math.min(product.productQuantity, 10);
+            this.quantity = 1;
+
+            // 모달 렌더링
+            this.render();
+
+            // 모달 표시
+            const modal = document.getElementById('reservationModal');
+            if (modal) {
+                modal.classList.add('active');
+            }
+
+            // 이벤트 리스너 설정
+            this.bindEvents();
+
+        } catch (error) {
+            console.error('[예약모달] 로드 실패:', error);
+            Utils.notify('상품 정보를 불러오는데 실패했습니다.', 'error');
+        }
+    },
+
+    /**
+     * 예약 모달 닫기
+     */
+    close: function() {
+        console.log('[예약모달] 닫기');
+        
+        const modal = document.getElementById('reservationModal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+
+        // 데이터 초기화
+        this.currentProduct = null;
+        this.currentStore = null;
+        this.quantity = 1;
+    },
+
+    /**
+     * 모달 내용 렌더링
+     */
+    render: function() {
+        if (!this.currentProduct || !this.currentStore) {
+            console.error('[예약모달] 데이터가 없습니다');
+            return;
+        }
+
+        const product = this.currentProduct;
+        const store = this.currentStore;
+
+        // 가게 이름
+        const modalStoreName = document.getElementById('modalStoreName');
+        if (modalStoreName) {
+            modalStoreName.textContent = product.storeName;
+        }
+
+        // 상품 이미지
+        const modalProductImg = document.getElementById('modalProductImg');
+        if (modalProductImg) {
+            modalProductImg.src = product.productPictureIdx 
+                ? `/upload/${product.productPictureIdx}` 
+                : '/images/default-food.png';
+            modalProductImg.alt = product.productName;
+        }
+
+        // 상품 이름
+        const modalProductName = document.getElementById('modalProductName');
+        if (modalProductName) {
+            modalProductName.textContent = product.productName;
+        }
+
+        // 가격 정보
+        const currentPrice = product.eventPrice || product.price;
+        const hasDiscount = product.eventPrice && product.eventPrice < product.price;
+
+        const modalPrice = document.getElementById('modalPrice');
+        if (modalPrice) {
+            modalPrice.textContent = `${Utils.formatNumber(currentPrice)}엔`;
+        }
+
+        const modalOriginalPrice = document.getElementById('modalOriginalPrice');
+        if (modalOriginalPrice) {
+            if (hasDiscount) {
+                modalOriginalPrice.textContent = `${Utils.formatNumber(product.price)}엔`;
+                modalOriginalPrice.style.display = 'inline';
+            } else {
+                modalOriginalPrice.style.display = 'none';
+            }
+        }
+
+        // 재고 정보
+        const modalSaleTime = document.getElementById('modalSaleTime');
+        if (modalSaleTime) {
+            modalSaleTime.textContent = `재고 ${product.productQuantity}개 남음`;
+        }
+
+        // 수량 설정
+        const quantityInput = document.getElementById('quantityInput');
+        if (quantityInput) {
+            quantityInput.value = this.quantity;
+            quantityInput.max = this.maxQuantity;
+        }
+
+        // 최대 수량 안내
+        const modalQuantityNote = document.querySelector('.modal-quantity-note');
+        if (modalQuantityNote) {
+            modalQuantityNote.textContent = `최대 ${this.maxQuantity}개 예약 가능`;
+        }
+
+        // 총 금액 업데이트
+        this.updateTotalPrice();
+
+        console.log('[예약모달] 렌더링 완료');
+    },
+
+    /**
+     * 이벤트 바인딩
+     */
+    bindEvents: function() {
+        // 닫기 버튼
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+        const modalOverlay = document.querySelector('.modal-overlay');
+        
+        if (modalCloseBtn) {
+            modalCloseBtn.onclick = () => this.close();
+        }
+        if (modalOverlay) {
+            modalOverlay.onclick = () => this.close();
+        }
+
+        // 수량 감소 버튼
+        const decreaseBtn = document.getElementById('decreaseBtn');
+        if (decreaseBtn) {
+            decreaseBtn.onclick = () => {
+                if (this.quantity > 1) {
+                    this.quantity--;
+                    this.updateQuantity();
+                }
+            };
+        }
+
+        // 수량 증가 버튼
+        const increaseBtn = document.getElementById('increaseBtn');
+        if (increaseBtn) {
+            increaseBtn.onclick = () => {
+                if (this.quantity < this.maxQuantity) {
+                    this.quantity++;
+                    this.updateQuantity();
+                }
+            };
+        }
+
+        // 예약 버튼
+        const confirmBtn = document.getElementById('confirmBtn');
+        if (confirmBtn) {
+            confirmBtn.onclick = () => this.reserve();
+        }
+    },
+
+    /**
+     * 수량 업데이트
+     */
+    updateQuantity: function() {
+        const quantityInput = document.getElementById('quantityInput');
+        if (quantityInput) {
+            quantityInput.value = this.quantity;
+        }
+        
+        this.updateTotalPrice();
+    },
+
+    /**
+     * 총 금액 업데이트
+     */
+    updateTotalPrice: function() {
+        if (!this.currentProduct) return;
+
+        const unitPrice = this.currentProduct.eventPrice || this.currentProduct.price;
+        const totalPrice = unitPrice * this.quantity;
+
+        // 총 금액 표시
+        const modalTotalPrice = document.getElementById('modalTotalPrice');
+        if (modalTotalPrice) {
+            modalTotalPrice.textContent = `${Utils.formatNumber(totalPrice)}엔`;
+        }
+
+        // 버튼 텍스트 업데이트
+        const reserveButtonText = document.getElementById('reserveButtonText');
+        if (reserveButtonText) {
+            reserveButtonText.textContent = `${this.quantity}개 예약하기`;
+        }
+    },
+
+    /**
+     * 예약 처리
+     */
+    reserve: async function() {
+        console.log('[예약] 시작 - 수량:', this.quantity);
+
+        if (!this.currentProduct) {
+            Utils.notify('상품 정보가 없습니다.', 'error');
+            return;
+        }
+
+        try {
+            // 로그인 체크 (세션 또는 로컬스토리지에서 확인)
+            const userIdx = Utils.getStorage('userIdx');
+            if (!userIdx) {
+                Utils.notify('로그인이 필요합니다.', 'warning');
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 1000);
+                return;
+            }
+
+            // 예약 데이터 준비
+            const reservationData = {
+                userIdx: userIdx,
+                productNum: this.currentProduct.productNum,
+                storeIdx: this.currentProduct.storeIdx,
+                productName: this.currentProduct.productName,
+                orderQuantity: this.quantity,
+                totalPrice: (this.currentProduct.eventPrice || this.currentProduct.price) * this.quantity
+            };
+
+            console.log('[예약] 데이터:', reservationData);
+
+            const response = await API.post('/timesale/reserve', reservationData);
+
+            Utils.notify('예약이 완료되었습니다!', 'success');
+            this.close();
+
+            // 페이지 새로고침 (재고 업데이트 반영)
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+
+        } catch (error) {
+            console.error('[예약] 실패:', error);
+            Utils.notify(error.message || '예약에 실패했습니다.', 'error');
+        }
+    }
+};
+
+// 전역 함수로 노출 (HTML onclick 및 다른 스크립트에서 사용 가능)
+window.openReservationModal = function(productNum) {
+    ReservationModal.open(productNum);
+};
+
+window.closeReservationModal = function() {
+    ReservationModal.close();
+};
+    </script>
+</div>

@@ -1,0 +1,52 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+    hikari:
+      auto-commit: false
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    open-in-view: false
+    show-sql: false
+
+  session:
+    store-type: none
+
+  cache:
+    type: none
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: test@example.com
+    password: test-password
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+  google:
+    maps:
+      api-key: test-api-key
+
+  security:
+    jwt:
+      secret: test-secret-key-for-testing-only-min-32-characters
+      expiration: 86400000
+
+logging:
+  level:
+    root: WARN
+    com.scit.soragodong: DEBUG

@@ -1,0 +1,27 @@
+<div th:fragment="nav" class="bottom-nav">
+    <div class="nav-item" onclick="location.href='/finance'">
+        <ion-icon name="wallet-outline"></ion-icon>
+        <span>가계부</span>
+    </div>
+
+    <div class="nav-item" onclick="location.href='/timesale'">
+        <ion-icon name="time-outline"></ion-icon>
+        <span>타임세일</span>
+    </div>
+
+    <div style="width: 70px;"></div>
+
+    <div class="nav-center-btn" onclick="openChat()">
+        <ion-icon name="chatbubbles"></ion-icon>
+    </div>
+
+    <div class="nav-item" onclick="location.href='/used'">
+        <ion-icon name="cube-outline"></ion-icon>
+        <span>중고거래</span>
+    </div>
+
+    <div class="nav-item" onclick="location.href='/community'">
+        <ion-icon name="people-outline"></ion-icon>
+        <span>커뮤니티</span>
+    </div>
+</div>

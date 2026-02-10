@@ -1,0 +1,42 @@
+spring:
+  datasource:
+    url: jdbc:mysql://158.180.77.160:3306/soragodong?allowPublicKeyRetrieval=true&useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&autoReconnect=true&characterEncoding=utf8&allowMultiQueries=true
+    username: sora
+    password: sora123!@#
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+
+  data:
+    redis:
+      host: 158.180.77.160
+      port: 6379
+      password: 
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: soragodong.noreply@gmail.com
+    password: cxxc wmgz unfr fvgj
+
+  google:
+    maps:
+      api-key: AIzaSyD0JvkzUvQAe-HTTdPanpMhKR55RSXAPIY
+
+  security:
+    jwt:
+      secret: soragodong-super-secret-jwt-key-min-32-characters-required
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.format_sql: true
+
+  thymeleaf:
+    cache: false
+
+logging:
+  level:
+    root: INFO
+    com.scit.soragodong: DEBUG

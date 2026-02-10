@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <script type="module" src="https://unpkg.com/ionicons@7/dist/ionicons/ionicons.esm.js"></script>
+    <script async defer
+        th:src="@{https://maps.googleapis.com/maps/api/js(key=${googleMapsApiKey},libraries='places,geocoding')}"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/validation.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            signup.init();
+        });
+
+        const signup = {
+            init: () => {
+                signup.evtHandler();
+            },
+            evtHandler: () => {
+                document.querySelector('.geocode_btn').addEventListener('click', () => signup.getGoogleGeocode());
+                document.querySelector('.duplicate-btn').addEventListener('click', () => signup.emailDuplicate());
+                document.querySelector('.btn-primary').addEventListener('click', () => signup.submitForm());
+            },
+            getGoogleGeocode: () => {
+                const address = document.querySelector('input[name="userAddress"]').value;
+
+                if (!address) {
+                    Utils.notify('주소를 입력해주세요', 'warning');
+                    return;
+                }
+
+                new google.maps.Geocoder().geocode({ address }, (results, status) => {
+                    if (status === 'OK') {
+                        const lat = results[0].geometry.location.lat();
+                        const lng = results[0].geometry.location.lng();
+
+                        document.querySelector('input[name="userAddress"]').value = results[0].formatted_address;
+                        document.querySelector('input[name="userLat"]').value = lat;
+                        document.querySelector('input[name="userLng"]').value = lng;
+                    } else {
+                        Utils.notify('주소를 찾을 수 없습니다: ' + status, 'error');
+                    }
+                });
+            },
+            emailDuplicate: async () => {
+                const userEmail = document.querySelector('[name="userEmail"]').value;
+
+                // 검증
+                if (!Validation.required(userEmail)) {
+                    Utils.notify('이메일을 입력해주세요', 'warning');
+                    return;
+                }
+                if (!Validation.email(userEmail)) {
+                    Utils.notify('이메일 형식이 올바르지 않습니다', 'error');
+                    return;
+                }
+
+                try {
+                    const res = await API.post('/auth/check-email', { userEmail });
+                    if (res.data.isDuplicate) {
+                        Utils.notify('이미 사용 중인 이메일입니다', 'warning');
+                    } else {
+                        Utils.notify('사용 가능한 이메일입니다', 'success');
+                    }
+                } catch (error) {
+                    Utils.notify('오류가 발생했습니다: ' + error.message, 'error');
+                }
+            },
+            submitForm: async () => {
+                // 폼 데이터 수집
+                const userEmail = document.querySelector('[name="userEmail"]').value;
+                const password = document.querySelector('[name="password"]').value;
+                const userPwCheck = document.querySelector('[name="userPwCheck"]').value;
+                const userName = document.querySelector('[name="userName"]').value;
+                const userNickname = document.querySelector('[name="userNickname"]').value;
+                const userAddress = document.querySelector('[name="userAddress"]').value;
+                const userLat = document.querySelector('[name="userLat"]').value;
+                const userLng = document.querySelector('[name="userLng"]').value;
+
+                // 필수 검증
+                if (!Validation.required(userEmail) || !Validation.email(userEmail)) {
+                    Utils.notify('올바른 이메일을 입력해주세요', 'error');
+                    return;
+                }
+
+                if (!Validation.required(password) || !Validation.password(password)) {
+                    Utils.notify('비밀번호는 8~16자, 대문자/소문자/숫자/특수문자(@,#,$,!,%,*,?,&)를 포함해야 합니다', 'error');
+                    return;
+                }
+                if (password !== userPwCheck) {
+                    Utils.notify('비밀번호가 일치하지 않습니다', 'error');
+                    return;
+                }
+                if (!Validation.required(userName)) {
+                    Utils.notify('이름을 입력해주세요', 'warning');
+                    return;
+                }
+                if (!Validation.required(userNickname)) {
+                    Utils.notify('닉네임을 입력해주세요', 'warning');
+                    return;
+                }
+                if (!Validation.required(userAddress)) {
+                    Utils.notify('주소를 입력해주세요', 'warning');
+                    return;
+                }
+                if (!userLat || !userLng) {
+                    Utils.notify('주소 검색을 완료해주세요', 'warning');
+                    return;
+                }
+
+                // 약관 검증
+                const termChks = document.querySelectorAll('.term-chk[required]');
+                for (let chk of termChks) {
+                    if (!chk.checked) {
+                        Utils.notify('필수 약관에 동의해주세요', 'warning');
+                        return;
+                    }
+                }
+
+                // 서버 전송
+                try {
+                    const formData = {
+                        userEmail,
+                        password,
+                        userName,
+                        userNickname,
+                        userAddress,
+                        userLat: parseFloat(userLat),
+                        userLng: parseFloat(userLng)
+                    };
+
+                    // 비동기로 처리 (응답 대기 안 함)
+                    API.post('/auth/signup', formData)
+                        .then(response => {
+                            console.log('회원가입 성공:', response);
+                        })
+                        .catch(error => {
+                            console.error('회원가입 실패:', error);
+                            Utils.notify('회원가입 실패: ' + error.message, 'error');
+                            return;
+                        });
+
+                    Utils.notify('회원가입이 완료되었습니다!\n로그인 페이지로 이동합니다.', 'success', 4000);
+                    setTimeout(() => {
+                        window.location.href = '/auth/login';
+                    }, 1500);
+                } catch (error) {
+                    Utils.notify('폼 검증 오류: ' + error.message, 'error');
+                }
+            }
+        };
+
+        /**
+         * 약관 전체 동의/해제
+         */
+        function toggleAll(checkbox) {
+            const termChks = document.querySelectorAll('.term-chk');
+            termChks.forEach(chk => {
+                chk.checked = checkbox.checked;
+            });
+        }
+    </script>
+</head>
+
+<body>
+
+    <div class="app-container bg-gradient no-scrollbar">
+
+        <div class="page-header transparent">
+            <div class="header-left" onclick="history.back()">
+                <ion-icon name="chevron-back"></ion-icon>
+            </div>
+            <div class="header-title">회원가입</div>
+        </div>
+
+        <div class="form-area bar">
+
+            <div class="input-group">
+                <label class="label">아이디 (이메일) <span>*</span></label>
+                <div style="display:flex; gap: 8px;">
+                    <input type="email" name="userEmail" class="input-field" placeholder="example@email.com">
+                    <button type="button" class="duplicate-btn"
+                        style="width: 80px; background:#555; color:white; border-radius:12px; font-weight:bold;">중복확인</button>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label class="label">비밀번호 <span>*</span></label>
+                <input type="password" name="password" class="input-field" placeholder="8자리 이상 (대문자/소문자/숫자/특수문자)">
+                <input type="password" name="userPwCheck" class="input-field" placeholder="비밀번호 확인"
+                    style="margin-top:8px;">
+            </div>
+
+            <div class="input-group">
+                <label class="label">이름 <span>*</span></label>
+                <input type="text" name="userName" class="input-field" placeholder="이름 입력">
+            </div>
+
+            <div class="input-group">
+                <label class="label">닉네임 <span>*</span></label>
+                <input type="text" name="userNickname" class="input-field" placeholder="활동명 입력">
+            </div>
+
+            <div class="input-group">
+                <label class="label">주소 <span>*</span></label>
+                <div style="display:flex; gap: 8px;">
+                    <input type="text" name="userAddress" class="input-field" placeholder="주소 입력">
+                    <button type="button" class="geocode_btn"
+                        style="width: 80px; background:#555; color:white; border-radius:12px; font-weight:bold;">찾기</button>
+                </div>
+                <input type="hidden" name="userLat">
+                <input type="hidden" name="userLng">
+            </div>
+
+            <div class="terms-box">
+                <label class="check-row all">
+                    <input type="checkbox" name="checkAll" onchange="toggleAll(this)"><span>약관 전체 동의</span>
+                </label>
+
+                <label class="check-row">
+                    <input type="checkbox" class="term-chk" required>
+                    <span class="term-text">(필수) 서비스 이용약관</span>
+                    <span class="term-link">보기</span>
+                </label>
+
+                <label class="check-row">
+                    <input type="checkbox" class="term-chk" required>
+                    <span class="term-text">(필수) 개인정보 수집 및 이용</span>
+                    <span class="term-link">보기</span>
+                </label>
+
+                <label class="check-row">
+                    <input type="checkbox" class="term-chk" required>
+                    <span class="term-text">(필수) 위치기반 서비스 이용</span>
+                </label>
+
+                <label class="check-row">
+                    <input type="checkbox" class="term-chk" required>
+                    <span class="term-text">(필수) 만 14세 이상입니다</span>
+                </label>
+
+                <label class="check-row">
+                    <input type="checkbox" class="term-chk" id="marketingChk">
+                    <span class="term-text">(선택) 마케팅 정보 수신 동의</span>
+                </label>
+            </div>
+
+            <div style="margin-top: 20px; margin-bottom: 40px;">
+                <button type="button" class="btn-primary">가입 완료</button>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+
+</html>

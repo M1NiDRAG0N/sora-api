@@ -1,0 +1,21 @@
+<div th:fragment="header" class="page-header transparent">
+    
+    <div class="header-profile-section">
+        <img id="headerProfile" src="https://i.pravatar.cc/150?img=12" alt="프로필" class="header-profile-img">
+        
+        <div class="header-profile-info">
+            <span class="header-profile-greeting">좋은 아침,</span>
+            <span id="headerNickname" class="header-title header-nickname">전민싱싱</span>
+        </div>
+    </div>
+
+    <div class="header-actions">
+        <div onclick="alert('채팅 목록 페이지로 이동')" class="header-icon">
+            <ion-icon name="chatbubbles-outline"></ion-icon>
+        </div>
+        
+        <div onclick="alert('알림 확인')" class="header-icon">
+            <ion-icon name="notifications-outline"></ion-icon>
+        </div>
+    </div>
+</div>

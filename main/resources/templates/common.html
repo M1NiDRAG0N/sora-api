@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>소라고동</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/finance.css">
+    <link rel="stylesheet" href="/css/chat.css">
+    <link rel="stylesheet" href="/css/community.css">
+    <link rel="stylesheet" href="/css/findAccount.css">
+    <link rel="stylesheet" href="/css/profile.css">
+    <link rel="stylesheet" href="/css/timesale.css">
+
+    <script type="module" src="https://unpkg.com/ionicons@7/dist/ionicons/ionicons.esm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
+    <script src="/js/utils.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/validation.js"></script>
+</head>
+
+<body>
+
+    <div class="app-container bg-gradient">
+        <div th:replace="~{layout/header :: header}"></div>
+
+        <th:block th:if="${currentUri == '/main'}" th:insert="~{main/main :: div}"></th:block>
+        <th:block th:if="${currentUri == '/finance'}" th:insert="~{finance/finance :: div}"></th:block>
+        <th:block th:if="${currentUri == '/timesale'}" th:insert="~{timesale/timesale :: div}"></th:block>
+        <th:block th:if="${currentUri == '/timesale/detail'}" th:insert="~{timesale/timesaledetail :: div}"></th:block>
+
+        <div th:replace="~{layout/nav :: nav}"></div>
+
+        <!-- ================================================ -->
+
+        <div id="chatLayer" class="page-layer">
+            <div class="chat-header">
+                <div class="chat-close-btn">
+                    <ion-icon name="chevron-down"></ion-icon>
+                </div>
+                <div class="header-title">소라고동 AI</div>
+                <div class="chat-header-spacer"></div>
+            </div>
+
+            <div class="chat-body no-scrollbar" id="chatContainer">
+            </div>
+
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" placeholder="메시지를 입력하세요...">
+                <div class="btn-send">
+                    <ion-icon name="paper-plane"></ion-icon>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>

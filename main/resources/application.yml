@@ -1,0 +1,97 @@
+spring:
+  application:
+    name: sora-api
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  config:
+    import: optional:classpath:application-${spring.profiles.active}.yml
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 20MB
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/soragodong?allowPublicKeyRetrieval=true&useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&autoReconnect=true&characterEncoding=utf8&allowMultiQueries=true
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      auto-commit: false
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    open-in-view: false
+    show-sql: false
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+
+  session:
+    store-type: redis
+
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+  google:
+    maps:
+      api-key: ${GOOGLE_MAPS_API_KEY}
+
+  security:
+    jwt:
+      secret: ${JWT_SECRET}
+      expiration: 86400000
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000
+
+server:
+  port: 8080
+  shutdown: graceful
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+  compression:
+    enabled: true
+    min-response-size: 1024
+  tomcat:
+    connection-timeout: 20000
+    threads:
+      max: 200
+      min-spare: 10
+  error:
+    include-message: always
+    include-stacktrace: on_param
+
+logging:
+  level:
+    root: INFO
+    com.scit.soragodong: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/soragodong.log
+    max-size: 10MB
+    max-history: 30
