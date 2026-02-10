@@ -39,28 +39,23 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    "/landing"
-                    , "/auth/**"
-                    , "/"
-                ).permitAll()
-                .anyRequest().authenticated()
-            )
-            .formLogin(form -> form
-                .loginPage("/auth/login")
-                .loginProcessingUrl("/auth/login-proc")
-                .successHandler(successHandler)
-                .failureHandler(failureHandler)
-                .usernameParameter("userEmail")
-                .passwordParameter("password")
-            )
-            .logout(logout -> logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/login")
-            )
-            .userDetailsService(userDetailsService);
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/landing", "/auth/**", "/")
+                        .permitAll()
+                        .anyRequest().authenticated())
+                .formLogin(form -> form
+                        .loginPage("/auth/login")
+                        .loginProcessingUrl("/auth/login-proc")
+                        .successHandler(successHandler)
+                        .failureHandler(failureHandler)
+                        .usernameParameter("userEmail")
+                        .passwordParameter("password"))
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login"))
+                .userDetailsService(userDetailsService);
 
         return http.build();
     }
@@ -68,7 +63,7 @@ public class SecurityConfig {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return web -> web.ignoring()
-            .requestMatchers("/css/**", "/js/**", "/images/**", "/static/**");
+                .requestMatchers("/css/**", "/js/**", "/images/**", "/static/**");
     }
 
     @Bean
