@@ -1,19 +1,25 @@
 package com.scit.soragodong.service;
 
+import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.scit.soragodong.domain.dto.BoardDto;
 import com.scit.soragodong.domain.dto.BoardReplyDto;
+import com.scit.soragodong.domain.dto.FileRes;
 import com.scit.soragodong.domain.entity.Board;
 import com.scit.soragodong.domain.entity.BoardReply;
+import com.scit.soragodong.domain.entity.File;
 import com.scit.soragodong.domain.entity.FileGrp;
 import com.scit.soragodong.domain.entity.Users;
 import com.scit.soragodong.domain.enums.FileRefType;
@@ -21,6 +27,8 @@ import com.scit.soragodong.exception.CustomException;
 import com.scit.soragodong.exception.ErrorCode;
 import com.scit.soragodong.repository.BoardReplyRepository;
 import com.scit.soragodong.repository.BoardRepository;
+import com.scit.soragodong.repository.FileGrpRepository;
+import com.scit.soragodong.repository.FileRepository;
 import com.scit.soragodong.repository.UserRepository;
 import com.scit.soragodong.util.DateTimeUtil;
 
@@ -36,6 +44,9 @@ public class CommunityService {
     private final BoardRepository br;
     private final UserRepository ur;
     private final BoardReplyRepository brr;
+    private final FileService fileService;
+    private final FileGrpRepository fileGrpRepository;
+    private final FileRepository fileRepository;
 
     /**
      * 게시글 10개씩 조회
@@ -67,6 +78,7 @@ public class CommunityService {
                     .viewCount(board.getViewCount())
                     .createdAt(board.getCreatedAt())
                     .replyCount(board.getReplyCount())
+                    .fileGrpIdx(board.getFileGrp() != null ? board.getFileGrp().getFileGrpIdx() : null)
                     .build();
 
             dtoList.add(dto);
@@ -80,7 +92,7 @@ public class CommunityService {
      * @param boardDto
      * @return
      */
-    public BoardDto writeBoard(BoardDto boardDto) {
+    public BoardDto writeBoard(BoardDto boardDto, List<MultipartFile> files) {
 
         // user를 못찾으면 에러 던짐
         Users user = ur.findById(boardDto.userIdx())
@@ -97,8 +109,35 @@ public class CommunityService {
 
             Board savedBoard = br.save(baordEntity);
 
+            // 파일 저장 로직
+            if (files != null && !files.isEmpty()) {
+                // 파일 업로드 (FileGrp 생성 포함)
+                fileService.upload(FileRefType.BOARD, savedBoard.getBoardIdx(), files);
+
+                // 생성된 FileGrp 조회
+                Optional<FileGrp> fileGrpOpt = fileGrpRepository.findByRefTypeAndRefId(FileRefType.BOARD,
+                        savedBoard.getBoardIdx());
+
+                if (fileGrpOpt.isPresent()) {
+                    FileGrp fileGrp = fileGrpOpt.get();
+                    log.info("FileGrp found: {}", fileGrp.getFileGrpIdx());
+
+                    // Reflection을 사용하여 fileGrp 설정 (Setter가 없으므로)
+                    Field field = Board.class.getDeclaredField("fileGrp");
+                    field.setAccessible(true);
+                    field.set(savedBoard, fileGrp);
+
+                    // 변경사항 강제 저장 (UPDATE 쿼리 유발)
+                    savedBoard = br.saveAndFlush(savedBoard);
+                    log.info("Board updated with FileGrp");
+                } else {
+                    log.warn("FileGrp not found after upload");
+                }
+            }
+
             return getBoardOne(savedBoard);
         } catch (Exception e) {
+            log.error("글쓰기 에러", e);
             // 저장 실패하면 에러를 던짐
             throw new CustomException(ErrorCode.INTERNAL_ERROR);
         }
@@ -126,6 +165,7 @@ public class CommunityService {
                 .viewCount(savedBoard.getViewCount())
                 .replyCount(savedBoard.getReplyCount())
                 .createdAt(savedBoard.getCreatedAt())
+                .fileGrpIdx(savedBoard.getFileGrp() != null ? savedBoard.getFileGrp().getFileGrpIdx() : null)
                 .build();
 
         return dto;
@@ -147,9 +187,28 @@ public class CommunityService {
                 .viewCount(entity.getViewCount())
                 .createdAt(entity.getCreatedAt())
                 .replyCount(entity.getReplyCount())
+                .fileGrpIdx(entity.getFileGrp() != null ? entity.getFileGrp().getFileGrpIdx() : null)
                 .build();
 
         return boardDto;
+    }
+
+    /**
+     * 게시글 첨부파일 목록 조회
+     */
+    public List<FileRes> getBoardFiles(Integer boardIdx) {
+        Optional<FileGrp> grpOpt = fileGrpRepository.findByRefTypeAndRefId(FileRefType.BOARD, boardIdx);
+        if (grpOpt.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        FileGrp group = grpOpt.get();
+        List<File> files = fileRepository.findByFileGroupAndIsUseTrueOrderByFileOrder(group);
+        log.info("Board {} has {} files", boardIdx, files.size());
+
+        return files.stream()
+                .map(f -> new FileRes(f.getFileIdx(), f.getOriginalName(), f.getFilePath(), f.getFileOrder()))
+                .collect(Collectors.toList());
     }
 
     public List<BoardReplyDto> getReplyList(Integer boardIdx) {

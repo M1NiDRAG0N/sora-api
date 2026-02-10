@@ -46,8 +46,9 @@ public class Board extends BaseEntity {
     @Column(name = "VIEW_COUNT", nullable = false)
     private Integer viewCount = 0;
 
-    @Column(name = "FILE_GRP_IDX")
-    private Integer fileGrpIdx;
+    @OneToOne(fetch = FetchType.LAZY) // 또는 @ManyToOne
+    @JoinColumn(name = "FILE_GRP_IDX")
+    private FileGrp fileGrp;
 
     @Formula("(SELECT count(1) FROM BOARD_REPLY r WHERE r.BOARD_IDX = BOARD_IDX)")
     private int replyCount;
