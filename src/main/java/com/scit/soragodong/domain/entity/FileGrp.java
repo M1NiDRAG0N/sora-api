@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 
 import org.springframework.data.annotation.CreatedDate;
 
-import com.scit.soragodong.common.BaseEntity;
 import com.scit.soragodong.domain.enums.FileRefType;
 
 import jakarta.persistence.Column;
