@@ -28,6 +28,7 @@ public class UserService {
     private final RedisTemplate<String, String> redisTemplate;
     
     private static final String VERIFICATION_CODE_PREFIX = "signup:";
+    private static final String PASSWORD_RESET_PREFIX = "reset:";
     private static final long VERIFICATION_CODE_EXPIRY = 10; // 10분
     
     public boolean existsByUserEmail(String userEmail) {
@@ -85,6 +86,10 @@ public class UserService {
         String redisKey = VERIFICATION_CODE_PREFIX + userDto.userEmail();
         String verificationStatus = redisTemplate.opsForValue().get(redisKey);
         
+        if (verificationStatus == null) {
+            throw new CustomException(ErrorCode.VERIFICATION_EXPIRED);
+        }
+        
         if (!"verified".equals(verificationStatus)) {
             throw new CustomException(ErrorCode.INVALID_INPUT);
         }
@@ -130,4 +135,69 @@ public class UserService {
         int code = 100000 + random.nextInt(900000);
         return String.valueOf(code);
     }
-}
+    
+    /**
+     * 비밀번호 리셋 코드 발송 (기존 회원용)
+     */
+    public void sendPasswordResetCode(String email) {
+        // 이메일 존재 확인
+        Users user = ur.findByUserEmail(email)
+            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        
+        // 인증 코드 생성
+        String verificationCode = generateVerificationCode();
+        
+        // Redis에 저장 (10분 유효)
+        String redisKey = PASSWORD_RESET_PREFIX + email;
+        redisTemplate.opsForValue().set(redisKey, verificationCode, VERIFICATION_CODE_EXPIRY, TimeUnit.MINUTES);
+        
+        // 이메일 발송
+        emailService.sendVerificationEmail(email, verificationCode);
+    }
+    
+    /**
+     * 비밀번호 리셋 코드 검증
+     */
+    public void verifyPasswordResetCode(String email, String verificationCode) {
+        String redisKey = PASSWORD_RESET_PREFIX + email;
+        String storedCode = redisTemplate.opsForValue().get(redisKey);
+        
+        if (storedCode == null) {
+            throw new CustomException(ErrorCode.INVALID_INPUT);
+        }
+        
+        if (!storedCode.equals(verificationCode)) {
+            throw new CustomException(ErrorCode.INVALID_INPUT);
+        }
+        
+        // 검증 완료 표시
+        redisTemplate.opsForValue().set(redisKey, "verified", VERIFICATION_CODE_EXPIRY, TimeUnit.MINUTES);
+    }
+    
+    /**
+     * 비밀번호 리셋 (이메일 인증 후)
+     */
+    public void resetPassword(String email, String newPassword) {
+        // 이메일 인증 확인
+        String redisKey = PASSWORD_RESET_PREFIX + email;
+        String verificationStatus = redisTemplate.opsForValue().get(redisKey);
+        
+        if (verificationStatus == null) {
+            throw new CustomException(ErrorCode.VERIFICATION_EXPIRED);
+        }
+        
+        if (!"verified".equals(verificationStatus)) {
+            throw new CustomException(ErrorCode.INVALID_INPUT);
+        }
+        
+        // 사용자 존재 확인
+        Users user = ur.findByUserEmail(email)
+            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        
+        // 비밀번호 암호화 및 업데이트
+        String encryptedPassword = bCryptPasswordEncoder.encode(newPassword);
+        ur.updatePassword(email, encryptedPassword);
+        
+        // Redis 인증 코드 삭제
+        redisTemplate.delete(redisKey);
+    }}

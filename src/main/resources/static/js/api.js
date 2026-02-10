@@ -18,7 +18,8 @@ const API = {
             });
             return await API.handleResponse(response);
         } catch (error) {
-            throw new Error(`GET 요청 실패: ${error.message}`);
+            console.error(`GET 요청 실패: ${error.message}`);
+            throw new Error(`${error.message}`);
         }
     },
 
@@ -39,7 +40,8 @@ const API = {
             });
             return await API.handleResponse(response);
         } catch (error) {
-            throw new Error(`POST 요청 실패: ${error.message}`);
+            console.error(`POST 요청 실패: ${error.message}`);
+            throw new Error(`${error.message}`);
         }
     },
 
@@ -60,7 +62,8 @@ const API = {
             });
             return await API.handleResponse(response);
         } catch (error) {
-            throw new Error(`PUT 요청 실패: ${error.message}`);
+            console.error(`PUT 요청 실패: ${error.message}`);
+            throw new Error(`${error.message}`);
         }
     },
 
@@ -79,7 +82,8 @@ const API = {
             });
             return await API.handleResponse(response);
         } catch (error) {
-            throw new Error(`DELETE 요청 실패: ${error.message}`);
+            console.error(`DELETE 요청 실패: ${error.message}`);
+            throw new Error(`${error.message}`);
         }
     },
 
