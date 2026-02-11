@@ -73,40 +73,4 @@ public class DateTimeUtil {
         return dateTime.plusHours(hours);
     }
 
-    /**
-     * N시간 전, N일 전.... 등 반환
-     * 
-     * @param dateTime
-     * @return
-     */
-    public static String calculateTimeAgo(LocalDateTime dateTime) {
-        if (dateTime == null) {
-            return null;
-        }
-
-        LocalDateTime now = LocalDateTime.now();
-        long seconds = ChronoUnit.SECONDS.between(dateTime, now);
-
-        if (seconds < 60) {
-            return "방금 전";
-        }
-
-        long minutes = seconds / 60;
-        if (minutes < 60) {
-            return minutes + "분 전";
-        }
-
-        long hours = minutes / 60;
-        if (hours < 24) {
-            return hours + "시간 전";
-        }
-
-        long days = hours / 24;
-        if (days < 30) {
-            return days + "일 전";
-        }
-
-        // 30일이 넘어가면 그냥 날짜로 표시.
-        return formatDate(dateTime.toLocalDate());
-    }
 }

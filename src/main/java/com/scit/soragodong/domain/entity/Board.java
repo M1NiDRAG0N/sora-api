@@ -9,7 +9,7 @@ import lombok.*;
 
 @Entity
 @Table(name = "BOARD")
-@Getter
+@Data
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -50,7 +50,7 @@ public class Board extends BaseEntity {
     @JoinColumn(name = "FILE_GRP_IDX")
     private FileGrp fileGrp;
 
-    @Formula("(SELECT count(1) FROM BOARD_REPLY r WHERE r.BOARD_IDX = BOARD_IDX)")
+    @Formula("(SELECT count(1) FROM BOARD_REPLY r WHERE r.BOARD_IDX = BOARD_IDX and r.IS_USE = true)")
     private int replyCount;
 
     public void delete() {

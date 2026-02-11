@@ -73,7 +73,6 @@ public class CommunityService {
                     .boardTitle(board.getBoardTitle())
                     .boardContent(board.getBoardContent())
                     .isUse(board.getIsUse())
-                    .timeAgo(DateTimeUtil.calculateTimeAgo(board.getCreatedAt()))
                     .likeCount(board.getLikeCount())
                     .viewCount(board.getViewCount())
                     .createdAt(board.getCreatedAt())
@@ -160,7 +159,6 @@ public class CommunityService {
                 .boardTitle(savedBoard.getBoardTitle())
                 .boardContent(savedBoard.getBoardContent())
                 .isUse(savedBoard.getIsUse())
-                .timeAgo(DateTimeUtil.calculateTimeAgo(savedBoard.getCreatedAt()))
                 .likeCount(savedBoard.getLikeCount())
                 .viewCount(savedBoard.getViewCount())
                 .replyCount(savedBoard.getReplyCount())
@@ -182,7 +180,6 @@ public class CommunityService {
                 .boardTitle(entity.getBoardTitle())
                 .boardContent(entity.getBoardContent())
                 .isUse(entity.getIsUse())
-                .timeAgo(DateTimeUtil.calculateTimeAgo(entity.getCreatedAt()))
                 .likeCount(entity.getLikeCount())
                 .viewCount(entity.getViewCount())
                 .createdAt(entity.getCreatedAt())
@@ -212,7 +209,8 @@ public class CommunityService {
     }
 
     public List<BoardReplyDto> getReplyList(Integer boardIdx) {
-        List<BoardReply> replyEntityList = brr.findAllByBoard_BoardIdxOrderByCreatedAtAsc(boardIdx);
+
+        List<BoardReply> replyEntityList = brr.findAllByBoard_BoardIdxAndIsUseTrueOrderByCreatedAtAsc(boardIdx);
         List<BoardReplyDto> dtoList = new ArrayList<>();
 
         for (BoardReply boardReply : replyEntityList) {
@@ -223,7 +221,7 @@ public class CommunityService {
                     .userNickname(boardReply.getUser().getUserNickname())
                     .userIdx(boardReply.getUser().getUserIdx())
                     .replyContent(boardReply.getReplyContent())
-                    .timeAgo(DateTimeUtil.calculateTimeAgo(boardReply.getCreatedAt()))
+                    .createdAt((boardReply.getCreatedAt()))
                     .build();
 
             dtoList.add(dto);
@@ -267,6 +265,23 @@ public class CommunityService {
         }
     }
 
+    public BoardReplyDto getReplyOne(Integer replyIdx) {
+
+        BoardReply replyEntity = brr.findById(replyIdx).orElseThrow(() -> new CustomException(
+                ErrorCode.REPLY_NOT_FOUND));
+
+        BoardReplyDto dto = BoardReplyDto.builder()
+                .replyIdx(replyEntity.getReplyIdx())
+                .boardIdx(replyEntity.getBoard().getBoardIdx())
+                .userNickname(replyEntity.getUser().getUserNickname())
+                .userIdx(replyEntity.getUser().getUserIdx())
+                .createdAt((replyEntity.getCreatedAt()))
+                .replyContent(replyEntity.getReplyContent())
+                .build();
+
+        return dto;
+    }
+
     @Transactional // ★ 변경 감지(Dirty Checking)를 위해 필수!
     public void boardDelete(Integer boardIdx) {
         // 1. 게시글 찾기 (없으면 커스텀 예외 발생 -> 핸들러가 잡아서 처리함)
@@ -281,6 +296,22 @@ public class CommunityService {
         for (BoardReply reply : replyList) {
             reply.delete();
         }
+    }
+
+    public void replyDelete(Integer replyIdx) {
+        BoardReply boardReply = brr.findById(replyIdx)
+                .orElseThrow(() -> new CustomException(ErrorCode.REPLY_NOT_FOUND));
+
+        boardReply.delete();
+    }
+
+    public void replyUpdate(Integer replyIdx, String replyContent) {
+        BoardReply boardReply = brr.findById(replyIdx)
+                .orElseThrow(() -> new CustomException(ErrorCode.REPLY_NOT_FOUND));
+
+        boardReply.setReplyContent(replyContent);
+
+        brr.save(boardReply);
     }
 
 }

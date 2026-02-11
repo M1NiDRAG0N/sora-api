@@ -1109,3 +1109,179 @@ body.modal-open {
     /* 사진 속 살구빛 도는 빨강 */
     color: white;
 }
+
+.comment-time {
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 2px;
+    margin-left: 5px;
+}
+
+/* =========================================
+   [추가] 댓글 수정 모드 스타일
+   ========================================= */
+
+/* 수정 모드일 때 숨길 요소들 */
+.comment-item.editing .comment-text,
+.comment-item.editing .comment-action-box {
+    display: none;
+}
+
+/* 수정용 폼 박스 (기본은 숨김) */
+.comment-edit-form {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    margin-top: 5px;
+    gap: 8px;
+}
+
+/* 수정 모드일 때 폼 박스 보이기 */
+.comment-item.editing .comment-edit-form {
+    display: flex;
+}
+
+/* 수정용 입력창 */
+.comment-edit-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--primary);
+    /* 테두리를 메인 색상으로 강조 */
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+    resize: none;
+    font-family: inherit;
+    /* 기본 폰트 상속 */
+}
+
+.comment-edit-input:focus {
+    box-shadow: 0 0 0 3px rgba(178, 164, 255, 0.2);
+}
+
+/* 수정용 버튼 묶음 (완료, 취소) */
+.comment-edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.btn-comment-save,
+.btn-comment-cancel {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-comment-cancel {
+    background: #f0f0f0;
+    color: #555;
+}
+
+.btn-comment-save {
+    background: var(--primary);
+    color: white;
+}
+
+
+
+
+
+
+/* 댓글 삭제 로직 */
+
+/* =========================================
+   [추가] 댓글 수정 모드 스타일
+   ========================================= */
+/* =========================================
+   [수정됨] 댓글 수정 모드 & 헤더 스타일
+   ========================================= */
+
+/* 댓글 헤더 (닉네임, 시간, 버튼이 들어가는 줄) */
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    /* 왼쪽(닉네임)과 오른쪽(버튼) 양끝 정렬 */
+    align-items: center;
+    width: 100%;
+}
+
+/* 닉네임과 시간을 묶는 그룹 */
+.comment-info-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 수정 모드일 때 숨길 요소들 (일반 텍스트, 점 3개 메뉴) */
+.comment-item.editing .comment-text,
+.comment-item.editing .comment-action-box {
+    display: none;
+}
+
+/* 수정용 버튼 묶음 (기본은 숨김) */
+.comment-edit-actions {
+    display: none;
+    gap: 6px;
+}
+
+/* 수정 모드일 때 버튼 보이기 */
+.comment-item.editing .comment-edit-actions {
+    display: flex;
+}
+
+/* 수정용 폼 박스 (기본은 숨김) */
+.comment-edit-form {
+    display: none;
+    width: 100%;
+    margin-top: 8px;
+    /* 헤더와의 간격 */
+}
+
+/* 수정 모드일 때 입력창 보이기 */
+.comment-item.editing .comment-edit-form {
+    display: block;
+}
+
+/* 보라색 테두리 입력창 */
+.comment-edit-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--primary, #9C88FF);
+    /* 보라색 테두리 */
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+    resize: none;
+    /* 크기 조절 막기 */
+    font-family: inherit;
+}
+
+.comment-edit-input:focus {
+    box-shadow: 0 0 0 3px rgba(156, 136, 255, 0.2);
+}
+
+/* 취소/수정 버튼 스타일 (사진 참고) */
+.btn-comment-cancel,
+.btn-comment-save {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-comment-cancel {
+    background: #f9f9f9;
+    color: #555;
+}
+
+.btn-comment-save {
+    background: #D0C9FF;
+    /* 보라색 */
+    color: white;
+}
