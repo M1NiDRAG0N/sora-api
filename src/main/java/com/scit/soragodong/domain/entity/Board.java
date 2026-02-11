@@ -1,5 +1,7 @@
 package com.scit.soragodong.domain.entity;
 
+import org.hibernate.annotations.Formula;
+
 import com.scit.soragodong.common.BaseEntity;
 
 import jakarta.persistence.*;
@@ -32,7 +34,8 @@ public class Board extends BaseEntity {
     private String boardContent;
 
     @Column(name = "IS_USE", nullable = false)
-    private Boolean isUse;
+    @Builder.Default // 빌더 쓸 때도 이 값이 기본으로 들어가게 해줌
+    private Boolean isUse = true;
 
     @Builder.Default
     @Column(name = "LIKE_COUNT", nullable = false)
@@ -43,10 +46,15 @@ public class Board extends BaseEntity {
     @Column(name = "VIEW_COUNT", nullable = false)
     private Integer viewCount = 0;
 
-    @PrePersist
-    protected void onCreate() {
-        if (this.isUse == null)
-            this.isUse = true;
+    @OneToOne(fetch = FetchType.LAZY) // 또는 @ManyToOne
+    @JoinColumn(name = "FILE_GRP_IDX")
+    private FileGrp fileGrp;
+
+    @Formula("(SELECT count(1) FROM BOARD_REPLY r WHERE r.BOARD_IDX = BOARD_IDX)")
+    private int replyCount;
+
+    public void delete() {
+        this.isUse = false;
     }
 
 }

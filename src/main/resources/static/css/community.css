@@ -300,7 +300,7 @@
     cursor: pointer;
 }
 
-.page-title {
+.page-title2 {
     font-weight: 700;
     color: #333;
     font-size: 18px;
@@ -351,7 +351,7 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
 }
 
-.title-input {
+#title-input {
     width: 100%;
     border: none;
     outline: none;
@@ -367,7 +367,7 @@
     margin-bottom: 20px;
 }
 
-.content-textarea {
+#content-textarea {
     width: 100%;
     flex: 1;
     border: none;
@@ -577,7 +577,9 @@
     font-size: 18px;
 }
 
-/* 댓글 섹션 */
+/* =========================================
+   [수정됨] 댓글 섹션 스타일
+   ========================================= */
 .comment-section-title {
     font-size: 15px;
     font-weight: 700;
@@ -592,13 +594,24 @@
     gap: 15px;
 }
 
+/* 댓글 카드 (양쪽 정렬을 위해 수정) */
 .comment-item {
     display: flex;
-    gap: 12px;
+    justify-content: space-between;
+    /* 왼쪽 그룹과 오른쪽 버튼 사이 벌리기 */
+    align-items: flex-start;
     background: white;
     padding: 15px;
     border-radius: 16px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+/* 왼쪽: 프사 + 텍스트 묶음 (새로 추가) */
+.comment-left-group {
+    display: flex;
+    gap: 12px;
+    flex: 1;
+    /* 남은 공간 모두 차지 */
 }
 
 .comment-user-img {
@@ -611,10 +624,11 @@
 }
 
 .comment-content {
-    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 4px;
+    padding-right: 10px;
+    /* 텍스트가 버튼 침범하지 않게 */
 }
 
 .comment-user-name {
@@ -627,6 +641,74 @@
     font-size: 13px;
     color: #555;
     line-height: 1.4;
+    word-break: break-all;
+    /* 긴 단어 줄바꿈 */
+}
+
+/* 오른쪽: 더보기 버튼 박스 (새로 추가) */
+.comment-action-box {
+    position: relative;
+    /* 드롭다운 위치 기준 */
+    flex-shrink: 0;
+    /* 사이즈 줄어들지 않음 */
+}
+
+/* 댓글 점 3개 버튼 */
+.btn-comment-more {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #bbb;
+    cursor: pointer;
+    padding: 4px;
+    margin-top: -4px;
+    /* 위치 미세 조정 */
+}
+
+/* 댓글 전용 드롭다운 메뉴 */
+.comment-dropdown {
+    display: none;
+    /* 기본 숨김 */
+    position: absolute;
+    right: 0;
+    top: 24px;
+    background: white;
+    border: 1px solid #eee;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    width: 80px;
+    z-index: 50;
+    overflow: hidden;
+}
+
+.comment-dropdown.active {
+    display: block;
+    /* 활성화 시 보임 */
+    animation: fadeIn 0.2s ease-out;
+}
+
+/* 댓글 메뉴 아이템 */
+.comment-menu-item {
+    display: block;
+    width: 100%;
+    padding: 8px 0;
+    text-align: center;
+    background: white;
+    border: none;
+    border-bottom: 1px solid #f9f9f9;
+    font-size: 13px;
+    cursor: pointer;
+    color: #333;
+}
+
+.comment-menu-item:last-child {
+    border-bottom: none;
+    color: #ff4d4f;
+    /* 삭제 버튼 빨강 */
+}
+
+.comment-menu-item:hover {
+    background-color: #f5f5f5;
 }
 
 /* 하단 플로팅 입력창 (상세보기용) */
@@ -645,7 +727,7 @@
     z-index: 30;
 }
 
-.input-field {
+.input-field2 {
     flex: 1;
     border: none;
     outline: none;
@@ -653,9 +735,29 @@
     background: transparent;
 }
 
-.input-field::placeholder {
+.input-field2::placeholder {
     color: #aaa;
 }
+
+.input-field2 {
+    width: 100%;
+    padding: 16px;
+    /* border: 1px solid rgba(255, 255, 255, 0.6); */
+    border-radius: 16px;
+    font-size: 15px;
+    outline: none;
+    transition: 0.2s;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+}
+
+.input-field2:focus {
+    background: var(--white);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(178, 164, 255, 0);
+}
+
 
 .btn-mic {
     font-size: 24px;
@@ -682,4 +784,328 @@
 
 .btn-send-circle:active {
     background: #B2A4FF;
+}
+
+/* ✅ 앱 스타일 풀스크린 모달 */
+.full-screen-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    /* 배경색 */
+    z-index: 9999;
+    /* 제일 위에 뜨게 */
+
+    /* 처음엔 숨김 & 아래로 내려가 있음 */
+    visibility: hidden;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-in-out, visibility 0.3s;
+    overflow-y: auto;
+    /* 내용이 길면 스크롤 */
+}
+
+/* 활성화되면 올라옴 */
+.full-screen-modal.active {
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* 모달이 떴을 때 뒤에 있는 메인 화면 스크롤 막기 */
+body.modal-open {
+    overflow: hidden;
+}
+
+/* 글쓰기 폼을 화면 위에 붕 띄우기 */
+#writeForm {
+    position: absolute;
+    /* 화면 기준 고정 */
+    top: 100%;
+    /* 처음엔 화면 아래쪽(100%)에 숨겨둠 */
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* 화면 꽉 차게 */
+    z-index: 9999;
+    /* 다른 모든 요소보다 위에 오도록 (헤더, 네비보다 높게) */
+    background-color: #fff;
+    /* 배경색 필수 (투명하면 뒤가 비침) */
+    transition: top 0.3s ease-in-out;
+    /* 부드럽게 올라오는 애니메이션 */
+    overflow-y: auto;
+    /* 내용이 길면 스크롤 가능하게 */
+}
+
+#viewForm {
+    position: absolute;
+    /* 화면 기준 고정 */
+    top: 0;
+    /* 처음엔 화면 아래쪽(100%)에 숨겨둠 */
+    left: 100%;
+    width: 100%;
+    height: 100%;
+    /* 화면 꽉 차게 */
+    z-index: 9999;
+    /* 다른 모든 요소보다 위에 오도록 (헤더, 네비보다 높게) */
+    background-color: #fff;
+    /* 배경색 필수 (투명하면 뒤가 비침) */
+    transition: left 0.3s ease-in-out;
+    /* 부드럽게 올라오는 애니메이션 */
+    overflow-y: auto;
+    /* 내용이 길면 스크롤 가능하게 */
+}
+
+/* 이 클래스가 붙으면 화면에 나타남 */
+#writeForm.active {
+    top: 0;
+    /* 화면 맨 위로 이동 */
+}
+
+#viewForm.active {
+    left: 0;
+    /* 화면 맨 위로 이동 */
+}
+
+/* --- 이미지 슬라이더 --- */
+.slider-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 15px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f0f0f0;
+}
+
+.slider-wrapper {
+    display: flex;
+    transition: transform 0.3s ease-in-out;
+}
+
+.slider-slide {
+    min-width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000;
+}
+
+.slider-slide img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+    max-height: 500px;
+}
+
+.slider-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    background: rgba(0, 0, 0, 0.4);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    z-index: 10;
+    transition: background 0.2s;
+}
+
+.slider-btn:active {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.slider-btn.prev {
+    left: 10px;
+}
+
+.slider-btn.next {
+    right: 10px;
+}
+
+.slider-dots {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+}
+
+.slider-dot {
+    width: 8px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.slider-dot.active {
+    background: white;
+    transform: scale(1.2);
+}
+
+
+
+
+
+
+
+
+/* =========================================
+       1. 더보기 버튼 & 드롭다운 메뉴 스타일 
+       ========================================= */
+.header-right-group {
+    position: relative;
+    /* 드롭다운 배치의 기준점 */
+    display: flex;
+    align-items: center;
+}
+
+/* 드롭다운 메뉴 박스 (공통) */
+.custom-dropdown-menu {
+    display: none;
+    /* 기본 숨김 */
+    position: absolute;
+    top: 40px;
+    /* 버튼 아래 위치 */
+    right: 0;
+    /* 오른쪽 정렬 */
+    width: 140px;
+    /* 너비 적절히 조정 */
+    background: #ffffff;
+    border-radius: 12px;
+    /* 둥근 모서리 */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    /* 부드러운 그림자 */
+    padding: 8px 0;
+    z-index: 1000;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+/* 활성화 클래스 */
+.custom-dropdown-menu.active {
+    display: block;
+    animation: fadeIn 0.2s ease-out;
+}
+
+/* 메뉴 아이템 (수정, 삭제, 신고하기 등) */
+.menu-item {
+    display: block;
+    width: 100%;
+    padding: 12px 0;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 500;
+    color: #333;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.1s;
+}
+
+.menu-item:active {
+    background-color: #f5f5f5;
+}
+
+/* 빨간색 텍스트 (삭제, 신고하기) */
+.menu-item.danger {
+    color: #ff4d4f;
+}
+
+/* 페이드인 애니메이션 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* =========================================
+       2. 게시글 삭제 확인 모달 스타일 (Image 3)
+       ========================================= */
+.modal-overlay {
+    display: none;
+    /* 기본 숨김 */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    /* 배경 어둡게 */
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay.show {
+    display: flex;
+}
+
+.custom-modal {
+    background: white;
+    width: 300px;
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 12px;
+}
+
+.modal-desc {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.5;
+    margin-bottom: 24px;
+    word-break: keep-all;
+}
+
+.modal-btn-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.modal-btn {
+    flex: 1;
+    padding: 12px 0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-close {
+    background-color: #f0f0f0;
+    color: #666;
+}
+
+.btn-delete2 {
+    background-color: #ff6b6b;
+    /* 사진 속 살구빛 도는 빨강 */
+    color: white;
 }

@@ -10,8 +10,8 @@ import com.scit.soragodong.domain.entity.FileGrp;
 
 public interface FileRepository extends JpaRepository<File, Integer> {
 
-    List<FileGrp> findByFileGroupAndIsUseTrueOrderByFileOrder(FileGrp group);
-    
+    List<File> findByFileGroupAndIsUseTrueOrderByFileOrder(FileGrp group);
+
     /**
      * 파일 그룹에서 첫 번째 파일 조회 (썸네일용)
      */

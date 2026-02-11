@@ -15,6 +15,9 @@ public enum ErrorCode {
     USER_NOT_FOUND(404, "사용자를 찾을 수 없습니다."),
     DUPLICATE_EMAIL(409, "이미 사용 중인 이메일입니다."),
 
+    // ===== 커뮤니티 =====
+    BOARD_NOT_FOUND(404, "게시글을 찾을 수 없습니다."),
+
     // ===== 파일 =====
     RESOURCE_NOT_FOUND(404, "요청한 리소스를 찾을 수 없습니다."),
 
@@ -26,7 +29,7 @@ public enum ErrorCode {
 
     // ===== 공통 =====
     INTERNAL_ERROR(500, "시스템 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-    
+
     private final int status;
     private final String message;
 }

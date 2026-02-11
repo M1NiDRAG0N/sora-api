@@ -1,28 +1,28 @@
 <div class="detail-content no-scrollbar" th:fragment="div">
 
-
-    <div class="community-scroll-area">
+    <div class="community-scroll-area" id="communityMain">
 
         <div class="category-bar2" id="categoryBar">
             <div class="cat-scroll">
-                <div class="cat-chip active" onclick="selectCategory(this)">전체</div>
-                <div class="cat-chip" onclick="selectCategory(this)">소분</div>
-                <div class="cat-chip" onclick="selectCategory(this)">자취 꿀팁</div>
-                <div class="cat-chip" onclick="selectCategory(this)">유머게시판</div>
-                <div class="cat-chip" onclick="selectCategory(this)">자유게시판</div>
+                <div class="cat-chip active" onclick="CommunityMain.selectCategory(this)">전체</div>
+                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)">소분/나눔</div>
+                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)">꿀팁/정보</div>
+                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)">자유/수다</div>
+                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)">요리/집밥</div>
+                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)">질문/고민</div>
             </div>
             <div class="search-input-box">
                 <input type="text" class="real-search-input" id="searchInput" placeholder="검색어를 입력하세요">
             </div>
-            <div class="search-btn" onclick="toggleSearchMode()">
+            <div class="search-btn" onclick="CommunityMain.toggleSearchMode()">
                 <ion-icon name="search-outline" id="searchIcon"></ion-icon>
             </div>
         </div>
 
         <div class="feed-list2" id="feedListContainer">
 
-            <a th:each="board : ${boardDtoList}" th:href="@{/community/view/{id}(id=${board.boardIdx})}"
-                class="feed-card">
+            <div th:each="board : ${boardDtoList}" class="feed-card" th:data-boardIdx="${board.boardIdx}"
+                onclick="CommunityView.openView(this)">
 
                 <div class="feed-header">
                     <div class="feed-user-group">
@@ -30,7 +30,7 @@
                             class="user-img-md"> -->
                         <div class="user-info-text">
                             <span class="user-name" th:text="${board.userNickname}">닉네임</span>
-                            <span class="post-time" th:text="${board.createdAt}">시간</span>
+                            <span class="post-time" th:text="${board.timeAgo}">시간</span>
                         </div>
                     </div>
                     <span class="post-tag" th:text="${board.boardCategory}">카테고리</span>
@@ -41,13 +41,14 @@
                         <div class="feed-title" th:text="${board.boardTitle}">제목</div>
                         <div class="feed-preview" th:text="${board.boardContent}">내용</div>
                     </div>
-                    <!-- <img th:if="${board.thumbnail != null}" th:src="${board.thumbnail}" class="feed-thumb"> -->
+                    <img th:if="${board.fileGrpIdx != null}" th:src="@{/img/group/{idx}(idx=${board.fileGrpIdx})}"
+                        class="feed-thumb">
                 </div>
 
                 <div class="feed-footer">
                     <div class="action-item">
                         <ion-icon name="chatbubble-outline"></ion-icon>
-                        <span>0</span>
+                        <span th:text="${board.replyCount}">0</span>
                     </div>
                     <div class="action-item">
                         <ion-icon name="heart-outline"></ion-icon>
@@ -58,7 +59,7 @@
                         <span th:text="${board.viewCount}">0</span>
                     </div>
                 </div>
-            </a>
+            </div>
         </div>
 
         <div id="loading-trigger" style="padding: 20px; text-align: center; color: #888;">
@@ -67,9 +68,147 @@
 
     </div>
 
-    <a href="community_write.html" class="fab-write">
+    <!-- 글쓰기 버튼 -->
+    <button class="fab-write" onclick="CommunityWrite.open()">
         <ion-icon name="pencil-outline"></ion-icon>
-    </a>
+    </button>
+
+
+    <!-- 글쓰기 페이지 시작 -->
+    <div class="app-container bg-gradient" id="writeForm">
+
+        <div class="write-header">
+            <div class="btn-cancel" onclick="CommunityWrite.close()">취소</div>
+            <div class="page-title2">글쓰기</div>
+            <div class="btn-done" onclick="CommunityWrite.submitPost()">완료</div>
+        </div>
+
+        <input type="hidden" id="loginUserIdx" th:value="${#authentication.principal.userIdx}">
+
+        <div class="category-select-area">
+            <div class="select-chip selected" onclick="CommunityMain.selectCategoryWrite(this)" data-value="소분/나눔">소분/나눔
+            </div>
+            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="꿀팁/정보">꿀팁/정보</div>
+            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="자유/수다">자유/수다</div>
+            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="요리/집밥">요리/집밥</div>
+            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="질문/고민">질문/고민</div>
+        </div>
+
+        <div class="write-card">
+            <input type="text" id="title-input" placeholder="제목을 입력하세요.">
+            <div class="divider"></div>
+            <textarea id="content-textarea" placeholder="내용을 입력하세요."></textarea>
+
+            <div class="image-attach-row" id="imageRow">
+                <div class="camera-btn" onclick="document.getElementById('fileInput').click()">
+                    <ion-icon name="camera" class="camera-icon"></ion-icon>
+                    <span class="camera-count" id="imgCount">0/10</span>
+                </div>
+                <input type="file" id="fileInput" style="display: none;" accept="image/*" multiple
+                    onchange="handleFileSelect(this)">
+            </div>
+        </div>
+
+        <div class="bottom-spacer"></div>
+
+    </div>
+
+    <!-- 글쓰기 페이지 끗 -->
+
+    <!-- 게시글 상세보기 시작 -->
+    <div class="app-container bg-gradient" id="viewForm">
+        <input type="hidden" id="loginUserIdxMain" th:value="${#authentication.principal.userIdx}">
+        <div class="view-header">
+            <button type="button" class="header-btn-icon" onclick="CommunityView.closeView()">
+                <ion-icon name="chevron-back"></ion-icon>
+            </button>
+            <div>상세보기</div>
+
+            <div class="header-right-group">
+                <button type="button" class="header-btn-icon" onclick="CommunityView.toggleBoardMenu()">
+                    <ion-icon name="ellipsis-horizontal"></ion-icon>
+                </button>
+                <div class="custom-dropdown-menu" id="board-owner-menu">
+                    <button class="menu-item" onclick="CommunityView.editBoard()">게시글 수정</button>
+                    <button class="menu-item danger" onclick="CommunityView.confirmDelete()">게시글 삭제</button>
+                </div>
+
+                <div class="custom-dropdown-menu" id="board-visitor-menu">
+                    <button class="menu-item danger" onclick="CommunityView.reportBoard()">신고하기</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="deleteConfirmModal">
+            <div class="custom-modal">
+                <div class="modal-title">게시글 삭제</div>
+                <div class="modal-desc">
+                    정말 이 게시글을 삭제하시겠습니까?<br>
+                    삭제된 글은 복구할 수 없습니다.
+                </div>
+                <div class="modal-btn-row">
+                    <button class="modal-btn btn-close" onclick="CommunityView.closeDeleteModal()">취소</button>
+                    <button class="modal-btn btn-delete2" onclick="
+                        CommunityView.deleteBoard(this)">삭제</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-scroll-area">
+
+            <article class="post-card-full">
+                <div class="post-header-row">
+                    <a href="profile.user.html" class="writer-info">
+                        <img src="https://i.pravatar.cc/150?img=68" class="writer-img">
+                        <div class="writer-text">
+                            <span class="writer-name" id="view-writer"></span>
+                            <span class="write-time" id="view-time"></span>
+                        </div>
+                    </a>
+                    <span class="category-badge" id="view-category"></span>
+                </div>
+
+                <div class="post-text" id="view-content"></div>
+
+                <img src="" class="post-image" alt="이미지" id="view-image" style="display: none;">
+                <div id="dynamic-image-container"></div>
+
+                <div class="post-stats-row">
+                    <div class="stat-item">
+                        <ion-icon name="heart-outline"></ion-icon> <span id="view-like">2</span>
+                    </div>
+                    <div class="stat-item">
+                        <ion-icon name="eye-outline"></ion-icon> <span id="view-view">2</span>
+                    </div>
+                </div>
+            </article>
+
+            <section>
+                <div class="comment-section-title">댓글 <sapn id="reply-count"></sapn>
+                </div>
+
+                <!-- 댓글 목록 태그-->
+                <div class="comment-list" id="reply-card"></div>
+            </section>
+
+        </div>
+
+        <div class="input-container-floating">
+            <input type="text" class="input-field2" placeholder="메시지 입력..." onkeypress="handleEnter(event)">
+
+            <button type="button" class="btn-mic">
+                <ion-icon name="mic-outline"></ion-icon>
+            </button>
+
+            <button type="button" class="btn-send-circle" onclick="CommunityReply.sendReply()">
+                <ion-icon name="paper-plane"></ion-icon>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- 게시글 상세보기 끗 -->
+
 
 
     <div id="chatLayer" class="page-layer">
@@ -91,56 +230,656 @@
         </div>
     </div>
     <script>
+        // ✅ [전역 변수] 사용자가 선택한 파일들을 저장할 배열
+        let selectedFiles = [];
+
         // ==========================================
-        // ✅ [수정] 더미 데이터 & 스크롤 로직 전부 삭제
-        // 이제 UI 관련 기능(검색 토글, 채팅, 카테고리 클릭 효과)만 남았습니다.
+        //  1. 파일 처리 관련 함수들 (Global Scope)
         // ==========================================
 
-        // 카테고리 클릭 시 색상만 변경 (데이터 로딩 X)
-        function selectCategory(element) {
-            document.querySelectorAll('.cat-chip').forEach(chip => chip.classList.remove('active'));
-            element.classList.add('active');
+        // 파일 선택 시 실행 (HTML onchange에서 호출)
+        function handleFileSelect(input) {
+            const files = Array.from(input.files);
+
+            // 1. 개수 제한 체크
+            if (selectedFiles.length + files.length > 10) {
+                alert("사진은 최대 10장까지 첨부할 수 있습니다.");
+                input.value = "";
+                return;
+            }
+
+            // 2. 배열에 파일 추가
+            files.forEach(file => {
+                if (!file.type.startsWith('image/')) return;
+                selectedFiles.push(file);
+            });
+
+            // 3. 화면 다시 그리기
+            renderPreview();
+
+            // 4. input 초기화 (같은 파일 다시 선택 가능하게)
+            input.value = "";
         }
 
-        // 검색 모드 토글
-        function toggleSearchMode() {
-            const bar = document.getElementById('categoryBar');
-            const icon = document.getElementById('searchIcon');
-            const input = document.getElementById('searchInput');
-            bar.classList.toggle('search-mode');
-            if (bar.classList.contains('search-mode')) {
-                icon.setAttribute('name', 'close-outline');
-                input.focus();
-            } else {
-                icon.setAttribute('name', 'search-outline');
-                input.value = '';
+        // 화면에 미리보기 그리기
+        function renderPreview() {
+            const container = document.getElementById('imageRow');
+
+            // 기존 미리보기 박스만 싹 지우기 (카메라 버튼은 건드리면 안 됨!)
+            const previews = container.querySelectorAll('.preview-box');
+            previews.forEach(box => box.remove());
+
+            // 배열에 있는 파일들로 다시 그리기
+            selectedFiles.forEach((file, index) => {
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    const imageUrl = e.target.result;
+
+                    const div = document.createElement('div');
+                    div.className = 'preview-box';
+                    div.innerHTML = `
+                    <img src="${imageUrl}" class="preview-img">
+                    <div class="btn-remove-img" onclick="removeImage(${index})">
+                        <ion-icon name="close"></ion-icon>
+                    </div>
+                `;
+
+                    // 컨테이너에 추가 (카메라 버튼 뒤로 붙음)
+                    container.appendChild(div);
+                };
+
+                reader.readAsDataURL(file);
+            });
+
+            // 카운트 업데이트
+            document.getElementById('imgCount').innerText = `${selectedFiles.length}/10`;
+        }
+
+        // 이미지 삭제 함수
+        function removeImage(index) {
+            selectedFiles.splice(index, 1); // 배열에서 삭제
+            renderPreview(); // 화면 갱신
+        }
+
+
+
+
+
+
+
+
+
+
+        const CommunityMain = {
+            /**
+             * 카테고리 칩 선택 UI 변경
+             * @param {HTMLElement} element - 클릭된 카테고리 요소(this)
+             */
+            selectCategory: (element) => {
+                // 모든 칩에서 active 제거
+                document.querySelectorAll('.cat-chip').forEach(chip => {
+                    chip.classList.remove('active');
+                });
+                // 클릭한 칩에 active 추가
+                element.classList.add('active');
+            },
+
+            selectCategoryWrite: (element) => {
+                // 모든 칩에서 active 제거
+                document.querySelectorAll('.select-chip').forEach(chip => {
+                    chip.classList.remove('selected');
+                });
+                // 클릭한 칩에 active 추가
+                element.classList.add('selected');
+                console.log(element.getAttribute('data-value'));
+            },
+
+            /**
+             * 검색 모드 토글 (검색창 열기/닫기)
+             */
+            toggleSearchMode: () => {
+                const bar = document.getElementById('categoryBar');
+                const icon = document.getElementById('searchIcon');
+                const input = document.getElementById('searchInput');
+
+                // 클래스 토글
+                bar.classList.toggle('search-mode');
+
+                // 상태에 따른 아이콘 및 포커스 처리
+                if (bar.classList.contains('search-mode')) {
+                    icon.setAttribute('name', 'close-outline');
+                    input.focus();
+                } else {
+                    icon.setAttribute('name', 'search-outline');
+                    input.value = '';
+                }
+            },
+
+
+            // 무한 스크롤 시작
+            state: {
+                currentPage: 2,
+                isLoading: false, // 중복 로딩 방지용 깃발
+                isLastPage: false
+            },
+
+            // 2. 초기화 (이벤트 등록)
+            init: () => {
+                const scrollBox = document.querySelector('.detail-content');
+
+                if (scrollBox) {
+                    scrollBox.addEventListener('scroll', CommunityMain.pageLoading);
+                }
+            },
+
+            // 3. 스크롤 감지 함수 (계산 대상 변경)
+            pageLoading: (e) => {
+                if (CommunityMain.state.isLoading || CommunityMain.state.isLastPage) return;
+                const container = e.target;
+
+                const scrollTop = container.scrollTop;       // 현재 스크롤 위치
+                const clientHeight = container.clientHeight; // 화면에 보이는 높이
+                const scrollHeight = container.scrollHeight; // 전체 내용 높이
+
+                // 바닥 감지 (여유 50px)
+                if (scrollTop + clientHeight >= scrollHeight - 50) {
+                    CommunityMain.loadMorePosts();
+                }
+            },
+
+            // 스크롤 내리면 비동기로 10개 로딩
+            loadMorePosts: async () => {
+                CommunityMain.state.isLoading = true;
+
+                try {
+                    const page = CommunityMain.state.currentPage;
+                    const response = await API.get(`/community/list?page=${page}`);
+
+                    if (!response || response.length === 0) {
+                        CommunityMain.state.isLastPage = true;
+                        // 하단 로딩바에 메시지 표시 (선택사항)
+                        const loader = document.getElementById('loading-trigger');
+                        if (loader) loader.innerText = "마지막 게시글입니다.";
+
+                        window.removeEventListener('scroll', CommunityMain.pageLoading);
+                        return;
+                    }
+
+                    const container = document.getElementById('feedListContainer');
+                    response.forEach(dto => {
+                        const html = CommunityMain.createFeedCardHTML(dto);
+                        container.insertAdjacentHTML('beforeend', html);
+                    });
+                    CommunityMain.state.currentPage++;
+                }
+                catch (error) {
+                    console.error('로딩 실패:', error);
+                } finally {
+                    CommunityMain.state.isLoading = false;
+                }
+            },
+
+            createFeedCardHTML: (dto) => {
+                return `
+            <div class="feed-card" data-boardIdx="${dto.boardIdx}"
+                onclick="CommunityView.openView(this)">
+
+                <div class="feed-header">
+                    <div class="feed-user-group">
+                        <div class="user-info-text">
+                            <span class="user-name">${dto.userNickname}</span>
+                            <span class="post-time">${dto.timeAgo}</span>
+                        </div>
+                    </div>
+                    
+                    <span class="post-tag">${dto.boardCategory}</span>
+                </div>
+
+                <div class="feed-body">
+                    <div class="feed-text-area">
+                        <div class="feed-title">${dto.boardTitle}</div>
+                        
+                        <div class="feed-preview">${dto.boardContent}</div>
+                    </div>
+                    ${dto.fileGrpIdx ? `<img src="/img/group/${dto.fileGrpIdx}" class="feed-thumb">` : ''}
+                </div>
+
+                <div class="feed-footer">
+                    <div class="action-item">
+                        <ion-icon name="chatbubble-outline"></ion-icon>
+                        <span>${dto.replyCount}</span>
+                    </div>
+
+                    <div class="action-item">
+                        <ion-icon name="heart-outline"></ion-icon> 
+                        <span>    
+                            ${dto.likeCount}
+                        </span>
+                    </div>
+
+                        <div class="action-item">
+                            <ion-icon name="eye-outline"></ion-icon> 
+                            <span>
+                                ${dto.viewCount}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                `;
+            }
+        };
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', () => {
+            CommunityMain.init();
+        });
+        // 무한 스크롤 끗
+
+
+
+        const CommunityWrite = {
+            open: () => {
+                const writeDiv = document.querySelector('#writeForm');
+
+                if (writeDiv) {
+                    writeDiv.classList.add('active');
+                }
+            },
+
+            close: () => {
+                const writeDiv = document.querySelector('#writeForm');
+
+                if (writeDiv) {
+                    writeDiv.classList.remove('active');
+                }
+
+                document.querySelector("#title-input").value = '';
+                document.querySelector("#content-textarea").value = '';
+                // 파일 선택 초기화
+                selectedFiles = [];
+                document.getElementById('imgCount').innerText = "0/10";
+                renderPreview();
+            },
+
+            submitPost: async () => {
+                const cate = document.querySelector(".selected").getAttribute('data-value');
+                const title = document.querySelector("#title-input");
+                const content = document.querySelector("#content-textarea");
+                const loginUserIdx = document.querySelector("#loginUserIdx").value;
+                console.log(cate);
+                console.log(title.value);
+                console.log(content.value);
+                console.log(loginUserIdx);
+
+
+                // 필수 검증
+                if (!Validation.required(title.value.trim())) {
+                    Utils.notify('제목을 입력하세요.', 'error');
+                    return;
+                }
+                if (!Validation.required(content.value.trim())) {
+                    Utils.notify('내용을 입력하세요', 'error');
+                    return;
+                }
+
+
+                const boardDto = {
+                    userIdx: loginUserIdx,
+                    boardCategory: cate,
+                    boardTitle: title.value,
+                    boardContent: content.value
+                }
+                console.log(boardDto);
+
+                // FormData 생성
+                const formData = new FormData();
+                formData.append("board", new Blob([JSON.stringify(boardDto)], { type: "application/json" }));
+
+                selectedFiles.forEach(file => {
+                    formData.append("files", file);
+                });
+
+                try {
+                    // API.js는 multipart/form-data를 지원하지 않으므로 직접 fetch 사용
+                    const response = await fetch('/community/write', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const resultDto = await response.json();
+
+                    console.log(resultDto);
+                    Utils.notify('게시글을 등록했습니다!', 'success', 4000);
+                    title.value = '';
+                    content.value = '';
+                    // 파일 초기화
+                    selectedFiles = [];
+                    document.getElementById('imgCount').innerText = "0/10";
+                    renderPreview();
+
+
+                    document.querySelector('#writeForm').classList.remove('active');
+                    CommunityWrite.refreshAfterWrite(resultDto);
+                } catch (error) {
+                    console.error('글쓰기 실패:', error);
+                    Utils.notify('글 등록 중 오류가 발생했습니다.', 'error');
+                }
+            },
+
+
+            // 글쓰기 완료 후 비동기 새로고침
+            refreshAfterWrite: (response) => {
+                const dto = response;
+                console.log(dto);
+                const container = document.getElementById('feedListContainer');
+
+                // CommunityMain에서 만든 카드 양식 
+                const html = CommunityMain.createFeedCardHTML(dto);
+
+                container.insertAdjacentHTML('afterbegin', html);
+            }
+        };
+
+        const CommunityView = {
+
+            board_info: {
+                boardIdx: '',
+                replyCount: '',
+                userNickname: '', // 중복 로딩 방지용 깃발
+                timeAgo: '',
+                boardCategory: '',
+                boardContent: '',
+                likeCount: '',
+                userIdx: ''
+            },
+
+            openView: async (e) => {
+                const boardIdx = e.getAttribute('data-boardIdx');
+                console.log(boardIdx);
+                const viewForm = document.querySelector('#viewForm');
+
+                // th: href = "@{/community/view/{id}(id=${board.boardIdx})}"
+                const board = await API.get(`/community/view/${boardIdx}`);
+                const boardReply = await API.get(`/community/reply/${boardIdx}`);
+                console.log(boardReply);
+
+                CommunityView.board_info.boardIdx = board.boardIdx;
+                CommunityView.board_info.replyCount = board.replyCount;
+                CommunityView.board_info.userNickname = board.userNickname;
+                CommunityView.board_info.timeAgo = board.timeAgo;
+                CommunityView.board_info.boardCategory = board.boardCategory;
+                CommunityView.board_info.boardContent = board.boardContent;
+                CommunityView.board_info.likeCount = board.likeCount;
+                CommunityView.board_info.userIdx = board.userIdx;
+
+                const container = document.querySelector('#reply-card');
+                container.innerHTML = ''; // 댓글 목록 초기화
+
+                boardReply.forEach(dto => {
+                    const html = CommunityReply.createReplyCardHTML(dto);
+                    container.insertAdjacentHTML('beforeend', html);
+                });
+                viewForm.classList.add('active');
+                // 텍스트 데이터 넣기 
+                document.querySelector('#reply-count').innerText = board.replyCount;
+                currentBoardIdx = boardIdx;
+                document.querySelector('#view-writer').innerText = board.userNickname;
+                document.querySelector('#view-time').innerText = board.timeAgo;
+                document.querySelector('#view-category').innerText = board.boardCategory;
+                document.querySelector('#view-content').innerText = board.boardContent; // 줄바꿈 처리가 필요하면 innerHTML 사용
+                document.querySelector('#view-like').innerText = board.likeCount;
+                document.querySelector('#view-view').innerText = board.viewCount;
+
+                // 이미지 처리
+                const imgTag = document.querySelector('#view-image');
+                const dynContainer = document.getElementById('dynamic-image-container');
+                imgTag.style.display = 'none';
+                imgTag.src = '';
+                dynContainer.innerHTML = ''; // 기존 동적 이미지 제거
+
+                if (board.fileGrpIdx) {
+                    const files = await API.get(`/community/files/${boardIdx}`);
+
+                    if (files && files.length > 0) {
+                        const sliderHtml = CommunitySlider.createHTML(files);
+                        dynContainer.innerHTML = sliderHtml;
+                        CommunitySlider.init(dynContainer, files.length);
+                    }
+                }
+
+
+            },
+
+            closeView: () => {
+                CommunityView.board_info.boardIdx = '';
+                CommunityView.board_info.replyCount = '';
+                CommunityView.board_info.userNickname = '';
+                CommunityView.board_info.timeAgo = '';
+                CommunityView.board_info.boardCategory = '';
+                CommunityView.board_info.boardContent = '';
+                CommunityView.board_info.likeCount = '';
+                CommunityView.board_info.userIdx = '';
+                const viewForm = document.querySelector('#viewForm');
+                viewForm.classList.remove('active');
+                document.querySelector('#reply-card').innerHTML = '';
+                document.querySelector('#reply-count').innerText = '';
+                document.querySelector('#view-writer').innerText = '';
+                document.querySelector('#view-time').innerText = '';
+                document.querySelector('#view-category').innerText = '';
+                document.querySelector('#view-content').innerText = '';
+                document.querySelector('#view-like').innerText = '';
+                document.querySelector('#view-view').innerText = '';
+                document.querySelector('#board-owner-menu').classList.remove('active');
+                document.querySelector('#view-image').src = '';
+                document.getElementById('dynamic-image-container').innerHTML = '';
+            },
+
+            toggleBoardMenu: () => {
+                console.log('토글 버튼 움직임 확인');
+                const loginUserIdx = document.querySelector('#loginUserIdxMain').value;
+                const boardUserIdx = CommunityView.board_info.userIdx;
+                console.log('로그인 유저: ', loginUserIdx);
+                console.log('게시글 작성자: ', boardUserIdx);
+                if (loginUserIdx == boardUserIdx) {
+                    document.querySelector('#board-owner-menu').classList.toggle('active');
+                } else {
+                    document.querySelector('#board-visitor-menu').classList.toggle('active');
+                }
+
+            },
+
+            confirmDelete: () => {
+                document.querySelector('#board-owner-menu').classList.remove('active');
+                document.querySelector('#deleteConfirmModal').classList.add('show');
+            },
+
+            closeDeleteModal: () => {
+                document.querySelector('#deleteConfirmModal').classList.remove('show');
+            },
+
+            deleteBoard: async (e) => {
+                const boardIdx = CommunityView.board_info.boardIdx;
+                console.log(boardIdx);
+                try {
+                    const response = await API.delete(`/community/delete/${boardIdx}`);
+
+                    if (response.status == 200) {
+                        Utils.notify('게시글을 삭제했습니다.', 'success');
+
+                        CommunityView.closeDeleteModal();
+                        CommunityView.closeView();
+
+                        const deletedCard = document.querySelector(`.feed-card[data-boardIdx="${boardIdx}"]`);
+
+                        if (deletedCard) {
+                            deletedCard.remove(); // DOM에서 즉시 제거 (새로고침 효과)
+                        }
+                    }
+                } catch (error) {
+                    console.error("삭제 실패:", error);
+                    Utils.notify('삭제 중 오류가 발생했습니다.', 'error');
+                }
+            }
+
+
+        };
+
+        // --- 이미지 슬라이더 로직 ---
+        const CommunitySlider = {
+            currentIndex: 0,
+            totalSlides: 0,
+
+            createHTML: (files) => {
+                let slides = '';
+                let dots = '';
+
+                files.forEach((file, index) => {
+                    slides += `
+                        <div class="slider-slide">
+                            <img src="/img/${file.fileIdx}" alt="Slide ${index}">
+                        </div>
+                    `;
+                    dots += `<div class="slider-dot ${index === 0 ? 'active' : ''}" onclick="CommunitySlider.goToSlide(${index})"></div>`;
+                });
+
+                const showNav = files.length > 1;
+
+                return `
+                    <div class="slider-container">
+                        <div class="slider-wrapper">
+                            ${slides}
+                        </div>
+                        ${showNav ? `
+                            <button class="slider-btn prev" onclick="CommunitySlider.moveSlide(-1)">
+                                <ion-icon name="chevron-back"></ion-icon>
+                            </button>
+                            <button class="slider-btn next" onclick="CommunitySlider.moveSlide(1)">
+                                <ion-icon name="chevron-forward"></ion-icon>
+                            </button>
+                            <div class="slider-dots">
+                                ${dots}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            },
+
+            init: (container, count) => {
+                CommunitySlider.currentIndex = 0;
+                CommunitySlider.totalSlides = count;
+                // 초기화 시 첫 슬라이드 위치로 확실히 이동 (혹시 모를 잔상 방지)
+                const wrapper = container.querySelector('.slider-wrapper');
+                if (wrapper) wrapper.style.transform = `translateX(0)`;
+            },
+
+            moveSlide: (direction) => {
+                const newIndex = CommunitySlider.currentIndex + direction;
+
+                if (newIndex >= 0 && newIndex < CommunitySlider.totalSlides) {
+                    CommunitySlider.goToSlide(newIndex);
+                }
+            },
+
+            goToSlide: (index) => {
+                CommunitySlider.currentIndex = index;
+                const wrapper = document.querySelector('.slider-wrapper');
+                const dots = document.querySelectorAll('.slider-dot');
+
+                if (wrapper) {
+                    wrapper.style.transform = `translateX(-${index * 100}%)`;
+                }
+
+                if (dots.length > 0) {
+                    dots.forEach(dot => dot.classList.remove('active'));
+                    if (dots[index]) dots[index].classList.add('active');
+                }
+            }
+        };
+
+
+        const CommunityReply = {
+            // 1. 댓글 HTML 생성 (본인일 때만 점 3개 버튼 표시)
+            createReplyCardHTML: (dto) => {
+                // 로그인한 유저 ID 가져오기 (문자열)
+                const loginUserIdx = document.querySelector('#loginUserIdxMain').value;
+                console.log("로그인 유저id 확인 ", loginUserIdx);
+                console.log("댓글 id 확인 ", dto.userIdx);
+                // 본인 확인 (타입이 다를 수 있으니 == 사용)
+                const isOwner = (loginUserIdx == dto.userIdx);
+
+                return `
+                    <div class="comment-item" id="reply-item-${dto.replyIdx}">
+                        <div class="comment-left-group">
+                            <img src="https://i.pravatar.cc/150?img=5" class="comment-user-img">
+                            <div class="comment-content">
+                                <span class="comment-user-name">${dto.userNickname}</span>
+                                <span class="comment-text">${dto.replyContent}</span>
+                            </div>
+                        </div>
+
+                        ${isOwner ? `
+                        <div class="comment-action-box">
+                            <button type="button" class="btn-comment-more" onclick="CommunityReply.toggleMenu(${dto.replyIdx})">
+                                <ion-icon name="ellipsis-vertical"></ion-icon>
+                            </button>
+                            
+                            <div class="comment-dropdown" id="reply-menu-${dto.replyIdx}">
+                                <button class="comment-menu-item" onclick="CommunityReply.edit(${dto.replyIdx})">수정</button>
+                                <button class="comment-menu-item" onclick="CommunityReply.delete(${dto.replyIdx})">삭제</button>
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            },
+
+            sendReply: async () => {
+                const replyContent = document.querySelector('.input-field2').value;
+                const boardIdx = currentBoardIdx;
+                document.querySelector('.input-field2').value = '';
+                const data = {
+                    replyContent: replyContent
+                };
+
+                console.log(replyContent);
+                console.log(boardIdx);
+
+                const response = await API.post(`/community/reply/${boardIdx}`, data);
+                const html = CommunityReply.createReplyCardHTML(response)
+                const container = document.querySelector('#reply-card');
+
+                container.insertAdjacentHTML('beforeend', html);
+                Utils.notify('댓글을 등록했습니다.', 'success');
+
+                // document.querySelector('#reply-count').innerText = 1;
+                const countReply = document.querySelector('#reply-count').innerText;
+
+                console.log(countReply);
+                console.log(Number(countReply) + 1);
+                document.querySelector('#reply-count').innerText = Number(countReply) + 1;
+            },
+            toggleMenu: (replyIdx) => {
+                const dropdownMenu = document.querySelector(`#reply-menu-${replyIdx}`);
+                dropdownMenu.classList.toggle('active');
+            },
+
+            delete: async (replyIdx) => {
+                const deleteResponse = await API.delete(`/community/deleteReply/${replyIdx}`);
+            }
+
+        };
+
+        function handleEnter(event) {
+            if (event.key === 'Enter') {
+                CommunityReply.sendReply();
             }
         }
 
-        // // 채팅 관련 로직
-        // const chatDummyData = [
-        //     { sender: "ai", message: "무엇을 도와줄까? 🐚" },
-        //     { sender: "user", message: "전자레인지 선물을 받아서 기존의 것을 정리하고 싶은데 어떻게 하는게 좋을까" },
-        //     { sender: "ai", message: "네네네 찾아봐오오오 호에에에에에에에에엥 호에에에에엥 에?" }
-        // ];
 
-        // function openChat() {
-        //     const layer = document.getElementById('chatLayer');
-        //     const container = document.getElementById('chatContainer');
-        //     container.innerHTML = '';
-        //     chatDummyData.forEach(data => {
-        //         const isMe = data.sender === 'user';
-        //         const profileImg = `<img src="sora.png" class="chat-profile">`;
-        //         const html = `<div class="bubble-row ${isMe ? 'me' : ''}">
-        //                 ${!isMe ? profileImg : ''}<div class="bubble ${isMe ? 'me' : 'ai'}">${data.message}</div>
-        //             </div>`;
-        //         container.insertAdjacentHTML('beforeend', html);
-        //     });
-        //     layer.classList.add('active');
-        // }
-
-        // function closeChat() {
-        //     document.getElementById('chatLayer').classList.remove('active');
-        // }
     </script>
 </div>
