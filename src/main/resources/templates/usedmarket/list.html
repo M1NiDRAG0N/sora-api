@@ -1,13 +1,12 @@
 <div class="market-search-area" th:fragment="div">
     <div class="static-search-box">
-        <input type="text" id="mainSearchInput" class="market-search-input" placeholder="삼성1동 근처에서 검색"
-            onkeypress="handleMainSearch(event)">
-        <ion-icon name="search" class="search-icon-inside" onclick="triggerMainSearch()"></ion-icon>
+        <input type="text" id="mainSearchInput" class="market-search-input" placeholder="삼성1동 근처에서 검색">
+        <ion-icon name="search" class="search-icon-inside"></ion-icon>
     </div>
 </div>
 <div class="market-list" id="marketList">
     
-    <div class="market-item" onclick="location.href='usedmarketdetail.html'">
+    <div class="market-item">
         <img src="https://picsum.photos/200?random=1" class="item-thumb" alt="상품">
         <div class="item-info">
             <div>
@@ -22,7 +21,7 @@
         </div>
     </div>
 
-    <div class="market-item" onclick="location.href='usedmarketdetail.html'">
+    <div class="market-item">
         <img src="https://picsum.photos/200?random=2" class="item-thumb" alt="상품">
         <div class="item-info">
             <div>
@@ -43,100 +42,143 @@
     </div>
     <div id="scroll-sentinel"></div>
 
-    <div class="fab-write" onclick="location.href='usedmarketwrite.html'">
-            <ion-icon name="add-outline" style="font-size: 20px;"></ion-icon>
-            글쓰기
+    <!-- 글쓰기 버튼 -->
+    <button class="fab-write reg-pop-open-btn">
+        <ion-icon name="pencil-outline"></ion-icon>
+    </button>
+
+    <!-- 상품 작성 페이지 시작 -->
+    <div class="app-container bg-gradient popup-container regPop">
+        <div class="write-header">
+            <button class="header-btn-icon reg-pop-close-btn" style="color:#333;">
+                <ion-icon name="chevron-back"></ion-icon>
+            </button>
+            <div class="page-title">내 물건 팔기</div>
+            <div style="width: 24px;"></div>
         </div>
 
-    <!-- popup -->
-    <div id="searchDrawer" class="search-drawer">
-        <div class="search-header">
-            <ion-icon name="arrow-back" style="font-size: 24px; cursor: pointer; color: var(--text-main);"
-                onclick="closeSearchDrawer()"></ion-icon>
+        <div class="scroll-flex-1 write-container-padded">
+            <div class="image-attach-row" id="imageRow">
+                <div class="camera-btn" id="cameraBtn">
+                    <ion-icon name="camera" class="camera-icon"></ion-icon>
+                    <span class="camera-count" id="imgCount">0/10</span>
+                </div>
+            </div>
+            <input type="file" id="imgUpload" style="display: none;" multiple accept="image/*"
+                onchange="handleFileSelect(this)">
 
-            <div class="search-input-box">
-                <input type="text" class="search-input" placeholder="근처 물품을 검색해보세요"
-                    onkeypress="handleDrawerSearch(event)">
+            <label class="input-label" id="title">제목</label>
+            <input type="text" class="input-box-styled" placeholder="제목을 입력하세요">
+
+            <label class="input-label" id="info">자세한 설명</label>
+            <textarea class="textarea-box-styled" placeholder="게시글 내용을 작성해주세요."></textarea>
+
+            <label class="input-label" id="priceLabel">가격</label>
+            <input type="number" class="input-box-styled" placeholder="가격을 입력해주세요 (원)">
+
+            <label class="input-label">거래 희망 장소</label>
+            <div class="location-select-box">
+                <span id="locText" class="loc-placeholder">위치 추가</span>
+                <ion-icon name="chevron-forward" style="color:#ccc;"></ion-icon>
+            </div>
+            <div id="mapArea" class="map-wrapper">
+                <div id="writeMap" class="map-container"></div>
+            </div>
+            <input type="hidden" id="lat"><input type="hidden" id="lng">
+        </div>
+
+        <div class="fixed-bottom-btn-area" style="flex-shrink: 0;">
+            <button class="btn-submit-full active" onclick="alert('작성 완료!')">작성완료</button>
+        </div>
+
+        <div class="bottom-spacer"></div>
+    </div>
+    <!-- 상세 팝업 -->
+    <div class="app-container bg-gradient popup-container">
+        <div class="view-header">
+            <button type="button" class="header-btn-icon">
+                <ion-icon name="chevron-back"></ion-icon>
+            </button>
+            <div>상세보기</div>
+
+            <div class="header-right-group">
+                <button type="button" class="header-btn-icon">
+                    <ion-icon name="ellipsis-horizontal"></ion-icon>
+                </button>
+                <div class="custom-dropdown-menu" id="product-menu">
+                    <button class="menu-item danger">신고하기</button>
+                </div>
             </div>
         </div>
 
-        <div class="search-body">
-            <div class="recent-label">최근 검색어</div>
-            <div class="recent-empty">최근 검색한 내역이 없습니다.</div>
-        </div>
-    </div>
-</div>
-<script>
-    // 메인 검색
-    function handleMainSearch(event) {
-        if (event.key === 'Enter') triggerMainSearch();
-    }
-    function triggerMainSearch() {
-        const query = document.getElementById('mainSearchInput').value;
-        if (query.trim()) alert("'" + query + "' 검색 결과 페이지로 이동합니다.");
-        else alert("검색어를 입력해주세요.");
-    }
+        <div class="content-scroll-area">
+            <div class="swiper product-swiper">
+                <div class="swiper-wrapper">
+                    <div class="swiper-slide"><img src="https://picsum.photos/400/400?random=1"></div>
+                    <div class="swiper-slide"><img src="https://picsum.photos/400/400?random=2"></div>
+                </div>
+                <div class="swiper-pagination"></div>
+            </div>
 
-    // Drawer 검색
-    function openSearchDrawer() {
-        document.getElementById('searchDrawer').classList.add('active');
-        setTimeout(() => { document.querySelector('.search-input').focus(); }, 300);
-    }
-    function closeSearchDrawer() {
-        document.getElementById('searchDrawer').classList.remove('active');
-    }
-    function handleDrawerSearch(event) {
-        if (event.key === 'Enter') {
-            const query = event.target.value;
-            if (query.trim()) { alert("'" + query + "' 검색을 시작합니다!"); closeSearchDrawer(); }
-        }
-    }
-
-    // 무한 스크롤
-    document.addEventListener('DOMContentLoaded', () => {
-        const sentinel = document.getElementById('scroll-sentinel');
-        const loading = document.getElementById('loading');
-        let isLoading = false;
-
-        function createDummyItem(index) {
-            const randomPrice = Math.floor(Math.random() * 50) * 1000 + 1000;
-            return `
-                <div class="market-item" onclick="location.href='usedmarketdetail.html'">
-                    <img src="https://picsum.photos/200?random=${index + 10}" class="item-thumb" alt="상품">
-                    <div class="item-info">
-                        <div>
-                            <div class="item-title">새로 로딩된 상품 ${index}번</div>
-                            <div class="item-meta">역삼1동 · 방금 전</div>
-                            <div class="item-price">${randomPrice.toLocaleString()}원</div>
-                        </div>
-                        <div class="item-stats">
-                            <span class="stat-icon"><ion-icon name="heart-outline"></ion-icon> ${index % 5}</span>
-                        </div>
+            <div class="seller-info">
+                <div class="profile">
+                    <img src="https://i.pravatar.cc/100?img=12" class="profile-img">
+                    <div>
+                        <div style="font-weight:700; font-size:15px;" id="view-seller"></div>
+                        <div style="font-size:12px; color:var(--text-sub);" id="view-location"></div>
                     </div>
                 </div>
-            `;
-        }
+                <div style="color:#35c5f0; font-weight:700;" id="view-temp">36.5°C 😊</div>
+            </div>
 
-        function loadMoreItems() {
-            if (isLoading) return;
-            isLoading = true;
-            loading.classList.add('active');
+            <div class="content">
+                <h1 class="title" id="view-title"></h1>
+                <div class="meta" id="view-time"></div>
+                <div class="desc" id="view-desc"></div>
 
-            setTimeout(() => {
-                for (let i = 1; i <= 5; i++) {
-                    loading.insertAdjacentHTML('beforebegin', createDummyItem(i));
-                }
-                isLoading = false;
-                loading.classList.remove('active');
-            }, 1000);
-        }
+                <div class="detail-stats" id="view-stats">
+                    관심 5 · 채팅 2 · 조회 123
+                </div>
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) loadMoreItems();
-            });
-        }, { threshold: 0.1 });
+                <div class="map-area">
+                    <div class="map-title">
+                        거래 희망 장소 <span class="map-loc-name" id="view-location-name"></span>
+                    </div>
+                    <div id="detailMap"></div>
+                </div>
+            </div>
+        </div>
 
-        observer.observe(sentinel);
+        <div class="bottom-bar">
+            <ion-icon name="heart-outline"
+                style="font-size:24px; color:var(--text-sub); padding-right:15px; border-right:1px solid #eee; cursor: pointer;"></ion-icon>
+            <div style="flex:1;">
+                <div class="price" id="view-price"></div>
+                <div style="font-size:12px; color:var(--primary); font-weight:700;">가격 제안 불가</div>
+            </div>
+            <button class="btn-primary chat-btn" onclick="location.href='chat_used.html'">채팅하기</button>
+        </div>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        list.init();
     });
+    const list = {
+        init: () => {
+            list.evtHandler();
+        },
+        evtHandler: () => {
+            document.querySelector('.reg-pop-open-btn').addEventListener('click', () => list.openRegPopup());
+            document.querySelector('.reg-pop-close-btn').addEventListener('click', () => list.closeRegPopup());
+        },
+        openRegPopup: () => {
+            document.querySelector('.regPop').classList.add('active');
+        },
+        closeRegPopup: () => {
+            document.querySelector('.regPop').classList.remove('active');
+        },
+    };
 </script>
+
+</div>
