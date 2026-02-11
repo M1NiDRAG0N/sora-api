@@ -6,13 +6,12 @@ import lombok.Builder;
 
 @Builder
 public record BoardReplyDto(
-        Integer replyIdx,
-        Integer boardIdx,
-        Integer userIdx,
-        String userNickname,
-        String replyContent,
-        Boolean isUse,
-        String timeAgo,
-        LocalDateTime createdAt,
-        LocalDateTime updatedAt) {
+                Integer replyIdx,
+                Integer boardIdx,
+                Integer userIdx,
+                String userNickname,
+                String replyContent,
+                Boolean isUse,
+                LocalDateTime createdAt,
+                LocalDateTime updatedAt) {
 }

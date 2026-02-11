@@ -30,7 +30,8 @@
                             class="user-img-md"> -->
                         <div class="user-info-text">
                             <span class="user-name" th:text="${board.userNickname}">닉네임</span>
-                            <span class="post-time" th:text="${board.timeAgo}">시간</span>
+                            <!-- 여기 중요 -->
+                            <span class="post-time time-ago-target" th:text="${board.createdAt}">시간</span>
                         </div>
                     </div>
                     <span class="post-tag" th:text="${board.boardCategory}">카테고리</span>
@@ -429,7 +430,7 @@
                     <div class="feed-user-group">
                         <div class="user-info-text">
                             <span class="user-name">${dto.userNickname}</span>
-                            <span class="post-time">${dto.timeAgo}</span>
+                            <span class="post-time">${Utils.timeAgo(dto.createdAt)}</span>
                         </div>
                     </div>
                     
@@ -472,6 +473,13 @@
         };
         // 페이지 로드 시 실행
         document.addEventListener('DOMContentLoaded', () => {
+            // ★ 타임리프가 찍어놓은 원본 날짜를 찾아서 'N분 전'으로 변환!
+            document.querySelectorAll('.time-ago-target').forEach(el => {
+                const rawDate = el.innerText.trim();
+                if (rawDate) {
+                    el.innerText = Utils.timeAgo(rawDate);
+                }
+            })
             CommunityMain.init();
         });
         // 무한 스크롤 끗
@@ -590,8 +598,7 @@
             board_info: {
                 boardIdx: '',
                 replyCount: '',
-                userNickname: '', // 중복 로딩 방지용 깃발
-                timeAgo: '',
+                userNickname: '',
                 boardCategory: '',
                 boardContent: '',
                 likeCount: '',
@@ -611,7 +618,6 @@
                 CommunityView.board_info.boardIdx = board.boardIdx;
                 CommunityView.board_info.replyCount = board.replyCount;
                 CommunityView.board_info.userNickname = board.userNickname;
-                CommunityView.board_info.timeAgo = board.timeAgo;
                 CommunityView.board_info.boardCategory = board.boardCategory;
                 CommunityView.board_info.boardContent = board.boardContent;
                 CommunityView.board_info.likeCount = board.likeCount;
@@ -629,7 +635,6 @@
                 document.querySelector('#reply-count').innerText = board.replyCount;
                 currentBoardIdx = boardIdx;
                 document.querySelector('#view-writer').innerText = board.userNickname;
-                document.querySelector('#view-time').innerText = board.timeAgo;
                 document.querySelector('#view-category').innerText = board.boardCategory;
                 document.querySelector('#view-content').innerText = board.boardContent; // 줄바꿈 처리가 필요하면 innerHTML 사용
                 document.querySelector('#view-like').innerText = board.likeCount;
@@ -659,7 +664,6 @@
                 CommunityView.board_info.boardIdx = '';
                 CommunityView.board_info.replyCount = '';
                 CommunityView.board_info.userNickname = '';
-                CommunityView.board_info.timeAgo = '';
                 CommunityView.board_info.boardCategory = '';
                 CommunityView.board_info.boardContent = '';
                 CommunityView.board_info.likeCount = '';
@@ -805,36 +809,48 @@
         const CommunityReply = {
             // 1. 댓글 HTML 생성 (본인일 때만 점 3개 버튼 표시)
             createReplyCardHTML: (dto) => {
-                // 로그인한 유저 ID 가져오기 (문자열)
                 const loginUserIdx = document.querySelector('#loginUserIdxMain').value;
-                console.log("로그인 유저id 확인 ", loginUserIdx);
-                console.log("댓글 id 확인 ", dto.userIdx);
-                // 본인 확인 (타입이 다를 수 있으니 == 사용)
                 const isOwner = (loginUserIdx == dto.userIdx);
 
                 return `
-                    <div class="comment-item" id="reply-item-${dto.replyIdx}">
-                        <div class="comment-left-group">
-                            <img src="https://i.pravatar.cc/150?img=5" class="comment-user-img">
-                            <div class="comment-content">
-                                <span class="comment-user-name">${dto.userNickname}</span>
-                                <span class="comment-text">${dto.replyContent}</span>
+                <div class="comment-item" id="reply-item-${dto.replyIdx}">
+                    <div class="comment-left-group">
+                        <img src="https://i.pravatar.cc/150?img=5" class="comment-user-img">
+                        
+                        <div class="comment-content" style="width: 100%;">
+                            <div class="comment-header">
+                                <div class="comment-info-left">
+                                    <span class="comment-user-name">${dto.userNickname}</span>
+                                    <span class="comment-time" style="font-size: 11px; color: #aaa;">${Utils.timeAgo(dto.createdAt)}</span>
+                                </div>
+                                
+                                <div class="comment-edit-actions">
+                                    <button class="btn-comment-cancel" onclick="CommunityReply.cancelEdit(${dto.replyIdx})">취소</button>
+                                    <button class="btn-comment-save" onclick="CommunityReply.saveEdit(${dto.replyIdx})">수정</button>
+                                </div>
                             </div>
-                        </div>
-
-                        ${isOwner ? `
-                        <div class="comment-action-box">
-                            <button type="button" class="btn-comment-more" onclick="CommunityReply.toggleMenu(${dto.replyIdx})">
-                                <ion-icon name="ellipsis-vertical"></ion-icon>
-                            </button>
                             
-                            <div class="comment-dropdown" id="reply-menu-${dto.replyIdx}">
-                                <button class="comment-menu-item" onclick="CommunityReply.edit(${dto.replyIdx})">수정</button>
-                                <button class="comment-menu-item" onclick="CommunityReply.delete(${dto.replyIdx})">삭제</button>
+                            <span class="comment-text" id="reply-text-${dto.replyIdx}">${dto.replyContent}</span>
+                            
+                            <div class="comment-edit-form" id="reply-edit-form-${dto.replyIdx}">
+                                <textarea class="comment-edit-input" id="reply-input-${dto.replyIdx}" rows="1"></textarea>
                             </div>
                         </div>
-                        ` : ''}
                     </div>
+
+                    ${isOwner ? `
+                    <div class="comment-action-box">
+                        <button type="button" class="btn-comment-more" onclick="CommunityReply.toggleMenu(${dto.replyIdx})">
+                            <ion-icon name="ellipsis-vertical"></ion-icon>
+                        </button>
+                        
+                        <div class="comment-dropdown" id="reply-menu-${dto.replyIdx}">
+                            <button class="comment-menu-item" onclick="CommunityReply.edit(${dto.replyIdx})">수정</button>
+                            <button class="comment-menu-item" onclick="CommunityReply.delete(${dto.replyIdx})">삭제</button>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
                 `;
             },
 
@@ -864,19 +880,109 @@
                 document.querySelector('#reply-count').innerText = Number(countReply) + 1;
             },
             toggleMenu: (replyIdx) => {
+
                 const dropdownMenu = document.querySelector(`#reply-menu-${replyIdx}`);
+                document.querySelectorAll('.comment-dropdown.active').forEach(item => {
+                    if (item !== dropdownMenu) {
+                        item.classList.remove('active');
+                    }
+                });
                 dropdownMenu.classList.toggle('active');
             },
 
             delete: async (replyIdx) => {
-                const deleteResponse = await API.delete(`/community/deleteReply/${replyIdx}`);
+
+                try {
+                    const deleteReplyResponse = await API.delete(`/community/deleteReply/${replyIdx}`);
+
+                    if (deleteReplyResponse.status == 200) {
+                        Utils.notify('댓글을 삭제했습니다.', 'success');
+
+
+                        const deletedReplyCard = document.querySelector(`#reply-item-${replyIdx}`);
+
+                        if (deletedReplyCard) {
+                            deletedReplyCard.remove()
+                        }
+
+                        const replyCount = document.querySelector('#reply-count').innerText;
+                        document.querySelector('#reply-count').innerText = Number(replyCount) - 1;
+                    }
+                } catch (error) {
+                    console.error("삭제 실패:", error);
+                    Utils.notify('삭제 중 오류가 발생했습니다.', 'error');
+                }
+            },
+
+            edit: (replyIdx) => {
+                CommunityReply.toggleMenu(replyIdx); // 메뉴 닫기
+
+                // 1. 다른 열려있는 수정 폼 원상복구
+                document.querySelectorAll('.comment-item.editing').forEach(item => {
+                    item.classList.remove('editing');
+                });
+
+                const item = document.querySelector(`#reply-item-${replyIdx}`);
+                const input = document.querySelector(`#reply-input-${replyIdx}`);
+
+                // ★ 핵심 수정: 화면(span)에 적힌 원본 텍스트를 직접 가져옵니다. (엔터, 따옴표 에러 완벽 차단)
+                const textSpan = document.querySelector(`#reply-text-${replyIdx}`);
+                input.value = textSpan.innerText;
+
+                // 2. 수정 모드 켜기 (폼 띄우기)
+                item.classList.add('editing');
+                input.focus();
+
+            },
+            // 2. [기능] 수정 모드에서 '취소' 버튼 눌렀을 때
+            cancelEdit: (replyIdx) => {
+                const item = document.querySelector(`#reply-item-${replyIdx}`);
+                item.classList.remove('editing'); // 클래스만 빼주면 원래대로 돌아갑니다.
+            },
+
+            // 3. [기능] 수정 모드에서 '수정(저장)' 버튼 눌렀을 때
+            saveEdit: async (replyIdx) => {
+                // 수정된 내용 가져오기
+                const input = document.querySelector(`#reply-input-${replyIdx}`);
+                const newContent = input.value.trim();
+
+                if (!newContent) {
+                    Utils.notify("댓글 내용을 입력해주세요.", "error");
+                    return;
+                }
+
+                try {
+                    // ★ 백엔드 수정 API 호출 (PUT 또는 PATCH)
+                    const data = { replyContent: newContent };
+                    const response = await API.put(`/community/reply/update/${replyIdx}`, data);
+
+                    // [API 연결 전 화면 처리 (눈속임)]
+                    // 1. 일반 텍스트 부분의 내용을 바꿈
+                    const textSpan = document.querySelector(`#reply-text-${replyIdx}`);
+                    textSpan.innerText = newContent;
+
+                    // 2. 드롭다운의 onclick 함수(수정) 파라미터 업데이트 (다음 수정을 위해)
+                    const editBtn = document.querySelector(`#reply-menu-${replyIdx} button:first-child`);
+                    editBtn.setAttribute("onclick", `CommunityReply.edit(${replyIdx}, '${newContent.replace(/'/g, "\\'")}')`);
+
+                    // 3. 수정 모드 종료 (입력창 숨기고 텍스트 보이기)
+                    CommunityReply.cancelEdit(replyIdx);
+
+                    Utils.notify("댓글이 수정되었습니다.", "success");
+
+                } catch (error) {
+                    console.error("수정 실패:", error);
+                    Utils.notify("수정 중 오류가 발생했습니다.", "error");
+                }
             }
+
 
         };
 
         function handleEnter(event) {
             if (event.key === 'Enter') {
                 CommunityReply.sendReply();
+
             }
         }
 
