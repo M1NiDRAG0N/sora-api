@@ -43,7 +43,7 @@ public class FileController {
      * 예: /img/1
      */
     @GetMapping("/{fileIdx}")
-    public ResponseEntity<byte[]> getFileByIdx(@PathVariable int fileIdx) {
+    public ResponseEntity<byte[]> getFileByIdx(@PathVariable("fileIdx") int fileIdx) {
         try {
             Optional<File> fileOpt = fileRepository.findById(fileIdx);
             if (fileOpt.isEmpty()) {
@@ -63,7 +63,7 @@ public class FileController {
      * 예: /img/group/1
      */
     @GetMapping("/group/{fileGrpIdx}")
-    public ResponseEntity<byte[]> getThumbnailByGroupIdx(@PathVariable int fileGrpIdx) {
+    public ResponseEntity<byte[]> getThumbnailByGroupIdx(@PathVariable("fileGrpIdx") int fileGrpIdx) {
         try {
             Optional<FileGrp> groupOpt = fileGrpRepository.findById(fileGrpIdx);
             if (groupOpt.isEmpty()) {
