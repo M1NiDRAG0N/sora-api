@@ -1,0 +1,142 @@
+<div class="market-search-area" th:fragment="div">
+    <div class="static-search-box">
+        <input type="text" id="mainSearchInput" class="market-search-input" placeholder="삼성1동 근처에서 검색"
+            onkeypress="handleMainSearch(event)">
+        <ion-icon name="search" class="search-icon-inside" onclick="triggerMainSearch()"></ion-icon>
+    </div>
+</div>
+<div class="market-list" id="marketList">
+    
+    <div class="market-item" onclick="location.href='usedmarketdetail.html'">
+        <img src="https://picsum.photos/200?random=1" class="item-thumb" alt="상품">
+        <div class="item-info">
+            <div>
+                <div class="item-title">아이패드 에어 5세대 스페이스 그레이 풀박스 팝니다</div>
+                <div class="item-meta">역삼1동 · 2분 전</div>
+                <div class="item-price">650,000원</div>
+            </div>
+            <div class="item-stats">
+                <span class="stat-icon"><ion-icon name="chatbubble-outline"></ion-icon> 2</span>
+                <span class="stat-icon"><ion-icon name="heart-outline"></ion-icon> 5</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="market-item" onclick="location.href='usedmarketdetail.html'">
+        <img src="https://picsum.photos/200?random=2" class="item-thumb" alt="상품">
+        <div class="item-info">
+            <div>
+                <div class="item-title">소라고동 한정판 굿즈 미개봉</div>
+                <div class="item-meta">청담동 · 1시간 전</div>
+                <div class="item-price">50,000원</div>
+            </div>
+            <div class="item-stats">
+                <span class="stat-icon"><ion-icon name="chatbubble-outline"></ion-icon> 1</span>
+                <span class="stat-icon"><ion-icon name="heart-outline"></ion-icon> 4</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading" class="loading-spinner">
+        <ion-icon name="reload-outline" style="animation: spin 1s linear infinite; font-size: 20px;"></ion-icon>
+        <span>불러오는 중...</span>
+    </div>
+    <div id="scroll-sentinel"></div>
+
+    <div class="fab-write" onclick="location.href='usedmarketwrite.html'">
+            <ion-icon name="add-outline" style="font-size: 20px;"></ion-icon>
+            글쓰기
+        </div>
+
+    <!-- popup -->
+    <div id="searchDrawer" class="search-drawer">
+        <div class="search-header">
+            <ion-icon name="arrow-back" style="font-size: 24px; cursor: pointer; color: var(--text-main);"
+                onclick="closeSearchDrawer()"></ion-icon>
+
+            <div class="search-input-box">
+                <input type="text" class="search-input" placeholder="근처 물품을 검색해보세요"
+                    onkeypress="handleDrawerSearch(event)">
+            </div>
+        </div>
+
+        <div class="search-body">
+            <div class="recent-label">최근 검색어</div>
+            <div class="recent-empty">최근 검색한 내역이 없습니다.</div>
+        </div>
+    </div>
+</div>
+<script>
+    // 메인 검색
+    function handleMainSearch(event) {
+        if (event.key === 'Enter') triggerMainSearch();
+    }
+    function triggerMainSearch() {
+        const query = document.getElementById('mainSearchInput').value;
+        if (query.trim()) alert("'" + query + "' 검색 결과 페이지로 이동합니다.");
+        else alert("검색어를 입력해주세요.");
+    }
+
+    // Drawer 검색
+    function openSearchDrawer() {
+        document.getElementById('searchDrawer').classList.add('active');
+        setTimeout(() => { document.querySelector('.search-input').focus(); }, 300);
+    }
+    function closeSearchDrawer() {
+        document.getElementById('searchDrawer').classList.remove('active');
+    }
+    function handleDrawerSearch(event) {
+        if (event.key === 'Enter') {
+            const query = event.target.value;
+            if (query.trim()) { alert("'" + query + "' 검색을 시작합니다!"); closeSearchDrawer(); }
+        }
+    }
+
+    // 무한 스크롤
+    document.addEventListener('DOMContentLoaded', () => {
+        const sentinel = document.getElementById('scroll-sentinel');
+        const loading = document.getElementById('loading');
+        let isLoading = false;
+
+        function createDummyItem(index) {
+            const randomPrice = Math.floor(Math.random() * 50) * 1000 + 1000;
+            return `
+                <div class="market-item" onclick="location.href='usedmarketdetail.html'">
+                    <img src="https://picsum.photos/200?random=${index + 10}" class="item-thumb" alt="상품">
+                    <div class="item-info">
+                        <div>
+                            <div class="item-title">새로 로딩된 상품 ${index}번</div>
+                            <div class="item-meta">역삼1동 · 방금 전</div>
+                            <div class="item-price">${randomPrice.toLocaleString()}원</div>
+                        </div>
+                        <div class="item-stats">
+                            <span class="stat-icon"><ion-icon name="heart-outline"></ion-icon> ${index % 5}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function loadMoreItems() {
+            if (isLoading) return;
+            isLoading = true;
+            loading.classList.add('active');
+
+            setTimeout(() => {
+                for (let i = 1; i <= 5; i++) {
+                    loading.insertAdjacentHTML('beforebegin', createDummyItem(i));
+                }
+                isLoading = false;
+                loading.classList.remove('active');
+            }, 1000);
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) loadMoreItems();
+            });
+        }, { threshold: 0.1 });
+
+        observer.observe(sentinel);
+    });
+</script>
