@@ -4,64 +4,23 @@
 
         <div class="category-bar2" id="categoryBar">
             <div class="cat-scroll">
-                <div class="cat-chip active" onclick="CommunityMain.selectCategory(this)">전체</div>
-                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)">소분/나눔</div>
-                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)">꿀팁/정보</div>
-                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)">자유/수다</div>
-                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)">요리/집밥</div>
-                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)">질문/고민</div>
+                <div class="cat-chip active" onclick="CommunityMain.selectCategory(this)" data-cate="전체">전체</div>
+                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)" data-cate="소분/나눔">소분/나눔</div>
+                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)" data-cate="꿀팁/정보">꿀팁/정보</div>
+                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)" data-cate="자유/수다">자유/수다</div>
+                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)" data-cate="요리/집밥">요리/집밥</div>
+                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)" data-cate="질문/고민">질문/고민</div>
             </div>
             <div class="search-input-box">
-                <input type="text" class="real-search-input" id="searchInput" placeholder="검색어를 입력하세요">
+                <input type="text" class="real-search-input" id="searchInput" placeholder="검색어를 입력하세요"
+                    onkeypress="handleSearchEnter(event)">
             </div>
             <div class="search-btn" onclick="CommunityMain.toggleSearchMode()">
                 <ion-icon name="search-outline" id="searchIcon"></ion-icon>
             </div>
         </div>
 
-        <div class="feed-list2" id="feedListContainer">
-
-            <div th:each="board : ${boardDtoList}" class="feed-card" th:data-boardIdx="${board.boardIdx}"
-                onclick="CommunityView.openView(this)">
-
-                <div class="feed-header">
-                    <div class="feed-user-group">
-                        <!-- <img th:src="${board.userImg != null ? board.userImg : '/images/default-profile.png'}"
-                            class="user-img-md"> -->
-                        <div class="user-info-text">
-                            <span class="user-name" th:text="${board.userNickname}">닉네임</span>
-                            <!-- 여기 중요 -->
-                            <span class="post-time time-ago-target" th:text="${board.createdAt}">시간</span>
-                        </div>
-                    </div>
-                    <span class="post-tag" th:text="${board.boardCategory}">카테고리</span>
-                </div>
-
-                <div class="feed-body">
-                    <div class="feed-text-area">
-                        <div class="feed-title" th:text="${board.boardTitle}">제목</div>
-                        <div class="feed-preview" th:text="${board.boardContent}">내용</div>
-                    </div>
-                    <img th:if="${board.fileGrpIdx != null}" th:src="@{/img/group/{idx}(idx=${board.fileGrpIdx})}"
-                        class="feed-thumb">
-                </div>
-
-                <div class="feed-footer">
-                    <div class="action-item">
-                        <ion-icon name="chatbubble-outline"></ion-icon>
-                        <span th:text="${board.replyCount}">0</span>
-                    </div>
-                    <div class="action-item">
-                        <ion-icon name="heart-outline"></ion-icon>
-                        <span th:text="${board.likeCount}">0</span>
-                    </div>
-                    <div class="action-item">
-                        <ion-icon name="eye-outline"></ion-icon>
-                        <span th:text="${board.viewCount}">0</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <div class="feed-list2" id="feedListContainer"></div>
 
         <div id="loading-trigger" style="padding: 20px; text-align: center; color: #888;">
             <span class="loading-text">Loading...</span>
@@ -87,12 +46,13 @@
         <input type="hidden" id="loginUserIdx" th:value="${#authentication.principal.userIdx}">
 
         <div class="category-select-area">
-            <div class="select-chip selected" onclick="CommunityMain.selectCategoryWrite(this)" data-value="소분/나눔">소분/나눔
+            <div class="select-chip selected" onclick="CommunityMain.selectCategoryWrite(this)"
+                data-value="DISTRIBUTINO">소분/나눔
             </div>
-            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="꿀팁/정보">꿀팁/정보</div>
-            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="자유/수다">자유/수다</div>
-            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="요리/집밥">요리/집밥</div>
-            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="질문/고민">질문/고민</div>
+            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="TIP">꿀팁/정보</div>
+            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="HUMOR">자유/수다</div>
+            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="COOK">요리/집밥</div>
+            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="QUESTION">질문/고민</div>
         </div>
 
         <div class="write-card">
@@ -173,10 +133,12 @@
 
                 <img src="" class="post-image" alt="이미지" id="view-image" style="display: none;">
                 <div id="dynamic-image-container"></div>
-
+                <!-- 좋아요 누르면 fill : red 추가-->
                 <div class="post-stats-row">
                     <div class="stat-item">
-                        <ion-icon name="heart-outline"></ion-icon> <span id="view-like">2</span>
+                        <button class="like-btn" onclick="CommunityView.clickLike()"><ion-icon name="heart-outline"
+                                id="view-like-icon"></ion-icon></button>
+                        <span id="view-like"></span>
                     </div>
                     <div class="stat-item">
                         <ion-icon name="eye-outline"></ion-icon> <span id="view-view">2</span>
@@ -232,77 +194,82 @@
     </div>
     <script>
         // ✅ [전역 변수] 사용자가 선택한 파일들을 저장할 배열
-        let selectedFiles = [];
+        let selectedFiles = [];       // 새로 추가한 파일들
+        let deletedFileIdxs = [];     // 삭제할 기존 파일 ID들
+        let isEditMode = false;       // 수정 모드 여부
+        let editingBoardIdx = null;   // 수정 중인 글 번호
 
         // ==========================================
-        //  1. 파일 처리 관련 함수들 (Global Scope)
+        //  1. 파일 처리 함수들 (수정 모드 지원)
         // ==========================================
 
-        // 파일 선택 시 실행 (HTML onchange에서 호출)
         function handleFileSelect(input) {
             const files = Array.from(input.files);
+            // 현재 화면에 있는 미리보기 박스 개수 (기존 + 새거)
+            const currentCount = document.querySelectorAll('.preview-box').length;
 
-            // 1. 개수 제한 체크
-            if (selectedFiles.length + files.length > 10) {
-                alert("사진은 최대 10장까지 첨부할 수 있습니다.");
+            if (currentCount + files.length > 10) {
+                Utils.notify("사진은 최대 10장까지 첨부할 수 있습니다.", "error");
                 input.value = "";
                 return;
             }
 
-            // 2. 배열에 파일 추가
             files.forEach(file => {
                 if (!file.type.startsWith('image/')) return;
                 selectedFiles.push(file);
             });
 
-            // 3. 화면 다시 그리기
-            renderPreview();
-
-            // 4. input 초기화 (같은 파일 다시 선택 가능하게)
+            renderNewFiles(); // 새 파일만 다시 그리기
             input.value = "";
         }
 
-        // 화면에 미리보기 그리기
-        function renderPreview() {
+        // ★ 새 파일만 그리는 함수 (기존 파일은 건드리지 않음)
+        function renderNewFiles() {
             const container = document.getElementById('imageRow');
 
-            // 기존 미리보기 박스만 싹 지우기 (카메라 버튼은 건드리면 안 됨!)
-            const previews = container.querySelectorAll('.preview-box');
-            previews.forEach(box => box.remove());
+            // 'new-file' 클래스가 있는 박스만 지우고 다시 그림
+            const newPreviews = container.querySelectorAll('.preview-box.new-file');
+            newPreviews.forEach(box => box.remove());
 
-            // 배열에 있는 파일들로 다시 그리기
             selectedFiles.forEach((file, index) => {
                 const reader = new FileReader();
-
                 reader.onload = function (e) {
-                    const imageUrl = e.target.result;
-
                     const div = document.createElement('div');
-                    div.className = 'preview-box';
+                    div.className = 'preview-box new-file'; // ★ 새 파일 식별자
                     div.innerHTML = `
-                    <img src="${imageUrl}" class="preview-img">
-                    <div class="btn-remove-img" onclick="removeImage(${index})">
+                    <img src="${e.target.result}" class="preview-img">
+                    <div class="btn-remove-img" onclick="removeNewFile(${index})">
                         <ion-icon name="close"></ion-icon>
                     </div>
                 `;
-
-                    // 컨테이너에 추가 (카메라 버튼 뒤로 붙음)
                     container.appendChild(div);
+                    updateImageCount();
                 };
-
                 reader.readAsDataURL(file);
             });
 
-            // 카운트 업데이트
-            document.getElementById('imgCount').innerText = `${selectedFiles.length}/10`;
+            // 비동기 로딩 딜레이 고려하여 카운트 갱신
+            setTimeout(updateImageCount, 50);
         }
 
-        // 이미지 삭제 함수
-        function removeImage(index) {
-            selectedFiles.splice(index, 1); // 배열에서 삭제
-            renderPreview(); // 화면 갱신
+        // 새 파일 삭제
+        function removeNewFile(index) {
+            selectedFiles.splice(index, 1);
+            renderNewFiles();
         }
 
+        // ★ 기존 파일 삭제 (UI 제거 + 삭제 목록에 추가)
+        function removeExistingFile(element, fileIdx) {
+            element.closest('.preview-box').remove(); // 화면에서 삭제
+            deletedFileIdxs.push(fileIdx); // 삭제할 ID 목록에 담기
+            updateImageCount();
+        }
+
+        // 전체 이미지 개수 업데이트
+        function updateImageCount() {
+            const total = document.querySelectorAll('.preview-box').length;
+            document.getElementById('imgCount').innerText = `${total}/10`;
+        }
 
 
 
@@ -322,8 +289,13 @@
                 document.querySelectorAll('.cat-chip').forEach(chip => {
                     chip.classList.remove('active');
                 });
-                // 클릭한 칩에 active 추가
-                element.classList.add('active');
+
+                element.classList.add('active')
+
+                CommunityMain.state.category = element.getAttribute('data-cate');
+                console.log(CommunityMain.state.category);
+                CommunityMain.state.currentPage = 1;
+                CommunityMain.loadPost(true);
             },
 
             selectCategoryWrite: (element) => {
@@ -354,13 +326,23 @@
                 } else {
                     icon.setAttribute('name', 'search-outline');
                     input.value = '';
+                    CommunityMain.state.keyword = '';
+                    CommunityMain.loadPost(true);
                 }
+            },
+            // 검색 실행 함수
+            search: () => {
+                const input = document.querySelector('#searchInput');
+                CommunityMain.state.keyword = input.value;
+                CommunityMain.loadPost(true); // 리셋 O
             },
 
 
             // 무한 스크롤 시작
             state: {
-                currentPage: 2,
+                currentPage: 1,
+                category: '전체',
+                keyword: '',
                 isLoading: false, // 중복 로딩 방지용 깃발
                 isLastPage: false
             },
@@ -368,10 +350,9 @@
             // 2. 초기화 (이벤트 등록)
             init: () => {
                 const scrollBox = document.querySelector('.detail-content');
-
                 if (scrollBox) {
                     scrollBox.addEventListener('scroll', CommunityMain.pageLoading);
-                }
+                };
             },
 
             // 3. 스크롤 감지 함수 (계산 대상 변경)
@@ -385,25 +366,40 @@
 
                 // 바닥 감지 (여유 50px)
                 if (scrollTop + clientHeight >= scrollHeight - 50) {
-                    CommunityMain.loadMorePosts();
+                    CommunityMain.loadPost(false);
                 }
             },
 
-            // 스크롤 내리면 비동기로 10개 로딩
-            loadMorePosts: async () => {
+            loadPost: async (isReset = false) => {
+                if (CommunityMain.state.isLoading) return;
+
+                // 1. 리셋 로직 (카테고리 변경, 검색 시)
+                if (isReset) {
+                    CommunityMain.state.currentPage = 1;
+                    CommunityMain.state.isLastPage = false;
+                    document.getElementById('feedListContainer').innerHTML = '';
+                }
+
+                if (CommunityMain.state.isLastPage) return;
+
                 CommunityMain.state.isLoading = true;
 
                 try {
-                    const page = CommunityMain.state.currentPage;
-                    const response = await API.get(`/community/list?page=${page}`);
+                    // 상태값 가져오기
+                    const { currentPage, category, keyword } = CommunityMain.state;
+                    console.log(currentPage);
+                    console.log(category);
+                    console.log(keyword);
+                    // URL 생성
+                    const url = `/community/list?page=${currentPage}&category=${encodeURIComponent(category)}&keyword=${encodeURIComponent(keyword)}`;
+                    console.log("요청 URL:", url); // 디버깅용 로그
+
+                    const response = await API.get(url);
 
                     if (!response || response.length === 0) {
                         CommunityMain.state.isLastPage = true;
-                        // 하단 로딩바에 메시지 표시 (선택사항)
                         const loader = document.getElementById('loading-trigger');
                         if (loader) loader.innerText = "마지막 게시글입니다.";
-
-                        window.removeEventListener('scroll', CommunityMain.pageLoading);
                         return;
                     }
 
@@ -412,22 +408,31 @@
                         const html = CommunityMain.createFeedCardHTML(dto);
                         container.insertAdjacentHTML('beforeend', html);
                     });
+
                     CommunityMain.state.currentPage++;
-                }
-                catch (error) {
+
+                } catch (error) {
                     console.error('로딩 실패:', error);
                 } finally {
                     CommunityMain.state.isLoading = false;
                 }
             },
 
+
+
             createFeedCardHTML: (dto) => {
+                const profileImg = dto.profileIdx != null
+                    ? `/images/profiles/${dto.profileIdx}.png`
+                    : '/images/default-profile.png';
+                const heartIconName = dto.isLiked ? 'heart' : 'heart-outline';
+                const heartColorClass = dto.isLiked ? 'heart-active' : '';
                 return `
             <div class="feed-card" data-boardIdx="${dto.boardIdx}"
                 onclick="CommunityView.openView(this)">
 
                 <div class="feed-header">
                     <div class="feed-user-group">
+                            <img src="${profileImg}" class="user-img-md">
                         <div class="user-info-text">
                             <span class="user-name">${dto.userNickname}</span>
                             <span class="post-time">${Utils.timeAgo(dto.createdAt)}</span>
@@ -448,12 +453,12 @@
 
                 <div class="feed-footer">
                     <div class="action-item">
-                        <ion-icon name="chatbubble-outline"></ion-icon>
+                        <ion-icon name="chatbubble-outline" id="main-like-icon"></ion-icon>
                         <span>${dto.replyCount}</span>
                     </div>
 
                     <div class="action-item">
-                        <ion-icon name="heart-outline"></ion-icon> 
+                        <ion-icon name="${heartIconName}" class="${heartColorClass}"></ion-icon> 
                         <span>    
                             ${dto.likeCount}
                         </span>
@@ -481,6 +486,7 @@
                 }
             })
             CommunityMain.init();
+            CommunityMain.loadPost(true); // 첫 로딩
         });
         // 무한 스크롤 끗
 
@@ -488,107 +494,195 @@
 
         const CommunityWrite = {
             open: () => {
-                const writeDiv = document.querySelector('#writeForm');
+                CommunityWrite.resetForm();
+                isEditMode = false;
 
-                if (writeDiv) {
-                    writeDiv.classList.add('active');
+                document.querySelector('.page-title2').innerText = '글쓰기';
+                const submitBtn = document.querySelector('.btn-done');
+                submitBtn.innerText = '완료';
+                submitBtn.setAttribute('onclick', 'CommunityWrite.submitPost()'); // 함수 연결
+
+                document.querySelector('#writeForm').classList.add('active');
+            },
+
+            // [수정 모드 열기]
+            openEdit: async () => {
+                const boardIdx = CommunityView.board_info.boardIdx;
+                if (!boardIdx) return;
+                console.log("수정모드 열렸나/>")
+
+                CommunityWrite.resetForm(); // 초기화
+                isEditMode = true;
+                editingBoardIdx = boardIdx;
+
+                // UI 변경
+                document.querySelector('.page-title2').innerText = '게시글 수정';
+                const submitBtn = document.querySelector('.btn-done');
+                submitBtn.innerText = '수정';
+                submitBtn.setAttribute('onclick', 'CommunityWrite.updatePost()'); // 함수 연결
+                try {
+                    // 1. 기존 내용 채우기 (View에 있는 데이터 활용)
+                    const titleInput = document.querySelector("#title-input");
+                    const contentInput = document.querySelector("#content-textarea");
+
+                    // (주의) innerText는 줄바꿈이 사라질 수 있으므로, 줄바꿈 유지를 위해 API 데이터를 쓰거나 textarea 값을 확인해야 함
+                    // 여기서는 간단히 View 데이터를 넣습니다.
+                    // 만약 상세보기가 API로 가져온 데이터라면 CommunityView.board_info 사용
+                    titleInput.value = document.querySelector('.feed-title').innerText;
+                    contentInput.value = CommunityView.board_info.boardContent;
+
+                    // 2. 카테고리 선택
+                    const currentCategory = CommunityView.board_info.boardCategory;
+                    document.querySelectorAll('.select-chip').forEach(chip => {
+                        chip.classList.remove('selected');
+                        if (chip.getAttribute('data-value') === currentCategory) {
+                            chip.classList.add('selected');
+                        }
+                    });
+
+                    // 3. 기존 첨부파일 가져와서 그리기
+                    // (만약 files 정보가 없다면 API 호출 필요)
+                    const files = await API.get(`/community/files/${boardIdx}`);
+                    CommunityWrite.renderExistingFiles(files);
+
+                    document.querySelector('#writeForm').classList.add('active');
+
+                } catch (error) {
+                    console.error(error);
+                    Utils.notify("게시글 정보를 불러오는데 실패했습니다.", "error");
                 }
             },
 
             close: () => {
-                const writeDiv = document.querySelector('#writeForm');
-
-                if (writeDiv) {
-                    writeDiv.classList.remove('active');
-                }
-
+                document.querySelector('#writeForm').classList.remove('active');
+                CommunityWrite.resetForm();
+            },
+            resetForm: () => {
                 document.querySelector("#title-input").value = '';
                 document.querySelector("#content-textarea").value = '';
-                // 파일 선택 초기화
                 selectedFiles = [];
+                deletedFileIdxs = [];
+
+                // 미리보기 싹 지우기 (카메라 버튼 제외)
+                const container = document.getElementById('imageRow');
+                const previews = container.querySelectorAll('.preview-box');
+                previews.forEach(box => box.remove());
+
                 document.getElementById('imgCount').innerText = "0/10";
-                renderPreview();
             },
 
+            // 기존 파일 그리기
+            renderExistingFiles: (files) => {
+                const container = document.getElementById('imageRow');
+                if (!files) return;
+
+                files.forEach(file => {
+                    const div = document.createElement('div');
+                    div.className = 'preview-box existing-file'; // ★ 기존 파일 클래스
+                    div.innerHTML = `
+                    <img src="/img/${file.fileIdx}" class="preview-img">
+                    <div class="btn-remove-img" onclick="removeExistingFile(this, ${file.fileIdx})">
+                        <ion-icon name="close"></ion-icon>
+                    </div>
+                `;
+                    container.appendChild(div);
+                });
+                updateImageCount();
+            },// [POST] 글 등록
             submitPost: async () => {
                 const cate = document.querySelector(".selected").getAttribute('data-value');
-                const title = document.querySelector("#title-input");
-                const content = document.querySelector("#content-textarea");
+                const title = document.querySelector("#title-input").value;
+                const content = document.querySelector("#content-textarea").value;
                 const loginUserIdx = document.querySelector("#loginUserIdx").value;
-                console.log(cate);
-                console.log(title.value);
-                console.log(content.value);
-                console.log(loginUserIdx);
 
-
-                // 필수 검증
-                if (!Validation.required(title.value.trim())) {
-                    Utils.notify('제목을 입력하세요.', 'error');
+                if (!title.trim() || !content.trim()) {
+                    Utils.notify('제목과 내용을 입력해주세요.', 'error');
                     return;
                 }
-                if (!Validation.required(content.value.trim())) {
-                    Utils.notify('내용을 입력하세요', 'error');
-                    return;
-                }
-
 
                 const boardDto = {
                     userIdx: loginUserIdx,
                     boardCategory: cate,
-                    boardTitle: title.value,
-                    boardContent: content.value
-                }
-                console.log(boardDto);
+                    boardTitle: title,
+                    boardContent: content
+                };
 
-                // FormData 생성
                 const formData = new FormData();
                 formData.append("board", new Blob([JSON.stringify(boardDto)], { type: "application/json" }));
-
-                selectedFiles.forEach(file => {
-                    formData.append("files", file);
-                });
+                selectedFiles.forEach(file => formData.append("files", file));
 
                 try {
-                    // API.js는 multipart/form-data를 지원하지 않으므로 직접 fetch 사용
                     const response = await fetch('/community/write', {
                         method: 'POST',
                         body: formData
                     });
 
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
+                    if (!response.ok) throw new Error('등록 실패');
 
                     const resultDto = await response.json();
+                    Utils.notify('게시글을 등록했습니다!', 'success');
+                    CommunityWrite.close();
+                    CommunityWrite.refreshAfterWrite(resultDto); // 리스트에 추가
 
-                    console.log(resultDto);
-                    Utils.notify('게시글을 등록했습니다!', 'success', 4000);
-                    title.value = '';
-                    content.value = '';
-                    // 파일 초기화
-                    selectedFiles = [];
-                    document.getElementById('imgCount').innerText = "0/10";
-                    renderPreview();
-
-
-                    document.querySelector('#writeForm').classList.remove('active');
-                    CommunityWrite.refreshAfterWrite(resultDto);
                 } catch (error) {
-                    console.error('글쓰기 실패:', error);
+                    console.error(error);
                     Utils.notify('글 등록 중 오류가 발생했습니다.', 'error');
                 }
             },
 
+            // [PUT] 글 수정
+            updatePost: async () => {
+                const cate = document.querySelector(".selected").getAttribute('data-value');
+                const title = document.querySelector("#title-input").value;
+                const content = document.querySelector("#content-textarea").value;
 
-            // 글쓰기 완료 후 비동기 새로고침
+                if (!title.trim() || !content.trim()) {
+                    Utils.notify('제목과 내용을 입력해주세요.', 'error');
+                    return;
+                }
+
+                // 수정용 DTO (boardIdx 포함)
+                const boardDto = {
+                    boardIdx: editingBoardIdx,
+                    boardCategory: cate,
+                    boardTitle: title,
+                    boardContent: content
+                };
+
+                const formData = new FormData();
+                formData.append("board", new Blob([JSON.stringify(boardDto)], { type: "application/json" }));
+
+                // 1. 새 파일 추가
+                selectedFiles.forEach(file => formData.append("newFiles", file));
+
+                // 2. 삭제할 파일 ID 목록 (있든 없든 보냄, 없으면 빈 배열)
+                formData.append("deleteFileIdxs", new Blob([JSON.stringify(deletedFileIdxs)], { type: "application/json" }));
+
+                try {
+                    const response = await fetch('/community/edit', {
+                        method: 'PUT',
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        Utils.notify('게시글이 수정되었습니다.', 'success');
+                        CommunityWrite.close();
+
+                        // 가장 확실한 방법: 페이지 새로고침 (데이터 갱신을 위해)
+                        location.reload();
+                    } else {
+                        throw new Error('수정 실패');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    Utils.notify('수정 중 오류가 발생했습니다.', 'error');
+                }
+            },
+
             refreshAfterWrite: (response) => {
                 const dto = response;
-                console.log(dto);
                 const container = document.getElementById('feedListContainer');
-
-                // CommunityMain에서 만든 카드 양식 
                 const html = CommunityMain.createFeedCardHTML(dto);
-
                 container.insertAdjacentHTML('afterbegin', html);
             }
         };
@@ -604,16 +698,37 @@
                 likeCount: '',
                 userIdx: ''
             },
-
+            editBoard: () => {
+                // 메뉴 닫기
+                document.querySelector('#board-owner-menu').classList.remove('active');
+                // 수정 창 열기
+                CommunityWrite.openEdit();
+            },
             openView: async (e) => {
                 const boardIdx = e.getAttribute('data-boardIdx');
                 console.log(boardIdx);
                 const viewForm = document.querySelector('#viewForm');
 
-                // th: href = "@{/community/view/{id}(id=${board.boardIdx})}"
+
                 const board = await API.get(`/community/view/${boardIdx}`);
                 const boardReply = await API.get(`/community/reply/${boardIdx}`);
-                console.log(boardReply);
+                console.log("boardReply 확인 : ", boardReply);
+
+                console.log(board.isLiked);
+
+                const heartIcon = document.querySelector('#view-like-icon'); // 아이콘에 ID 하나 주세요
+                if (board.isLiked) {
+                    // 1. 꽉 찬 하트로 아이콘 이름 변경
+                    heartIcon.setAttribute('name', 'heart');
+                    // 2. 빨간색 클래스 추가 (CSS로 .text-red { color: red; } 미리 만들어두기)
+
+                    heartIcon.classList.add('heart-active');
+                } else {
+                    // 안 눌렀으면 빈 하트
+                    heartIcon.setAttribute('name', 'heart-outline');
+                    heartIcon.classList.remove('heart-active');
+                }
+
 
                 CommunityView.board_info.boardIdx = board.boardIdx;
                 CommunityView.board_info.replyCount = board.replyCount;
@@ -728,9 +843,26 @@
                     console.error("삭제 실패:", error);
                     Utils.notify('삭제 중 오류가 발생했습니다.', 'error');
                 }
+            },
+
+            clickLike: async () => {
+                console.log("좋아요 누름");
+                const boardIdx = CommunityView.board_info.boardIdx;
+                console.log(boardIdx);
+                try {
+                    const response = await API.get(`community/like/${boardIdx}`);
+
+                    const likeCount = document.querySelector('#view-like').innerText;
+                    const heartIcon = document.querySelector('#view-like-icon');
+                    heartIcon.setAttribute('name', 'heart');
+                    heartIcon.classList.add('heart-active');
+                    document.querySelector('#view-like').innerText = Number(likeCount) + 1;
+                    Utils.notify('좋아요를 눌렀습니다.', 'like');
+
+                } catch (error) {
+                    Utils.notify('이미 좋아요를 누른 게시글입니다.', 'warning');
+                }
             }
-
-
         };
 
         // --- 이미지 슬라이더 로직 ---
@@ -811,11 +943,14 @@
             createReplyCardHTML: (dto) => {
                 const loginUserIdx = document.querySelector('#loginUserIdxMain').value;
                 const isOwner = (loginUserIdx == dto.userIdx);
+                const profileImg = dto.profileIdx != null
+                    ? `/images/profiles/${dto.profileIdx}.png`
+                    : '/images/default-profile.png';
 
                 return `
                 <div class="comment-item" id="reply-item-${dto.replyIdx}">
                     <div class="comment-left-group">
-                        <img src="https://i.pravatar.cc/150?img=5" class="comment-user-img">
+                        <img src="${profileImg}" class="user-img-md">
                         
                         <div class="comment-content" style="width: 100%;">
                             <div class="comment-header">
@@ -983,6 +1118,11 @@
             if (event.key === 'Enter') {
                 CommunityReply.sendReply();
 
+            }
+        }
+        function handleSearchEnter(event) {
+            if (event.key === 'Enter') {
+                CommunityMain.search(); // 검색 함수 실행
             }
         }
 

@@ -18,7 +18,7 @@ public enum ErrorCode {
     // ===== 커뮤니티 =====
     BOARD_NOT_FOUND(404, "게시글을 찾을 수 없습니다."),
     REPLY_NOT_FOUND(404, "댓글을 찾을 수 없습니다."),
-
+    EXITS_LIKE_ALREADY(404, "이미 추천한 글입니다."),
     // ===== 파일 =====
     RESOURCE_NOT_FOUND(404, "요청한 리소스를 찾을 수 없습니다."),
 
