@@ -30,6 +30,10 @@ public class UserOrder {
     private Integer orderIndex;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "USER_IDX", nullable = false)
+    private Users users;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "PRODUCT_NUM", nullable = false)
     private StoreProduct storeProduct;
 
@@ -57,5 +61,5 @@ public class UserOrder {
     private LocalDateTime cancelledAt;
 
     @Column(name = "CANCEL_REASON")
-    private Byte  cancelReason;
+    private Byte cancelReason;
 }
