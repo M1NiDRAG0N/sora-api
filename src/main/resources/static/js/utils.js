@@ -165,6 +165,7 @@ const Utils = {
         const colors = {
             success: { bg: '#10b981', icon: '✓' },
             error: { bg: '#ef4444', icon: '✕' },
+            like: { bg: '#ff72e5', icon: '✕' },
             info: { bg: '#3b82f6', icon: 'ℹ' },
             warning: { bg: '#f59e0b', icon: '⚠' }
         };

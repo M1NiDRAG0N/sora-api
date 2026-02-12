@@ -57,4 +57,15 @@ public class Board extends BaseEntity {
         this.isUse = false;
     }
 
+    public void updateBoard(String title, String content, String category) {
+        this.boardTitle = title;
+        this.boardContent = content;
+        this.boardCategory = category;
+    }
+
+    // 추천 증가 메서드
+    // 서비스 단에서 그냥 1더해서 저장해도 되지만 여기서 숫자 증가 로직을 만들어놓는게 더 안정적임.
+    public void increaseLike() {
+        this.likeCount++;
+    }
 }
