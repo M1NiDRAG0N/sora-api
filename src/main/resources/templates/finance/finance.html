@@ -1,79 +1,144 @@
-<div class="detail-content no-scrollbar finance-page" th:fragment="div">
-    <div class="net-worth-label">순자산</div>
-    <div class="net-worth-amount">1억 582만 3,000원</div>
-    <div class="net-worth-diff">어제보다 20억 줄었어요</div>
-
-    <div class="dashboard-card">
-        <div class="charts-row">
-            <div class="chart-col">
-                <div class="chart-title">Last Month</div>
-                <div class="chart-box"><canvas id="chartLast"></canvas>
-                    <div class="chart-center-text"><span class="chart-center-value">Total</span></div>
-                </div>
-            </div>
-            <div class="chart-col">
-                <div class="chart-title">This Month</div>
-                <div class="chart-box"><canvas id="chartThis"></canvas>
-                    <div class="chart-center-text"><span class="chart-center-value">Total</span></div>
-                </div>
-            </div>
+<!-- 통일된 구조: 가계부 페이지 -->
+<div class="page-wrapper finance-page" th:fragment="div">
+    
+    <!-- [2] 콘텐츠 (스크롤 영역) -->
+    <div class="page-content">
+        <div class="net-worth-section">
+            <div class="net-worth-label">순자산</div>
+            <div class="net-worth-amount">1억 582만 3,000원</div>
+            <div class="net-worth-diff" id="netWorthMessage">어제보다 20억 줄었어요</div>
         </div>
+        <div class="content-inner">
+            <!-- 대시보드 -->
+            <div class="dashboard-card">
+                <div class="charts-row">
+                    <div class="chart-col">
+                        <div class="chart-title">Last Month</div>
+                        <div class="chart-box"><canvas id="chartLast"></canvas>
+                            <div class="chart-center-text"><span class="chart-center-value">Total</span></div>
+                        </div>
+                    </div>
+                    <div class="chart-col">
+                        <div class="chart-title">This Month</div>
+                        <div class="chart-box"><canvas id="chartThis"></canvas>
+                            <div class="chart-center-text"><span class="chart-center-value">Total</span></div>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="budget-header">한 달 지출 목표 금액</div>
-        <div class="budget-bar-wrap">
-            <div class="bar-segment bg-red">68%</div>
-            <div class="bar-segment bg-green">32%</div>
-        </div>
+                <div class="budget-header">한 달 지출 목표 금액</div>
+                <div class="budget-bar-wrap">
+                    <div class="bar-segment bg-red">68%</div>
+                    <div class="bar-segment bg-green">32%</div>
+                </div>
 
-        <div class="budget-info-container">
-            <div class="budget-row">
-                <div class="row-left"><span class="dot-bullet"></span> 예산</div>
-                <div class="row-right">
-                    <div class="amount-text clickable budget-amount">2,500,000,000</div>
-                    <div class="sub-text">누르면 (설정 가능)</div>
+                <div class="budget-info-container">
+                    <div class="budget-row">
+                        <div class="row-left"><span class="dot-bullet"></span> 예산</div>
+                        <div class="row-right">
+                            <div class="amount-text clickable budget-amount">2,500,000,000</div>
+                            <div class="sub-text">누르면 (설정 가능)</div>
+                        </div>
+                    </div>
+                    <div class="budget-row">
+                        <div class="row-left"><span class="dot-bullet"></span> 지출</div>
+                        <div class="row-right">
+                            <div class="amount-text clickable expense-amount">1,700,000,000</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="budget-row">
-                <div class="row-left"><span class="dot-bullet"></span> 지출</div>
-                <div class="row-right">
-                    <div class="amount-text clickable expense-amount">1,700,000,000</div>
+
+            <!-- 달력 -->
+            <div class="calendar-sheet">
+                <div class="cal-header">
+                    <span class="cal-title toggle-calendar-view">January 2026</span>
+                </div>
+                <div id="calendarContainer" class="date-scroller"></div>
+            </div>
+
+            <!-- 거래 목록 -->
+            <div id="dayDetailSection" class="day-detail-section">
+                <div class="dd-header-date" id="ddDateTitle"></div>
+
+                <div class="dd-summary-row">
+                    <span class="dd-label">잔액보기</span>
+                    <span class="dd-count" id="ddCount">0건</span>
+                </div>
+
+                <div id="ddList"></div>
+
+                <div class="fab-edit open-modal">
+                    <ion-icon name="pencil"></ion-icon>
+                </div>
+            </div>
+
+            <div style="height: 100px;"></div>
+        </div>
+    </div>
+
+    <!-- [3] 모달 레이어 (고정) -->
+    <div class="modal-layers">
+        <!-- 공용 오버레이 (배경) -->
+        <div class="modal-overlay"></div>
+        
+        <!-- 입출금 모달 -->
+        <div class="modal-container" id="writeModal">
+            <div class="modal-content">
+                <div class="modal-title">입출금</div>
+
+                <div class="input-group">
+                    <label class="modal-label">카테고리</label>
+                    <div style="position:relative;">
+                        <select id="inpCategory" class="modal-input">
+                            <option value="식비">식비</option>
+                            <option value="교통비">교통비</option>
+                            <option value="쇼핑">쇼핑</option>
+                            <option value="월급">월급</option>
+                            <option value="용돈">용돈</option>
+                            <option value="기타">기타</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row-inputs">
+                    <div class="input-group sm">
+                        <label class="modal-label">구분</label>
+                        <select id="inpType" class="modal-input text-center">
+                            <option value="minus">-</option>
+                            <option value="plus">+</option>
+                        </select>
+                    </div>
+                    <div class="input-group lg">
+                        <label class="modal-label">금액 (원)</label>
+                        <input type="number" id="inpAmount" class="modal-input" placeholder="0">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <textarea id="inpMemo" class="modal-textarea" placeholder="내용을 입력하세요... (예: 친구에게 빌림)"></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="modal-btn-save" onclick="finance.saveData()">입력</button>
+                    <button class="modal-close-btn" onclick="finance.closeModal()">닫기</button>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="calendar-sheet">
-        <div class="cal-header">
-            <span class="cal-title toggle-calendar-view">January 2026</span>
-        </div>
-        <div id="calendarContainer" class="date-scroller"></div>
-    </div>
-
-    <div id="dayDetailSection" class="day-detail-section">
-        <div class="dd-header-date" id="ddDateTitle"></div>
-
-        <div class="dd-summary-row">
-            <span class="dd-label">잔액보기</span>
-            <span class="dd-count" id="ddCount">0건</span>
-        </div>
-
-        <div id="ddList"></div>
-
-        <div class="fab-edit open-modal">
-            <ion-icon name="pencil"></ion-icon>
-        </div>
-    </div>
-
-    <div style="height: 100px;"></div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            finance.init();
-        });
-
         const finance = {
             selectedDay: null,
             isGridView: false,
+            messageIndex: 0,
+            messages: [
+                '어제보다 20억 줄었어요',
+                '이번 달 저축이 잘되고 있어요!',
+                '목표까지 남은 금액: 1억원',
+                '지난주 지출이 늘었어요',
+                '평균보다 30% 많이 저축했어요'
+            ],
             mockDB: {
                 1: [{ cat: '월급', amount: '5,000,000', type: 'plus', memo: '1월 급여 입금완료', time: '09:00' }, { cat: '통신비', amount: '60,000', type: 'minus', memo: '휴대폰 요금 자동이체', time: '13:00' }],
                 4: [{ cat: '카드대금', amount: '999,950', type: 'minus', memo: '신용카드 대금 결제', time: '15:30' }],
@@ -85,6 +150,7 @@
                 finance.initCharts();
                 finance.evtHandler();
                 finance.renderScroller();
+                finance.startMessageRotation();
             },
 
             evtHandler: () => {
@@ -216,6 +282,22 @@
                 else finance.renderScroller();
             },
 
+            getOverlay: () => {
+                return document.querySelector('.modal-overlay');
+            },
+            
+            updateOverlay: () => {
+                const overlay = finance.getOverlay();
+                const hasActiveModal = document.querySelector('.modal-container.active');
+                if (overlay) {
+                    if (hasActiveModal) {
+                        overlay.classList.add('active');
+                    } else {
+                        overlay.classList.remove('active');
+                    }
+                }
+            },
+
             openModal: () => {
                 if (typeof finance.selectedDay === 'undefined' || !finance.selectedDay) {
                     alert("먼저 달력에서 날짜를 선택해주세요.");
@@ -223,11 +305,13 @@
                 }
                 document.getElementById('inpAmount').value = '';
                 document.getElementById('inpMemo').value = '';
-                document.getElementById('writeModal').style.display = 'flex';
+                document.getElementById('writeModal').classList.add('active');
+                finance.updateOverlay();
             },
 
             closeModal: () => {
-                document.getElementById('writeModal').style.display = 'none';
+                document.getElementById('writeModal').classList.remove('active');
+                finance.updateOverlay();
             },
 
             saveData: () => {
@@ -274,48 +358,33 @@
                 location.href = 'detailswrite.html';
             },
 
+            startMessageRotation: () => {
+                const msgEl = document.getElementById('netWorthMessage');
+                if (!msgEl) return;
+                
+                setInterval(() => {
+                    finance.messageIndex = (finance.messageIndex + 1) % finance.messages.length;
+                    msgEl.style.opacity = '0.5';
+                    
+                    setTimeout(() => {
+                        msgEl.innerText = finance.messages[finance.messageIndex];
+                        msgEl.style.opacity = '0.95';
+                    }, 150);
+                }, 5000);
+            }
         };
+
+        // 오버레이 클릭 시 모달 닫기
+        document.addEventListener('DOMContentLoaded', () => {
+            const overlay = document.querySelector('.modal-overlay');
+            if (overlay) {
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
+                        finance.closeModal();
+                    }
+                });
+            }
+            finance.init();
+        });
     </script>
-    <div id="writeModal" class="modal-overlay">
-        <div class="modal-card">
-            <div class="modal-title">입출금</div>
-
-            <div class="input-group">
-                <label class="modal-label">카테고리</label>
-                <div style="position:relative;">
-                    <select id="inpCategory" class="modal-input">
-                        <option value="식비">식비</option>
-                        <option value="교통비">교통비</option>
-                        <option value="쇼핑">쇼핑</option>
-                        <option value="월급">월급</option>
-                        <option value="용돈">용돈</option>
-                        <option value="기타">기타</option>
-                    </select>
-                </div>
-            </div>
-            <button class="modal-btn-save">입력</button>
-            <div class="modal-close-btn">
-                <div class=" row-inputs">
-                    <div class="input-group sm">
-                        <label class="modal-label">구분</label>
-                        <select id="inpType" class="modal-input text-center">
-                            <option value="minus">-</option>
-                            <option value="plus">+</option>
-                        </select>
-                    </div>
-                    <div class="input-group lg">
-                        <label class="modal-label">금액 (원)</label>
-                        <input type="number" id="inpAmount" class="modal-input" placeholder="0">
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <textarea id="inpMemo" class="modal-textarea" placeholder="내용을 입력하세요... (예: 친구에게 빌림)"></textarea>
-                </div>
-
-                <button class="modal-btn" onclick="saveData()">입력</button>
-                <div class="modal-close-btn" onclick="closeModal()">닫기</div>
-            </div>
-        </div>
-    </div>
 </div>

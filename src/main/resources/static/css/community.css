@@ -35,6 +35,16 @@
 
 /* --- 2. 커뮤니티 메인 (Community) --- */
 
+/* 커뮤니티 페이지 컨테이너 - flex 레이아웃 설정 */
+.community-page,
+.detail-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
 /* 스크롤 영역 */
 .community-scroll-area {
     flex: 1;
