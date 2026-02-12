@@ -15,9 +15,13 @@
     <link rel="stylesheet" href="/css/timesale.css">
     <link rel="stylesheet" href="/css/usedmarket.css">
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
     <script type="module" src="https://unpkg.com/ionicons@7/dist/ionicons/ionicons.esm.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
     <script src="/js/utils.js"></script>
     <script src="/js/api.js"></script>
@@ -33,7 +37,7 @@
         <th:block th:if="${currentUri == '/finance'}" th:insert="~{finance/finance :: div}"></th:block>
         <th:block th:if="${currentUri == '/community'}" th:insert="~{community/community :: div}"></th:block>
         <th:block th:if="${currentUri == '/timesale'}" th:insert="~{timesale/timesale :: div}"></th:block>
-        <th:block th:if="${currentUri == '/used-market'}" th:insert="~{usedmarket/list :: div}"></th:block>
+        <th:block th:if="${currentUri == '/used-market'}" th:insert="~{usedmarket/usedmarket :: div}"></th:block>
 
         <div th:replace="~{layout/nav :: nav}"></div>
 
