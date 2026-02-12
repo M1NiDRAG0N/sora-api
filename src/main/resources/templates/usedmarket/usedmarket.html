@@ -37,7 +37,7 @@
     </div>
 
     <div id="loading" class="loading-spinner">
-        <ion-icon name="reload-outline" style="animation: spin 1s linear infinite; font-size: 20px;"></ion-icon>
+        <ion-icon name="reload-outline" class="spin-icon"></ion-icon>
         <span>불러오는 중...</span>
     </div>
     <div id="scroll-sentinel"></div>
@@ -48,13 +48,13 @@
     </button>
 
     <!-- 상품 작성 페이지 시작 -->
-    <div class="app-container bg-gradient popup-container regPop">
+    <div class="popup-container bg-gradient regPop">
         <div class="write-header">
-            <button class="header-btn-icon reg-pop-close-btn" style="color:#333;">
+            <button type="button" class="header-btn-icon reg-pop-close-btn">
                 <ion-icon name="chevron-back"></ion-icon>
             </button>
             <div class="page-title">내 물건 팔기</div>
-            <div style="width: 24px;"></div>
+            <div class="header-spacer"></div>
         </div>
 
         <div class="scroll-flex-1 write-container-padded">
@@ -64,22 +64,22 @@
                     <span class="camera-count" id="imgCount">0/10</span>
                 </div>
             </div>
-            <input type="file" id="imgUpload" style="display: none;" multiple accept="image/*"
+            <input type="file" id="imgUpload" hidden multiple accept="image/*"
                 onchange="handleFileSelect(this)">
 
-            <label class="input-label" id="title">제목</label>
+            <label class="input-label">제목</label>
             <input type="text" class="input-box-styled" placeholder="제목을 입력하세요">
 
-            <label class="input-label" id="info">자세한 설명</label>
+            <label class="input-label">자세한 설명</label>
             <textarea class="textarea-box-styled" placeholder="게시글 내용을 작성해주세요."></textarea>
 
-            <label class="input-label" id="priceLabel">가격</label>
+            <label class="input-label">가격</label>
             <input type="number" class="input-box-styled" placeholder="가격을 입력해주세요 (원)">
 
             <label class="input-label">거래 희망 장소</label>
             <div class="location-select-box">
                 <span id="locText" class="loc-placeholder">위치 추가</span>
-                <ion-icon name="chevron-forward" style="color:#ccc;"></ion-icon>
+                <ion-icon name="chevron-forward"></ion-icon>
             </div>
             <div id="mapArea" class="map-wrapper">
                 <div id="writeMap" class="map-container"></div>
@@ -87,16 +87,16 @@
             <input type="hidden" id="lat"><input type="hidden" id="lng">
         </div>
 
-        <div class="fixed-bottom-btn-area" style="flex-shrink: 0;">
-            <button class="btn-submit-full active" onclick="alert('작성 완료!')">작성완료</button>
+        <div class="fixed-bottom-btn-area">
+            <button class="btn-submit-full active">작성완료</button>
         </div>
 
         <div class="bottom-spacer"></div>
     </div>
     <!-- 상세 팝업 -->
-    <div class="app-container bg-gradient popup-container">
+    <div class="popup-container bg-gradient viewPop">
         <div class="view-header">
-            <button type="button" class="header-btn-icon">
+            <button type="button" class="header-btn-icon view-pop-close-btn">
                 <ion-icon name="chevron-back"></ion-icon>
             </button>
             <div>상세보기</div>
@@ -124,11 +124,11 @@
                 <div class="profile">
                     <img src="https://i.pravatar.cc/100?img=12" class="profile-img">
                     <div>
-                        <div style="font-weight:700; font-size:15px;" id="view-seller"></div>
-                        <div style="font-size:12px; color:var(--text-sub);" id="view-location"></div>
+                        <div class="seller-name" id="view-seller"></div>
+                        <div class="seller-location" id="view-location"></div>
                     </div>
                 </div>
-                <div style="color:#35c5f0; font-weight:700;" id="view-temp">36.5°C 😊</div>
+                <div class="temp-badge" id="view-temp">36.5°C 😊</div>
             </div>
 
             <div class="content">
@@ -150,13 +150,12 @@
         </div>
 
         <div class="bottom-bar">
-            <ion-icon name="heart-outline"
-                style="font-size:24px; color:var(--text-sub); padding-right:15px; border-right:1px solid #eee; cursor: pointer;"></ion-icon>
-            <div style="flex:1;">
+            <ion-icon name="heart-outline" class="heart-icon"></ion-icon>
+            <div class="price-info">
                 <div class="price" id="view-price"></div>
-                <div style="font-size:12px; color:var(--primary); font-weight:700;">가격 제안 불가</div>
+                <div class="price-sub">가격 제안 불가</div>
             </div>
-            <button class="btn-primary chat-btn" onclick="location.href='chat_used.html'">채팅하기</button>
+            <button class="btn-primary chat-btn" id="chatBtn">채팅하기</button>
         </div>
     </div>
 
@@ -167,16 +166,32 @@
     const list = {
         init: () => {
             list.evtHandler();
+            new Swiper('.product-swiper', { pagination: { el: '.swiper-pagination' }, loop: true });
         },
         evtHandler: () => {
+            // 작성 팝업
             document.querySelector('.reg-pop-open-btn').addEventListener('click', () => list.openRegPopup());
             document.querySelector('.reg-pop-close-btn').addEventListener('click', () => list.closeRegPopup());
+            
+            // 상세보기 팝업
+            document.querySelector('.view-pop-close-btn').addEventListener('click', () => list.closeViewPopup());
+            
+            // 상품 클릭 시 상세보기 팝업 열기
+            document.querySelectorAll('.market-item').forEach(item => {
+                item.addEventListener('click', () => list.openViewPopup());
+            });
         },
         openRegPopup: () => {
             document.querySelector('.regPop').classList.add('active');
         },
         closeRegPopup: () => {
             document.querySelector('.regPop').classList.remove('active');
+        },
+        openViewPopup: () => {
+            document.querySelector('.viewPop').classList.add('active');
+        },
+        closeViewPopup: () => {
+            document.querySelector('.viewPop').classList.remove('active');
         },
     };
 </script>
