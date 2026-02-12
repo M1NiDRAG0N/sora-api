@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 public record UserOrderDto(
     Integer orderIndex,
+    Integer userIdx,
     Integer productNum,
     Integer storeIdx,
     String productName,
