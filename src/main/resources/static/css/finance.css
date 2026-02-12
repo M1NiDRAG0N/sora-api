@@ -1,7 +1,7 @@
-/* ===================================================================
-   [PART 1] 기본 설정 및 레이아웃 (원본)
+﻿/* ===================================================================
+   [PART 1] 湲곕낯 ?ㅼ젙 諛??덉씠?꾩썐 (?먮낯)
    =================================================================== */
-.detail-content {
+.finance-page {
     flex: 1;
     overflow-y: auto;
     padding: 0 20px;
@@ -9,9 +9,9 @@
 }
 
 /* ===================================================================
-   [PART 2] 가계부 메인 대시보드 (원본)
+   [PART 2] 媛怨꾨? 硫붿씤 ??쒕낫??(?먮낯)
    =================================================================== */
-.net-worth-label {
+.finance-page .net-worth-label{
     font-size: 14px;
     color: var(--text-sub);
     margin-bottom: 4px;
@@ -19,7 +19,7 @@
     margin-top: 20px;
 }
 
-.net-worth-amount {
+.finance-page .net-worth-amount{
     font-size: 28px;
     font-weight: 700;
     color: var(--text-main);
@@ -27,14 +27,14 @@
     letter-spacing: -0.5px;
 }
 
-.net-worth-diff {
+.finance-page .net-worth-diff{
     font-size: 13px;
     color: var(--text-sub);
     margin-bottom: 24px;
 }
 
-/* 카드 스타일 */
-.dashboard-card {
+/* 移대뱶 ?ㅽ???*/
+.finance-page .dashboard-card{
     background-color: var(--white);
     border-radius: 28px;
     padding: 24px 20px;
@@ -42,13 +42,13 @@
     margin-bottom: 20px;
 }
 
-.charts-row {
+.finance-page .charts-row{
     display: flex;
     justify-content: space-between;
     margin-bottom: 24px;
 }
 
-.chart-col {
+.finance-page .chart-col{
     width: 48%;
     position: relative;
     display: flex;
@@ -56,20 +56,20 @@
     align-items: center;
 }
 
-.chart-title {
+.finance-page .chart-title{
     font-size: 12px;
     font-weight: 600;
     color: var(--text-main);
     margin-bottom: 2px;
 }
 
-.chart-box {
+.finance-page .chart-box{
     width: 120px;
     height: 120px;
     position: relative;
 }
 
-.chart-center-text {
+.finance-page .chart-center-text{
     position: absolute;
     top: 50%;
     left: 50%;
@@ -78,13 +78,13 @@
     pointer-events: none;
 }
 
-.chart-center-value {
+.finance-page .chart-center-value{
     font-size: 13px;
     font-weight: 800;
     color: var(--text-main);
 }
 
-.budget-header {
+.finance-page .budget-header{
     font-size: 13px;
     font-weight: 700;
     color: #555;
@@ -92,7 +92,7 @@
     letter-spacing: -0.5px;
 }
 
-.budget-bar-wrap {
+.finance-page .budget-bar-wrap{
     display: flex;
     width: 100%;
     height: 36px;
@@ -101,7 +101,7 @@
     margin-bottom: 24px;
 }
 
-.bar-segment {
+.finance-page .bar-segment{
     display: flex;
     align-items: center;
     justify-content: center;
@@ -110,29 +110,29 @@
     color: white;
 }
 
-.bg-red {
+.finance-page .bg-red{
     background-color: var(--danger-red);
     width: 68%;
 }
 
-.bg-green {
+.finance-page .bg-green{
     background-color: var(--success-green);
     width: 32%;
 }
 
-.budget-info-container {
+.finance-page .budget-info-container{
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
-.budget-row {
+.finance-page .budget-row{
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
 }
 
-.row-left {
+.finance-page .row-left{
     display: flex;
     align-items: center;
     gap: 8px;
@@ -143,7 +143,7 @@
     flex-shrink: 0;
 }
 
-.dot-bullet {
+.finance-page .dot-bullet{
     width: 4px;
     height: 4px;
     background-color: #666;
@@ -151,13 +151,13 @@
     display: inline-block;
 }
 
-.row-right {
+.finance-page .row-right{
     display: flex;
     flex-direction: column;
     align-items: flex-end;
 }
 
-.amount-text {
+.finance-page .amount-text{
     font-family: 'Noto Sans KR', sans-serif;
     font-size: 17px;
     font-weight: 700;
@@ -166,19 +166,19 @@
     line-height: 1;
 }
 
-.sub-text {
+.finance-page .sub-text{
     font-size: 11px;
     color: #999;
     margin-top: 5px;
     font-weight: 400;
 }
 
-.clickable {
+.finance-page .clickable{
     cursor: pointer;
 }
 
-/* 캘린더 컨테이너 */
-.calendar-sheet {
+/* 罹섎┛??而⑦뀒?대꼫 */
+.finance-page .calendar-sheet{
     background-color: var(--white);
     border-radius: 28px;
     padding: 24px 0 20px 0;
@@ -186,7 +186,7 @@
     margin-top: 10px;
 }
 
-.cal-header {
+.finance-page .cal-header{
     display: flex;
     justify-content: center;
     align-items: center;
@@ -194,11 +194,11 @@
     position: relative;
 }
 
-.cal-nav-btn {
+.finance-page .cal-nav-btn{
     display: none;
 }
 
-.cal-title {
+.finance-page .cal-title{
     font-size: 16px;
     font-weight: 700;
     color: var(--text-main);
@@ -206,12 +206,12 @@
     transition: color 0.2s;
 }
 
-.cal-title:active {
+.finance-page .cal-title:active{
     color: var(--primary);
 }
 
-/* [모드 1] 가로 스크롤 */
-.date-scroller {
+/* [紐⑤뱶 1] 媛濡??ㅽ겕濡?*/
+.finance-page .date-scroller{
     display: flex;
     overflow-x: auto;
     padding: 0 20px 20px 20px;
@@ -220,11 +220,11 @@
     scrollbar-width: none;
 }
 
-.date-scroller::-webkit-scrollbar {
+.finance-page .date-scroller::-webkit-scrollbar{
     display: none;
 }
 
-.date-card {
+.finance-page .date-card{
     min-width: 54px;
     display: flex;
     flex-direction: column;
@@ -234,7 +234,7 @@
     position: relative;
 }
 
-.money-tag {
+.finance-page .money-tag{
     font-size: 9px;
     margin-bottom: 2px;
     height: 12px;
@@ -242,15 +242,15 @@
     white-space: nowrap;
 }
 
-.money-inc {
+.finance-page .money-inc{
     color: var(--success-green);
 }
 
-.money-exp {
+.finance-page .money-exp{
     color: var(--danger-red);
 }
 
-.date-number {
+.finance-page .date-number{
     font-size: 16px;
     color: var(--text-main);
     width: 36px;
@@ -262,38 +262,38 @@
     transition: 0.2s;
 }
 
-.date-card.active .date-number {
+.finance-page .date-card.active .date-number{
     background-color: #EBE5FF;
     color: var(--primary-dark);
     font-weight: 800;
 }
 
-/* [모드 2] 달력 그리드 뷰 */
-.calendar-grid {
+/* [紐⑤뱶 2] ?щ젰 洹몃━??酉?*/
+.finance-page .calendar-grid{
     width: 100%;
     padding: 0 15px;
     animation: fadeIn 0.3s ease-in-out;
 }
 
-@keyframes fadeIn {
-    from {
+/* @keyframes fadeIn {
+    .finance-page from{
         opacity: 0;
         transform: translateY(-5px);
     }
 
-    to {
+    .finance-page to{
         opacity: 1;
         transform: translateY(0);
     }
-}
+} */
 
-.grid-header-row {
+.finance-page .grid-header-row{
     display: flex;
     justify-content: space-between;
     margin-bottom: 15px;
 }
 
-.grid-header-cell {
+.finance-page .grid-header-cell{
     width: 14.28%;
     text-align: center;
     font-size: 11px;
@@ -301,12 +301,12 @@
     font-weight: 600;
 }
 
-.grid-dates-container {
+.finance-page .grid-dates-container{
     display: flex;
     flex-wrap: wrap;
 }
 
-.grid-date-cell {
+.finance-page .grid-date-cell{
     width: 14.28%;
     height: 80px;
     display: flex;
@@ -317,53 +317,53 @@
     cursor: pointer;
 }
 
-.grid-date-num {
+.finance-page .grid-date-num{
     font-size: 15px;
     color: #333;
     margin-bottom: 4px;
 }
 
-.grid-money {
+.finance-page .grid-money{
     font-size: 9px;
     margin-bottom: 2px;
     height: 12px;
     white-space: nowrap;
 }
 
-.grid-money.inc {
+.finance-page .grid-money.inc{
     color: var(--success-green);
 }
 
-.grid-money.exp {
+.finance-page .grid-money.exp{
     color: var(--danger-red);
 }
 
 
 /* ===================================================================
-   [PART 3] 상세 리스트 (Details) 스타일 (원본)
-   * 이 부분은 detail.html 등 다른 페이지에서 사용될 수 있으므로 유지합니다.
+   [PART 3] ?곸꽭 由ъ뒪??(Details) ?ㅽ???(?먮낯)
+   * ??遺遺꾩? detail.html ???ㅻⅨ ?섏씠吏?먯꽌 ?ъ슜?????덉쑝誘濡??좎??⑸땲??
    =================================================================== */
-.summary-header {
+.finance-page .summary-header{
     margin-top: 20px;
     margin-bottom: 30px;
     padding: 0 5px;
 }
 
-.summary-label {
+.finance-page .summary-label{
     font-size: 14px;
     font-weight: 600;
     color: var(--text-main);
     margin-bottom: 8px;
 }
 
-.summary-amount {
+.finance-page .summary-amount{
     font-size: 32px;
     font-weight: 900;
     color: #1A1A1A;
     letter-spacing: -0.5px;
 }
 
-.list-control-bar {
+.finance-page .list-control-bar{
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
@@ -373,20 +373,20 @@
     padding-bottom: 15px;
 }
 
-.list-title {
+.finance-page .list-title{
     font-size: 18px;
     font-weight: 800;
     color: var(--text-main);
 }
 
-.list-count {
+.finance-page .list-count{
     font-size: 12px;
     color: #999;
     font-weight: 400;
     margin-left: 5px;
 }
 
-.btn-register {
+.finance-page .btn-register{
     background-color: var(--primary);
     color: white;
     padding: 8px 16px;
@@ -401,17 +401,17 @@
     transition: transform 0.1s;
 }
 
-.btn-register:active {
+.finance-page .btn-register:active{
     transform: scale(0.96);
 }
 
-.clean-list {
+.finance-page .clean-list{
     display: flex;
     flex-direction: column;
     gap: 0;
 }
 
-.clean-item {
+.finance-page .clean-item{
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -420,7 +420,7 @@
     background: transparent;
 }
 
-.item-left {
+.finance-page .item-left{
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -429,7 +429,7 @@
     min-width: 0;
 }
 
-.item-title {
+.finance-page .item-title{
     font-size: 15px;
     font-weight: 700;
     color: #333;
@@ -438,19 +438,19 @@
     word-break: keep-all;
 }
 
-.item-title.clickable-title {
+.finance-page .item-title.clickable-title{
     cursor: pointer;
     text-decoration: underline;
     text-decoration-color: transparent;
     transition: all 0.2s;
 }
 
-.item-title.clickable-title:hover {
+.finance-page .item-title.clickable-title:hover{
     color: var(--primary);
     text-decoration-color: var(--primary);
 }
 
-.item-memo {
+.finance-page .item-memo{
     font-size: 13px;
     color: #666;
     font-weight: 400;
@@ -464,13 +464,13 @@
     word-break: break-all;
 }
 
-.item-date {
+.finance-page .item-date{
     font-size: 11px;
     color: #999;
     margin-top: 2px;
 }
 
-.item-right {
+.finance-page .item-right{
     text-align: right;
     display: flex;
     align-items: center;
@@ -479,21 +479,21 @@
     flex-shrink: 0;
 }
 
-.item-amount {
+.finance-page .item-amount{
     font-size: 16px;
     font-weight: 800;
     white-space: nowrap;
 }
 
-.item-amount.inc {
+.finance-page .item-amount.inc{
     color: var(--success-green);
 }
 
-.item-amount.exp {
+.finance-page .item-amount.exp{
     color: var(--danger-red);
 }
 
-.item-arrow {
+.finance-page .item-arrow{
     font-size: 18px;
     color: #CCC;
     cursor: pointer;
@@ -501,20 +501,20 @@
     transition: transform 0.2s, color 0.2s;
 }
 
-.item-arrow:hover {
+.finance-page .item-arrow:hover{
     color: #666;
 }
 
-.item-arrow.rotated {
+.finance-page .item-arrow.rotated{
     transform: rotate(180deg);
 }
 
 
 /* ===================================================================
-   [PART 4] 입력/수정 (Write) 화면 스타일 (원본)
-   * 이것도 detailswrite.html에서 쓰이므로 절대 삭제하면 안 됨
+   [PART 4] ?낅젰/?섏젙 (Write) ?붾㈃ ?ㅽ???(?먮낯)
+   * ?닿쾬??detailswrite.html?먯꽌 ?곗씠誘濡??덈? ??젣?섎㈃ ????
    =================================================================== */
-.write-card {
+.finance-page .write-card{
     background: var(--white);
     border-radius: 20px;
     padding: 20px;
@@ -524,7 +524,7 @@
     flex-direction: column;
 }
 
-.page-title {
+.finance-page .page-title{
     text-align: center;
     font-size: 20px;
     font-weight: 800;
@@ -532,33 +532,33 @@
     margin-bottom: 25px;
 }
 
-.input-group-container {
+.finance-page .input-group-container{
     display: flex;
     flex-direction: column;
     gap: 15px;
     margin-bottom: 20px;
 }
 
-.input-row-bottom {
+.finance-page .input-row-bottom{
     display: flex;
     align-items: flex-end;
     gap: 8px;
 }
 
-.input-col {
+.finance-page .input-col{
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
 
-.input-label {
+.finance-page .input-label{
     font-size: 12px;
     font-weight: 700;
     color: var(--text-main);
     margin-left: 2px;
 }
 
-.custom-input {
+.finance-page .custom-input{
     height: 45px;
     border: 1px solid #E5E5E5;
     border-radius: 12px;
@@ -571,25 +571,25 @@
     width: 100%;
 }
 
-.custom-input:focus {
+.finance-page .custom-input:focus{
     border-color: var(--primary);
 }
 
-.col-type {
+.finance-page .col-type{
     width: 60px;
     flex-shrink: 0;
 }
 
-.col-amount {
+.finance-page .col-amount{
     flex: 1;
 }
 
-.col-type select {
+.finance-page .col-type select{
     text-align-last: center;
     padding-right: 12px;
 }
 
-select.custom-input {
+.finance-page select.custom-input{
     -webkit-appearance: none;
     background: var(--white);
     background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
@@ -598,7 +598,7 @@ select.custom-input {
     background-size: 12px;
 }
 
-.btn-enter {
+.finance-page .btn-enter{
     width: 45px;
     height: 45px;
     border: 1px solid #E5E5E5;
@@ -613,11 +613,11 @@ select.custom-input {
     flex-shrink: 0;
 }
 
-.btn-enter:active {
+.finance-page .btn-enter:active{
     background: #f5f5f5;
 }
 
-.memo-area {
+.finance-page .memo-area{
     flex: 1;
     width: 100%;
     border: 1px solid #E5E5E5;
@@ -630,7 +630,7 @@ select.custom-input {
     margin-bottom: 15px;
 }
 
-.btn-submit {
+.finance-page .btn-submit{
     align-self: flex-end;
     padding: 12px 30px;
     border: 1px solid #E5E5E5;
@@ -643,13 +643,13 @@ select.custom-input {
     cursor: pointer;
 }
 
-.btn-submit:active {
+.finance-page .btn-submit:active{
     background: var(--primary);
     color: white;
     border-color: var(--primary);
 }
 
-.btn-delete {
+.finance-page .btn-delete{
     align-self: flex-start;
     margin-top: 10px;
     padding: 12px 20px;
@@ -665,41 +665,41 @@ select.custom-input {
 
 
 /* ===================================================================
-   [PART 5 - NEW] 상세 내역 (흰색 카드 스타일 + 플로팅 버튼)
-   * 요청하신 새로운 기능 디자인입니다.
+   [PART 5 - NEW] ?곸꽭 ?댁뿭 (?곗깋 移대뱶 ?ㅽ???+ ?뚮줈??踰꾪듉)
+   * ?붿껌?섏떊 ?덈줈??湲곕뒫 ?붿옄?몄엯?덈떎.
    =================================================================== */
-.day-detail-section {
+.finance-page .day-detail-section{
     background-color: #ffffff;
-    /* 달력과 동일한 흰색 카드 */
+    /* ?щ젰怨??숈씪???곗깋 移대뱶 */
     border-radius: 28px;
-    /* 둥근 모서리 */
+    /* ?κ렐 紐⑥꽌由?*/
     padding: 24px 20px 40px 20px;
-    /* 내부 여백 */
+    /* ?대? ?щ갚 */
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    /* 그림자 */
+    /* 洹몃┝??*/
     margin-top: 20px;
     margin-bottom: 20px;
     display: none;
-    /* 초기엔 숨김 (날짜 클릭시 나옴) */
+    /* 珥덇린???④? (?좎쭨 ?대┃???섏샂) */
     animation: slideUp 0.3s ease-out;
     position: relative;
-    /* 플로팅 버튼의 기준 */
+    /* ?뚮줈??踰꾪듉??湲곗? */
 }
 
-@keyframes slideUp {
-    from {
+/* @keyframes slideUp {
+    .finance-page from{
         opacity: 0;
         transform: translateY(20px);
     }
 
-    to {
+    .finance-page to{
         opacity: 1;
         transform: translateY(0);
     }
-}
+} */
 
-/* 1. 날짜 헤더 */
-.dd-header-date {
+/* 1. ?좎쭨 ?ㅻ뜑 */
+.finance-page .dd-header-date{
     text-align: center;
     font-size: 20px;
     font-weight: 800;
@@ -708,8 +708,8 @@ select.custom-input {
     letter-spacing: -0.5px;
 }
 
-/* 2. 잔액보기 줄 */
-.dd-summary-row {
+/* 2. ?붿븸蹂닿린 以?*/
+.finance-page .dd-summary-row{
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
@@ -719,24 +719,24 @@ select.custom-input {
     padding-bottom: 15px;
 }
 
-.dd-label {
+.finance-page .dd-label{
     font-size: 16px;
     font-weight: 700;
     color: #333;
 }
 
-.dd-count {
+.finance-page .dd-count{
     font-size: 13px;
     color: #999;
     margin-bottom: 2px;
 }
 
-/* 3. 리스트 아이템 */
-.dd-item {
+/* 3. 由ъ뒪???꾩씠??*/
+.finance-page .dd-item{
     margin-bottom: 25px;
 }
 
-.dd-item-top {
+.finance-page .dd-item-top{
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -744,13 +744,13 @@ select.custom-input {
     padding: 0 4px;
 }
 
-.dd-title {
+.finance-page .dd-title{
     font-size: 16px;
     font-weight: 700;
     color: #333;
 }
 
-.dd-amount {
+.finance-page .dd-amount{
     font-size: 17px;
     font-weight: 800;
     display: flex;
@@ -758,21 +758,21 @@ select.custom-input {
     gap: 4px;
 }
 
-.dd-amount.plus {
+.finance-page .dd-amount.plus{
     color: #2ecc71;
 }
 
-/* 초록색 */
-.dd-amount.minus {
+/* 珥덈줉??*/
+.finance-page .dd-amount.minus{
     color: #ff4757;
 }
 
-/* 빨간색 */
+/* 鍮④컙??*/
 
-/* 4. 메모 박스 (배경을 연한 회색으로 변경하여 흰 카드와 구분) */
-.dd-memo-box {
+/* 4. 硫붾え 諛뺤뒪 (諛곌꼍???고븳 ?뚯깋?쇰줈 蹂寃쏀븯????移대뱶? 援щ텇) */
+.finance-page .dd-memo-box{
     background-color: #f9f9f9;
-    /* 흰 카드 위에서 보이도록 연한 회색 */
+    /* ??移대뱶 ?꾩뿉??蹂댁씠?꾨줉 ?고븳 ?뚯깋 */
     border-radius: 12px;
     padding: 15px;
     font-size: 13px;
@@ -782,22 +782,22 @@ select.custom-input {
     margin-bottom: 6px;
 }
 
-/* 5. 시간 */
-.dd-time {
+/* 5. ?쒓컙 */
+.finance-page .dd-time{
     font-size: 11px;
     color: #ccc;
     margin-left: 8px;
 }
 
-/* 데이터 없음 메시지 */
-.empty-msg {
+/* ?곗씠???놁쓬 硫붿떆吏 */
+.finance-page .empty-msg{
     text-align: center;
     color: #ccc;
     padding: 40px 0;
 }
 
-/* 플로팅 버튼 (카드 내부 우측 하단 고정) */
-.fab-edit {
+/* ?뚮줈??踰꾪듉 (移대뱶 ?대? ?곗륫 ?섎떒 怨좎젙) */
+.finance-page .fab-edit{
     position: absolute;
     bottom: 20px;
     right: 20px;
@@ -816,66 +816,66 @@ select.custom-input {
 }
 
 /* ===================================================================
-   [PART 6] 팝업(모달) 스타일 - 여기부터 복사해서 finance.css 맨 끝에 붙여넣으세요
+   [PART 6] ?앹뾽(紐⑤떖) ?ㅽ???- ?ш린遺??蹂듭궗?댁꽌 finance.css 留??앹뿉 遺숈뿬?ｌ쑝?몄슂
    =================================================================== */
 
-/* 1. 배경 (평소에는 안 보이게 설정) */
-.modal-overlay {
+/* 1. 諛곌꼍 (?됱냼?먮뒗 ??蹂댁씠寃??ㅼ젙) */
+.finance-page .modal-overlay{
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
-    /* 뒤쪽을 어둡게 */
+    /* ?ㅼそ???대몼寃?*/
     display: none;
-    /* [중요] 이게 있어야 처음에 숨겨집니다 */
+    /* [以묒슂] ?닿쾶 ?덉뼱??泥섏쓬???④꺼吏묐땲??*/
     justify-content: center;
     align-items: center;
     z-index: 9999;
-    /* 제일 위에 뜨도록 */
+    /* ?쒖씪 ?꾩뿉 ?⑤룄濡?*/
     padding: 20px;
 }
 
-/* 2. 팝업창 본체 (하얀 카드 디자인) */
-.modal-card {
+/* 2. ?앹뾽李?蹂몄껜 (?섏? 移대뱶 ?붿옄?? */
+.finance-page .modal-card{
     background: #ffffff;
-    /* 달력과 같은 흰색 */
+    /* ?щ젰怨?媛숈? ?곗깋 */
     width: 100%;
     max-width: 320px;
     border-radius: 28px;
-    /* 둥근 모서리 */
+    /* ?κ렐 紐⑥꽌由?*/
     padding: 24px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    /* 그림자 */
+    /* 洹몃┝??*/
     display: flex;
     flex-direction: column;
     gap: 15px;
-    /* 내부 요소 간격 */
+    /* ?대? ?붿냼 媛꾧꺽 */
 }
 
-/* 제목 영역 */
-.modal-header {
+/* ?쒕ぉ ?곸뿭 */
+.finance-page .modal-header{
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 5px;
 }
 
-.modal-title {
+.finance-page .modal-title{
     font-size: 20px;
     font-weight: 800;
     color: #333;
 }
 
-.modal-close-icon {
+.finance-page .modal-close-icon{
     font-size: 24px;
     color: #bbb;
     cursor: pointer;
 }
 
-/* 입력 라벨 */
-.modal-label {
+/* ?낅젰 ?쇰꺼 */
+.finance-page .modal-label{
     font-size: 13px;
     font-weight: 700;
     color: #666;
@@ -884,8 +884,8 @@ select.custom-input {
     margin-left: 4px;
 }
 
-/* 입력창 디자인 (둥글게) */
-.modal-input {
+/* ?낅젰李??붿옄??(?κ?寃? */
+.finance-page .modal-input{
     width: 100%;
     height: 48px;
     border: 1px solid #E5E5E5;
@@ -897,30 +897,30 @@ select.custom-input {
     outline: none;
     background: #fff;
     -webkit-appearance: none;
-    /* 모바일 기본 스타일 제거 */
+    /* 紐⑤컮??湲곕낯 ?ㅽ????쒓굅 */
 }
 
-/* 입력창 포커스 시 보라색 테두리 */
-.modal-input:focus {
+/* ?낅젰李??ъ빱????蹂대씪???뚮몢由?*/
+.finance-page .modal-input:focus{
     border-color: #6c5ce7;
 }
 
-/* 가로 배치 (구분 + 금액) */
-.row-inputs {
+/* 媛濡?諛곗튂 (援щ텇 + 湲덉븸) */
+.finance-page .row-inputs{
     display: flex;
     gap: 10px;
 }
 
-.col-left {
+.finance-page .col-left{
     width: 35%;
 }
 
-.col-right {
+.finance-page .col-right{
     width: 65%;
 }
 
-/* 메모 입력창 */
-.modal-textarea {
+/* 硫붾え ?낅젰李?*/
+.finance-page .modal-textarea{
     width: 100%;
     height: 100px;
     border: 1px solid #E5E5E5;
@@ -932,16 +932,16 @@ select.custom-input {
     font-family: 'Noto Sans KR', sans-serif;
 }
 
-.modal-textarea:focus {
+.finance-page .modal-textarea:focus{
     border-color: #6c5ce7;
 }
 
-/* 입력 버튼 */
-.modal-btn {
+/* ?낅젰 踰꾪듉 */
+.finance-page .modal-btn{
     width: 100%;
     height: 52px;
     background-color: #fff;
-    /* 흰색 배경 */
+    /* ?곗깋 諛곌꼍 */
     color: #333;
     font-weight: 800;
     font-size: 16px;
@@ -952,7 +952,7 @@ select.custom-input {
     margin-top: 10px;
 }
 
-.modal-btn:active {
+.finance-page .modal-btn:active{
     background-color: #f5f5f5;
     transform: scale(0.98);
 }
