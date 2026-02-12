@@ -321,6 +321,21 @@
     padding: 10px 20px;
 }
 
+/* 드래그 가능한 영역의 기본 커서 */
+.cat-scroll, .category-select-area {
+    cursor: grab; /* 손바닥 모양 */
+    overflow-x: auto;
+    /* 드래그할 때 텍스트가 선택되는 것을 방지 */
+    user-select: none; 
+    -webkit-user-select: none;
+}
+
+/* 드래그 중일 때 커서 (움켜쥔 손) */
+.cat-scroll.active, .category-select-area.active {
+    cursor: grabbing;
+    cursor: -webkit-grabbing;
+}
+
 .select-chip {
     padding: 6px 16px;
     border-radius: 20px;
@@ -602,7 +617,7 @@
 .comment-list {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 7px;
 }
 
 /* 댓글 카드 (양쪽 정렬을 위해 수정) */
