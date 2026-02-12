@@ -1,199 +1,222 @@
-<div class="market-search-area" th:fragment="div">
-    <div class="static-search-box">
-        <input type="text" id="mainSearchInput" class="market-search-input" placeholder="삼성1동 근처에서 검색">
-        <ion-icon name="search" class="search-icon-inside"></ion-icon>
-    </div>
-</div>
-<div class="market-list" id="marketList">
-    
-    <div class="market-item">
-        <img src="https://picsum.photos/200?random=1" class="item-thumb" alt="상품">
-        <div class="item-info">
-            <div>
-                <div class="item-title">아이패드 에어 5세대 스페이스 그레이 풀박스 팝니다</div>
-                <div class="item-meta">역삼1동 · 2분 전</div>
-                <div class="item-price">650,000원</div>
-            </div>
-            <div class="item-stats">
-                <span class="stat-icon"><ion-icon name="chatbubble-outline"></ion-icon> 2</span>
-                <span class="stat-icon"><ion-icon name="heart-outline"></ion-icon> 5</span>
-            </div>
+<div class="usedmarket-page" th:fragment="div">
+    <div class="market-search-area">
+        <div class="static-search-box">
+            <input type="text" id="mainSearchInput" class="market-search-input" placeholder="삼성1동 근처에서 검색">
+            <ion-icon name="search" class="search-icon-inside"></ion-icon>
         </div>
     </div>
-
-    <div class="market-item">
-        <img src="https://picsum.photos/200?random=2" class="item-thumb" alt="상품">
-        <div class="item-info">
-            <div>
-                <div class="item-title">소라고동 한정판 굿즈 미개봉</div>
-                <div class="item-meta">청담동 · 1시간 전</div>
-                <div class="item-price">50,000원</div>
-            </div>
-            <div class="item-stats">
-                <span class="stat-icon"><ion-icon name="chatbubble-outline"></ion-icon> 1</span>
-                <span class="stat-icon"><ion-icon name="heart-outline"></ion-icon> 4</span>
+    <div class="market-list" id="marketList">
+        
+        <div class="market-item">
+            <img src="https://picsum.photos/200?random=1" class="item-thumb" alt="상품">
+            <div class="item-info">
+                <div>
+                    <div class="item-title">아이패드 에어 5세대 스페이스 그레이 풀박스 팝니다</div>
+                    <div class="item-meta">역삼1동 · 2분 전</div>
+                    <div class="item-price">650,000원</div>
+                </div>
+                <div class="item-stats">
+                    <span class="stat-icon"><ion-icon name="chatbubble-outline"></ion-icon> 2</span>
+                    <span class="stat-icon"><ion-icon name="heart-outline"></ion-icon> 5</span>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="loading" class="loading-spinner">
-        <ion-icon name="reload-outline" class="spin-icon"></ion-icon>
-        <span>불러오는 중...</span>
+        <div class="market-item">
+            <img src="https://picsum.photos/200?random=2" class="item-thumb" alt="상품">
+            <div class="item-info">
+                <div>
+                    <div class="item-title">소라고동 한정판 굿즈 미개봉</div>
+                    <div class="item-meta">청담동 · 1시간 전</div>
+                    <div class="item-price">50,000원</div>
+                </div>
+                <div class="item-stats">
+                    <span class="stat-icon"><ion-icon name="chatbubble-outline"></ion-icon> 1</span>
+                    <span class="stat-icon"><ion-icon name="heart-outline"></ion-icon> 4</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="loading" class="loading-spinner">
+            <ion-icon name="reload-outline" class="spin-icon"></ion-icon>
+            <span>불러오는 중...</span>
+        </div>
+        <div id="scroll-sentinel"></div>
     </div>
-    <div id="scroll-sentinel"></div>
 
     <!-- 글쓰기 버튼 -->
     <button class="fab-write reg-pop-open-btn">
         <ion-icon name="pencil-outline"></ion-icon>
     </button>
 
-    <!-- 상품 작성 페이지 시작 -->
+    <!-- 상품 작성 팝업 -->
     <div class="popup-container bg-gradient regPop">
-        <div class="write-header">
-            <button type="button" class="header-btn-icon reg-pop-close-btn">
-                <ion-icon name="chevron-back"></ion-icon>
-            </button>
-            <div class="page-title">내 물건 팔기</div>
-            <div class="header-spacer"></div>
-        </div>
-
-        <div class="scroll-flex-1 write-container-padded">
-            <div class="image-attach-row" id="imageRow">
-                <div class="camera-btn" id="cameraBtn">
-                    <ion-icon name="camera" class="camera-icon"></ion-icon>
-                    <span class="camera-count" id="imgCount">0/10</span>
-                </div>
-            </div>
-            <input type="file" id="imgUpload" hidden multiple accept="image/*"
-                onchange="handleFileSelect(this)">
-
-            <label class="input-label">제목</label>
-            <input type="text" class="input-box-styled" placeholder="제목을 입력하세요">
-
-            <label class="input-label">자세한 설명</label>
-            <textarea class="textarea-box-styled" placeholder="게시글 내용을 작성해주세요."></textarea>
-
-            <label class="input-label">가격</label>
-            <input type="number" class="input-box-styled" placeholder="가격을 입력해주세요 (원)">
-
-            <label class="input-label">거래 희망 장소</label>
-            <div class="location-select-box">
-                <span id="locText" class="loc-placeholder">위치 추가</span>
-                <ion-icon name="chevron-forward"></ion-icon>
-            </div>
-            <div id="mapArea" class="map-wrapper">
-                <div id="writeMap" class="map-container"></div>
-            </div>
-            <input type="hidden" id="lat"><input type="hidden" id="lng">
-        </div>
-
-        <div class="fixed-bottom-btn-area">
-            <button class="btn-submit-full active">작성완료</button>
-        </div>
-
-        <div class="bottom-spacer"></div>
-    </div>
-    <!-- 상세 팝업 -->
-    <div class="popup-container bg-gradient viewPop">
-        <div class="view-header">
-            <button type="button" class="header-btn-icon view-pop-close-btn">
-                <ion-icon name="chevron-back"></ion-icon>
-            </button>
-            <div>상세보기</div>
-
-            <div class="header-right-group">
-                <button type="button" class="header-btn-icon">
-                    <ion-icon name="ellipsis-horizontal"></ion-icon>
+            <div class="write-header">
+                <button type="button" class="header-btn-icon reg-pop-close-btn">
+                    <ion-icon name="chevron-back"></ion-icon>
                 </button>
-                <div class="custom-dropdown-menu" id="product-menu">
-                    <button class="menu-item danger">신고하기</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="content-scroll-area">
-            <div class="swiper product-swiper">
-                <div class="swiper-wrapper">
-                    <div class="swiper-slide"><img src="https://picsum.photos/400/400?random=1"></div>
-                    <div class="swiper-slide"><img src="https://picsum.photos/400/400?random=2"></div>
-                </div>
-                <div class="swiper-pagination"></div>
+                <div class="page-title">내 물건 팔기</div>
+                <div class="header-spacer"></div>
             </div>
 
-            <div class="seller-info">
-                <div class="profile">
-                    <img src="https://i.pravatar.cc/100?img=12" class="profile-img">
-                    <div>
-                        <div class="seller-name" id="view-seller"></div>
-                        <div class="seller-location" id="view-location"></div>
+            <div class="scroll-flex-1 write-container-padded">
+                <div class="image-attach-row" id="imageRow">
+                    <div class="camera-btn" id="cameraBtn">
+                        <ion-icon name="camera" class="camera-icon"></ion-icon>
+                        <span class="camera-count" id="imgCount">0/10</span>
                     </div>
                 </div>
-                <div class="temp-badge" id="view-temp">36.5°C 😊</div>
+                <input type="file" id="imgUpload" hidden multiple accept="image/*">
+
+                <label class="input-label">제목</label>
+                <input type="text" class="input-box-styled" placeholder="제목을 입력하세요">
+
+                <label class="input-label">자세한 설명</label>
+                <textarea class="textarea-box-styled" placeholder="게시글 내용을 작성해주세요."></textarea>
+
+                <label class="input-label">가격</label>
+                <input type="number" class="input-box-styled" placeholder="가격을 입력해주세요 (원)">
+
+                <label class="input-label">거래 희망 장소</label>
+                <div class="location-select-box">
+                    <span id="locText" class="loc-placeholder">위치 추가</span>
+                    <ion-icon name="chevron-forward"></ion-icon>
+                </div>
+                <div id="mapArea" class="map-wrapper">
+                    <div id="writeMap" class="map-container"></div>
+                </div>
+                <input type="hidden" id="lat"><input type="hidden" id="lng">
             </div>
 
-            <div class="content">
-                <h1 class="title" id="view-title"></h1>
-                <div class="meta" id="view-time"></div>
-                <div class="desc" id="view-desc"></div>
+            <div class="fixed-bottom-btn-area">
+                <button class="btn-submit-full active">작성완료</button>
+            </div>
 
-                <div class="detail-stats" id="view-stats">
-                    관심 5 · 채팅 2 · 조회 123
-                </div>
+            <div class="bottom-spacer"></div>
+        </div>
 
-                <div class="map-area">
-                    <div class="map-title">
-                        거래 희망 장소 <span class="map-loc-name" id="view-location-name"></span>
+        <!-- 상세 팝업 -->
+        <div class="popup-container bg-gradient viewPop">
+            <div class="view-header">
+                <button type="button" class="header-btn-icon view-pop-close-btn">
+                    <ion-icon name="chevron-back"></ion-icon>
+                </button>
+                <div>상세보기</div>
+
+                <div class="header-right-group">
+                    <button type="button" class="header-btn-icon">
+                        <ion-icon name="ellipsis-horizontal"></ion-icon>
+                    </button>
+                    <div class="custom-dropdown-menu" id="product-menu">
+                        <button class="menu-item danger">신고하기</button>
                     </div>
-                    <div id="detailMap"></div>
                 </div>
             </div>
-        </div>
 
-        <div class="bottom-bar">
-            <ion-icon name="heart-outline" class="heart-icon"></ion-icon>
-            <div class="price-info">
-                <div class="price" id="view-price"></div>
-                <div class="price-sub">가격 제안 불가</div>
+            <div class="content-scroll-area">
+                <div class="swiper product-swiper">
+                    <div class="swiper-wrapper">
+                        <div class="swiper-slide"><img src="https://picsum.photos/400/400?random=1"></div>
+                        <div class="swiper-slide"><img src="https://picsum.photos/400/400?random=2"></div>
+                    </div>
+                    <div class="swiper-pagination"></div>
+                </div>
+
+                <div class="seller-info">
+                    <div class="profile">
+                        <img src="https://i.pravatar.cc/100?img=12" class="profile-img">
+                        <div>
+                            <div class="seller-name" id="view-seller">이용민</div>
+                            <div class="seller-location" id="view-location">어디동</div>
+                        </div>
+                    </div>
+                    <div class="temp-badge" id="view-temp">36.5°C 😊</div>
+                </div>
+
+                <div class="content">
+                    <h1 class="title" id="view-title">뭐시기 뭐시기 팝니다</h1>
+                    <div class="meta" id="view-time">1분 전</div>
+                    <div class="desc" id="view-desc">기스 하나 없는 S급 상품입니다. 박스 풀세트구요. 직거래 선호합니다!</div>
+
+                    <div class="detail-stats" id="view-stats">
+                        관심 5 · 채팅 2 · 조회 123
+                    </div>
+
+                    <div class="map-area">
+                        <div class="map-title">
+                            거래 희망 장소 <span class="map-loc-name" id="view-location-name">역삼1동 주민센터</span>
+                        </div>
+                        <div id="detailMap"></div>
+                    </div>
+                </div>
             </div>
-            <button class="btn-primary chat-btn" id="chatBtn">채팅하기</button>
+
+            <div class="bottom-bar">
+                <ion-icon name="heart-outline" class="heart-icon"></ion-icon>
+                <div class="price-info">
+                    <div class="price" id="view-price"></div>
+                    <div class="price-sub">가격 제안 불가</div>
+                </div>
+                <button class="btn-primary chat-btn" id="chatBtn">채팅하기</button>
+            </div>
         </div>
-    </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        list.init();
-    });
-    const list = {
-        init: () => {
-            list.evtHandler();
-            new Swiper('.product-swiper', { pagination: { el: '.swiper-pagination' }, loop: true });
-        },
-        evtHandler: () => {
-            // 작성 팝업
-            document.querySelector('.reg-pop-open-btn').addEventListener('click', () => list.openRegPopup());
-            document.querySelector('.reg-pop-close-btn').addEventListener('click', () => list.closeRegPopup());
-            
-            // 상세보기 팝업
-            document.querySelector('.view-pop-close-btn').addEventListener('click', () => list.closeViewPopup());
-            
-            // 상품 클릭 시 상세보기 팝업 열기
-            document.querySelectorAll('.market-item').forEach(item => {
-                item.addEventListener('click', () => list.openViewPopup());
-            });
-        },
-        openRegPopup: () => {
-            document.querySelector('.regPop').classList.add('active');
-        },
-        closeRegPopup: () => {
-            document.querySelector('.regPop').classList.remove('active');
-        },
-        openViewPopup: () => {
-            document.querySelector('.viewPop').classList.add('active');
-        },
-        closeViewPopup: () => {
-            document.querySelector('.viewPop').classList.remove('active');
-        },
-    };
-</script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            list.init();
+        });
+        const list = {
+            init: () => {
+                list.evtHandler();
+                new Swiper('.product-swiper', { pagination: { el: '.swiper-pagination' }, loop: true });
+            },
+            evtHandler: () => {
+                // 작성 팝업
+                document.querySelector('.reg-pop-open-btn').addEventListener('click', () => list.openRegPopup());
+                document.querySelector('.reg-pop-close-btn').addEventListener('click', () => list.closeRegPopup());
+                
+                // 상세보기 팝업
+                document.querySelector('.view-pop-close-btn').addEventListener('click', () => list.closeViewPopup());
+                
+                // 상품 클릭 시 상세보기 팝업 열기
+                document.querySelectorAll('.market-item').forEach(item => {
+                    item.addEventListener('click', () => list.openViewPopup());
+                });
+                
+                document.querySelector('#cameraBtn').addEventListener('click', () => document.querySelector('#imgUpload').click());
 
+                document.querySelector('#imgUpload').addEventListener('change', (e) => list.handleFileSelect(e.target));
+
+            },
+            openRegPopup: () => {
+                document.querySelector('.regPop').classList.add('active');
+            },
+            closeRegPopup: () => {
+                document.querySelector('.regPop').classList.remove('active');
+            },
+            openViewPopup: () => {
+                document.querySelector('.viewPop').classList.add('active');
+            },
+            closeViewPopup: () => {
+                document.querySelector('.viewPop').classList.remove('active');
+            },
+            handleFileSelect: (input) => {
+                const files = input.files;
+                const cameraBtn = document.getElementById('cameraBtn');
+                Array.from(files).forEach(file => {
+                    if (!file.type.startsWith('image/')) return;
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const previewHtml = `<div class="preview-box"><img src="${e.target.result}" class="preview-img"><div class="btn-remove-img" onclick="this.parentElement.remove(); updateCount();"><ion-icon name="close"></ion-icon></div></div>`;
+                        cameraBtn.insertAdjacentHTML('afterend', previewHtml);
+                        list.updateCount();
+                    };
+                    reader.readAsDataURL(file);
+                });
+            },
+            updateCount: () => {
+                document.getElementById('imgCount').innerText = `${document.querySelectorAll('.preview-box').length}/10`;
+            }
+        };
+    </script>
 </div>
