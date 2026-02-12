@@ -1,5 +1,12 @@
 ﻿/* ===== ?곸꽭 ?섏씠吏 ?꾩슜 ?ㅽ???===== */
-
+/* 타임세일 페이지 컨테이너 - flex 레이아웃 설정 */
+.timesale-page {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
 /* ?ㅻ줈媛湲?踰꾪듉 */
 .timesale-page .header-back-btn{
     width: 40px;
@@ -218,11 +225,11 @@
 }
 
 @keyframes slideInRight {
-    .timesale-page from{
+    from{
         transform: translateX(100%);
     }
 
-    .timesale-page to{
+    to{
         transform: translateX(0);
     }
 }
