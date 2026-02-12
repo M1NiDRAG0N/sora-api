@@ -1,7 +1,6 @@
 /* ===================================================================
-   [PART 2] 가계부 메인 (Finance Dashboard)
+   [PART 1] 기본 설정 및 레이아웃 (원본)
    =================================================================== */
-/* 콘텐츠 영역 (배경 그라데이션 적용) */
 .detail-content {
     flex: 1;
     overflow-y: auto;
@@ -9,6 +8,9 @@
     padding-bottom: 100px;
 }
 
+/* ===================================================================
+   [PART 2] 가계부 메인 대시보드 (원본)
+   =================================================================== */
 .net-worth-label {
     font-size: 14px;
     color: var(--text-sub);
@@ -240,7 +242,6 @@
     white-space: nowrap;
 }
 
-/* [수정] 입금 초록색 */
 .money-inc {
     color: var(--success-green);
 }
@@ -329,7 +330,6 @@
     white-space: nowrap;
 }
 
-/* [수정] 입금 초록색 */
 .grid-money.inc {
     color: var(--success-green);
 }
@@ -340,7 +340,8 @@
 
 
 /* ===================================================================
-   [PART 3] 상세 리스트 (Details) 스타일
+   [PART 3] 상세 리스트 (Details) 스타일 (원본)
+   * 이 부분은 detail.html 등 다른 페이지에서 사용될 수 있으므로 유지합니다.
    =================================================================== */
 .summary-header {
     margin-top: 20px;
@@ -484,7 +485,6 @@
     white-space: nowrap;
 }
 
-/* [수정] 입금 초록색 */
 .item-amount.inc {
     color: var(--success-green);
 }
@@ -511,7 +511,8 @@
 
 
 /* ===================================================================
-   [PART 4] 입력/수정 (Write) 화면 스타일
+   [PART 4] 입력/수정 (Write) 화면 스타일 (원본)
+   * 이것도 detailswrite.html에서 쓰이므로 절대 삭제하면 안 됨
    =================================================================== */
 .write-card {
     background: var(--white);
@@ -660,4 +661,298 @@ select.custom-input {
     font-weight: 700;
     cursor: pointer;
     display: none;
+}
+
+
+/* ===================================================================
+   [PART 5 - NEW] 상세 내역 (흰색 카드 스타일 + 플로팅 버튼)
+   * 요청하신 새로운 기능 디자인입니다.
+   =================================================================== */
+.day-detail-section {
+    background-color: #ffffff;
+    /* 달력과 동일한 흰색 카드 */
+    border-radius: 28px;
+    /* 둥근 모서리 */
+    padding: 24px 20px 40px 20px;
+    /* 내부 여백 */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    /* 그림자 */
+    margin-top: 20px;
+    margin-bottom: 20px;
+    display: none;
+    /* 초기엔 숨김 (날짜 클릭시 나옴) */
+    animation: slideUp 0.3s ease-out;
+    position: relative;
+    /* 플로팅 버튼의 기준 */
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 1. 날짜 헤더 */
+.dd-header-date {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 800;
+    color: #333;
+    margin-bottom: 25px;
+    letter-spacing: -0.5px;
+}
+
+/* 2. 잔액보기 줄 */
+.dd-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 20px;
+    padding: 0 4px;
+    border-bottom: 1px solid #f5f5f5;
+    padding-bottom: 15px;
+}
+
+.dd-label {
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+}
+
+.dd-count {
+    font-size: 13px;
+    color: #999;
+    margin-bottom: 2px;
+}
+
+/* 3. 리스트 아이템 */
+.dd-item {
+    margin-bottom: 25px;
+}
+
+.dd-item-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 0 4px;
+}
+
+.dd-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+}
+
+.dd-amount {
+    font-size: 17px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.dd-amount.plus {
+    color: #2ecc71;
+}
+
+/* 초록색 */
+.dd-amount.minus {
+    color: #ff4757;
+}
+
+/* 빨간색 */
+
+/* 4. 메모 박스 (배경을 연한 회색으로 변경하여 흰 카드와 구분) */
+.dd-memo-box {
+    background-color: #f9f9f9;
+    /* 흰 카드 위에서 보이도록 연한 회색 */
+    border-radius: 12px;
+    padding: 15px;
+    font-size: 13px;
+    color: #555;
+    font-weight: 500;
+    line-height: 1.5;
+    margin-bottom: 6px;
+}
+
+/* 5. 시간 */
+.dd-time {
+    font-size: 11px;
+    color: #ccc;
+    margin-left: 8px;
+}
+
+/* 데이터 없음 메시지 */
+.empty-msg {
+    text-align: center;
+    color: #ccc;
+    padding: 40px 0;
+}
+
+/* 플로팅 버튼 (카드 내부 우측 하단 고정) */
+.fab-edit {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #bbb;
+    cursor: pointer;
+    z-index: 100;
+}
+
+/* ===================================================================
+   [PART 6] 팝업(모달) 스타일 - 여기부터 복사해서 finance.css 맨 끝에 붙여넣으세요
+   =================================================================== */
+
+/* 1. 배경 (평소에는 안 보이게 설정) */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    /* 뒤쪽을 어둡게 */
+    display: none;
+    /* [중요] 이게 있어야 처음에 숨겨집니다 */
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    /* 제일 위에 뜨도록 */
+    padding: 20px;
+}
+
+/* 2. 팝업창 본체 (하얀 카드 디자인) */
+.modal-card {
+    background: #ffffff;
+    /* 달력과 같은 흰색 */
+    width: 100%;
+    max-width: 320px;
+    border-radius: 28px;
+    /* 둥근 모서리 */
+    padding: 24px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    /* 그림자 */
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    /* 내부 요소 간격 */
+}
+
+/* 제목 영역 */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.modal-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #333;
+}
+
+.modal-close-icon {
+    font-size: 24px;
+    color: #bbb;
+    cursor: pointer;
+}
+
+/* 입력 라벨 */
+.modal-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #666;
+    margin-bottom: 6px;
+    display: block;
+    margin-left: 4px;
+}
+
+/* 입력창 디자인 (둥글게) */
+.modal-input {
+    width: 100%;
+    height: 48px;
+    border: 1px solid #E5E5E5;
+    border-radius: 16px;
+    padding: 0 16px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    outline: none;
+    background: #fff;
+    -webkit-appearance: none;
+    /* 모바일 기본 스타일 제거 */
+}
+
+/* 입력창 포커스 시 보라색 테두리 */
+.modal-input:focus {
+    border-color: #6c5ce7;
+}
+
+/* 가로 배치 (구분 + 금액) */
+.row-inputs {
+    display: flex;
+    gap: 10px;
+}
+
+.col-left {
+    width: 35%;
+}
+
+.col-right {
+    width: 65%;
+}
+
+/* 메모 입력창 */
+.modal-textarea {
+    width: 100%;
+    height: 100px;
+    border: 1px solid #E5E5E5;
+    border-radius: 16px;
+    padding: 16px;
+    font-size: 14px;
+    resize: none;
+    outline: none;
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+.modal-textarea:focus {
+    border-color: #6c5ce7;
+}
+
+/* 입력 버튼 */
+.modal-btn {
+    width: 100%;
+    height: 52px;
+    background-color: #fff;
+    /* 흰색 배경 */
+    color: #333;
+    font-weight: 800;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 16px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    margin-top: 10px;
+}
+
+.modal-btn:active {
+    background-color: #f5f5f5;
+    transform: scale(0.98);
 }

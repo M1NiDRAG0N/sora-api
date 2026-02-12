@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.scit.soragodong.domain.dto.StoreDto;
 import com.scit.soragodong.domain.dto.StoreProductDto;
@@ -13,301 +14,268 @@ import com.scit.soragodong.domain.entity.ProductStockHistory;
 import com.scit.soragodong.domain.entity.Store;
 import com.scit.soragodong.domain.entity.StoreProduct;
 import com.scit.soragodong.domain.entity.UserOrder;
-import com.scit.soragodong.domain.entity.Users;
 import com.scit.soragodong.repository.ProductStockHistoryRepository;
 import com.scit.soragodong.repository.StoreProductRepository;
 import com.scit.soragodong.repository.StoreRepository;
 import com.scit.soragodong.repository.UserOrderRepository;
 import com.scit.soragodong.repository.UserRepository;
 
-import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * 타임세일 서비스
+ */
 @Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Slf4j
-@AllArgsConstructor
-@Transactional
 public class TimesaleService {
 
-    private final StoreProductRepository storeProductRepository;
     private final StoreRepository storeRepository;
+    private final StoreProductRepository storeProductRepository;
     private final UserOrderRepository userOrderRepository;
+    private final ProductStockHistoryRepository stockHistoryRepository;
     private final UserRepository userRepository;
-    private final ProductStockHistoryRepository productStockHistoryRepository;
 
     /**
-     * 모든 상품(음식) 데이터 조회
-     */
-    public List<StoreProductDto> getAllProducts() {
-        List<StoreProduct> products = storeProductRepository.findAll();
-        
-        return products.stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * 할인 상품만 조회 (이벤트 가격이 있는 경우)
+     * 할인 중인 상품 목록 조회 (이벤트 가격이 있는 상품)
      */
     public List<StoreProductDto> getDiscountProducts() {
+        log.info("[getDiscountProducts] 할인 상품 목록 조회 시작");
+        
         List<StoreProduct> products = storeProductRepository.findByEventPriceIsNotNull();
         
+        log.info("[getDiscountProducts] 조회된 상품 수: {}", products.size());
+        
         return products.stream()
-                .map(this::convertToDto)
+                .map(this::convertToStoreProductDto)
                 .collect(Collectors.toList());
     }
 
     /**
-     * 특정 가게의 상품 조회
+     * 이벤트 진행 중인 가게 목록 조회
      */
-    public List<StoreProductDto> getProductsByStore(Integer storeIdx) {
-        List<StoreProduct> products = storeProductRepository.findByStoreStoreIdx(storeIdx);
-
-        return products.stream()
-                .map(this::convertToDto)
+    public List<StoreDto> getEventStores() {
+        log.info("[getEventStores] 이벤트 가게 목록 조회 시작");
+        
+        // 사용 중인 가게만 조회 (isUse = 1)
+        List<Store> stores = storeRepository.findByIsUse((byte) 1);
+        
+        log.info("[getEventStores] 조회된 가게 수: {}", stores.size());
+        
+        return stores.stream()
+                .map(this::convertToStoreDto)
                 .collect(Collectors.toList());
     }
-    
+
     /**
-     * 특정 가게의 재고가 있는 상품만 조회
+     * 특정 가게의 상세 정보 조회
+     * 
+     * @param storeIdx 가게 인덱스
+     * @return 가게 상세 정보
+     */
+    public StoreDto getStoreDetail(Integer storeIdx) {
+        log.info("[getStoreDetail] 가게 상세 정보 조회 시작 - storeIdx: {}", storeIdx);
+        
+        if (storeIdx == null) {
+            log.error("[getStoreDetail] storeIdx가 null입니다");
+            return null;
+        }
+        
+        // 가게 조회 (사용 중인 가게만)
+        Store store = storeRepository.findByStoreIdxAndIsUse(storeIdx, (byte) 1)
+                .orElse(null);
+        
+        if (store == null) {
+            log.warn("[getStoreDetail] 가게를 찾을 수 없음 - storeIdx: {}", storeIdx);
+            return null;
+        }
+        
+        log.info("[getStoreDetail] 가게 조회 성공 - storeName: {}", store.getStoreName());
+        
+        return convertToStoreDto(store);
+    }
+
+    /**
+     * 특정 가게의 재고가 있는 상품 목록 조회
      * 
      * @param storeIdx 가게 인덱스
      * @return 재고가 있는 상품 목록
      */
     public List<StoreProductDto> getProductsByStoreWithStock(Integer storeIdx) {
-        log.debug("가게 상품 목록 조회 시작 (재고 있는 상품만) - storeIdx: {}", storeIdx);
+        log.info("[getProductsByStoreWithStock] 가게 상품 목록 조회 시작 - storeIdx: {}", storeIdx);
+        
+        if (storeIdx == null) {
+            log.error("[getProductsByStoreWithStock] storeIdx가 null입니다");
+            return List.of();
+        }
         
         // 재고가 0보다 큰 상품만 조회
-        List<StoreProduct> products = storeProductRepository.findByStoreStoreIdxAndProductQuantityGreaterThan(storeIdx, 0);
+        List<StoreProduct> products = storeProductRepository
+                .findByStoreStoreIdxAndProductQuantityGreaterThan(storeIdx, 0);
         
-        log.debug("재고 있는 상품 조회 완료 - storeIdx: {}, 상품 수: {}", storeIdx, products.size());
+        log.info("[getProductsByStoreWithStock] 조회된 상품 수: {}", products.size());
         
         return products.stream()
-                .map(this::convertToDto)
+                .map(this::convertToStoreProductDto)
                 .collect(Collectors.toList());
     }
-    
+
     /**
-     * 상품 상세 정보 조회 (예약 모달용)
+     * 상품 단건 조회
      * 
      * @param productNum 상품 번호
      * @return 상품 상세 정보
      */
     public StoreProductDto getProductDetail(Integer productNum) {
-        log.debug("상품 상세 정보 조회 시작 - productNum: {}", productNum);
+        log.info("[getProductDetail] 상품 상세 정보 조회 시작 - productNum: {}", productNum);
         
+        if (productNum == null) {
+            log.error("[getProductDetail] productNum이 null입니다");
+            return null;
+        }
+        
+        // 상품 조회
         StoreProduct product = storeProductRepository.findById(productNum)
                 .orElse(null);
         
         if (product == null) {
-            log.warn("상품을 찾을 수 없음 - productNum: {}", productNum);
+            log.warn("[getProductDetail] 상품을 찾을 수 없음 - productNum: {}", productNum);
             return null;
         }
         
-        // 재고가 없으면 null 반환
-        if (product.getProductQuantity() <= 0) {
-            log.warn("재고가 없는 상품 - productNum: {}, 재고: {}", productNum, product.getProductQuantity());
-            return null;
-        }
+        log.info("[getProductDetail] 상품 조회 성공 - productName: {}", product.getProductName());
         
-        StoreProductDto productDto = convertToDto(product);
-        
-        log.debug("상품 상세 정보 조회 완료 - productName: {}", productDto.productName());
-        return productDto;
+        return convertToStoreProductDto(product);
     }
-    
+
     /**
-     * 예약 생성
+     * 상품 예약 처리
      * 
-     * @param request 예약 요청 정보
+     * @param orderDto 주문 정보
      * @return 생성된 주문 정보
      */
-    public UserOrderDto createReservation(UserOrderDto request) {
-        log.info("[예약] 예약 생성 시작 - userIdx: {}, productNum: {}, quantity: {}", 
-            request.userIdx(), request.productNum(), request.orderQuantity());
+    @Transactional
+    public UserOrderDto reserveProduct(UserOrderDto orderDto) {
+        log.info("[reserveProduct] 예약 처리 시작 - userIdx: {}, productNum: {}, quantity: {}", 
+                orderDto.userIdx(), orderDto.productNum(), orderDto.orderQuantity());
         
-        // 1. 사용자 조회
-        Users user = userRepository.findById(request.userIdx())
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-        
-        log.debug("[예약] 사용자 조회 완료 - userName: {}", user.getUserName());
-        
-        // 2. 상품 조회
-        StoreProduct product = storeProductRepository.findById(request.productNum())
+        // 1. 상품 조회
+        StoreProduct product = storeProductRepository.findById(orderDto.productNum())
                 .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
         
-        log.debug("[예약] 상품 조회 완료 - productName: {}, 현재 재고: {}", 
-            product.getProductName(), product.getProductQuantity());
-        
-        // 3. 가게 조회
-        Store store = storeRepository.findById(request.storeIdx())
-                .orElseThrow(() -> new IllegalArgumentException("가게를 찾을 수 없습니다."));
-        
-        log.debug("[예약] 가게 조회 완료 - storeName: {}", store.getStoreName());
-        
-        // 4. 재고 확인 및 감소
-        if (product.getProductQuantity() < request.orderQuantity()) {
-            throw new IllegalArgumentException(
-                String.format("재고가 부족합니다. 요청: %d, 현재 재고: %d", 
-                    request.orderQuantity(), product.getProductQuantity())
-            );
+        // 2. 재고 확인
+        if (product.getProductQuantity() < orderDto.orderQuantity()) {
+            log.error("[reserveProduct] 재고 부족 - 요청: {}, 재고: {}", 
+                    orderDto.orderQuantity(), product.getProductQuantity());
+            throw new IllegalStateException("재고가 부족합니다.");
         }
         
-        product.decreaseStock(request.orderQuantity());
-        log.info("[예약] 재고 감소 완료 - 감소량: {}, 남은 재고: {}", 
-            request.orderQuantity(), product.getProductQuantity());
+        // 3. 가게 조회
+        Store store = storeRepository.findById(orderDto.storeIdx())
+                .orElseThrow(() -> new IllegalArgumentException("가게를 찾을 수 없습니다."));
         
-        // 5. 주문 생성 (ORDER_STATUS = 0: 미결제)
+        // 4. 재고 감소 (PESSIMISTIC LOCK 사용하여 동시성 제어)
+        int updatedRows = storeProductRepository.decreaseStock(
+                orderDto.productNum(), 
+                orderDto.orderQuantity()
+        );
+        
+        if (updatedRows == 0) {
+            log.error("[reserveProduct] 재고 감소 실패 - 동시 예약으로 재고 부족");
+            throw new IllegalStateException("재고가 부족합니다. 다시 시도해주세요.");
+        }
+        
+        log.info("[reserveProduct] 재고 감소 완료 - productNum: {}, quantity: {}", 
+                orderDto.productNum(), orderDto.orderQuantity());
+        
+        // 5. USER_ORDER 테이블에 주문 정보 저장
         UserOrder order = UserOrder.builder()
-                .userIndex(user)  // ⭐ user → userIndex
+                .users(userRepository.findById(orderDto.userIdx())
+                        .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다.")))
                 .storeProduct(product)
                 .store(store)
-                .productName(request.productName())
-                .totalPrice(request.totalPrice())
-                .orderQuantity(request.orderQuantity())
-                .orderStatus((byte) 0) // 미결제
+                .productName(orderDto.productName())
+                .totalPrice(orderDto.totalPrice())
+                .orderQuantity(orderDto.orderQuantity())
+                .orderTime(LocalDateTime.now())
+                .orderStatus((byte) 0) // 0: 예약완료
                 .build();
         
         UserOrder savedOrder = userOrderRepository.save(order);
-        log.info("[예약] 주문 생성 완료 - orderIndex: {}", savedOrder.getOrderIndex());
+        log.info("[reserveProduct] 주문 저장 완료 - orderIndex: {}", savedOrder.getOrderIndex());
         
-        // 6. 재고 이력 생성 (STOCK_TYPE = 1: 출고)
-        ProductStockHistory history = ProductStockHistory.builder()
-                .store(store) // STORE_IDX 추가
+        // 6. PRODUCT_STOCK_HISTORY 테이블에 출고 이력 저장
+        ProductStockHistory stockHistory = ProductStockHistory.builder()
+                .store(store)
                 .storeProduct(product)
-                .stockType((byte) 1) // 출고
-                .quantity(request.orderQuantity())
-                .receivingDate(LocalDateTime.now()) // 출고도 receivingDate에 기록
+                .stockType((byte) 0) // 0: 출고
+                .quantity(orderDto.orderQuantity())
+                .receivingDate(LocalDateTime.now())
                 .releasedDate(LocalDateTime.now())
                 .note("타임세일 예약 - 주문번호: " + savedOrder.getOrderIndex())
                 .build();
         
-        productStockHistoryRepository.save(history);
-        log.info("[예약] 재고 이력 생성 완료 - historyIdx: {}", history.getHistoryIdx());
+        stockHistoryRepository.save(stockHistory);
+        log.info("[reserveProduct] 재고 이력 저장 완료");
         
-        // 7. DTO 변환 및 반환
-        UserOrderDto result = convertToOrderDto(savedOrder);
+        // 7. 결과 DTO 반환
+        UserOrderDto resultDto = new UserOrderDto(
+                savedOrder.getOrderIndex(),
+                savedOrder.getStoreProduct().getProductNum(),
+                savedOrder.getStore().getStoreIdx(),
+                savedOrder.getUsers().getUserIdx(),
+                savedOrder.getProductName(),
+                savedOrder.getTotalPrice(),
+                savedOrder.getOrderQuantity(),
+                savedOrder.getOrderTime(),
+                savedOrder.getOrderStatus().intValue(),
+                savedOrder.getCancelledAt(),
+                savedOrder.getCancelReason() != null ? savedOrder.getCancelReason().intValue() : null
+        );
         
-        log.info("[예약] 예약 완료 - orderIndex: {}, productName: {}, quantity: {}, totalPrice: {}", 
-            result.orderIndex(), result.productName(), result.orderQuantity(), result.totalPrice());
+        log.info("[reserveProduct] 예약 처리 완료 - orderIndex: {}", resultDto.orderIndex());
         
-        return result;
-    }
-    
-    /**
-     * 모든 가게 데이터 조회
-     */
-    public List<StoreDto> getAllStores() {
-        List<Store> stores = storeRepository.findAll();
-        
-        return stores.stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * 사용 중인 가게만 조회 (isUse = 1)
-     */
-    public List<StoreDto> getActiveStores() {
-        List<Store> stores = storeRepository.findByIsUse((byte) 1);
-        
-        return stores.stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+        return resultDto;
     }
 
     /**
-     * 이벤트 진행 중인 가게만 조회
+     * Store 엔티티를 StoreDto로 변환
      */
-    public List<StoreDto> getEventStores() {
-        List<Store> stores = storeRepository.findByEventState("진행중");
-        
-        return stores.stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * 가게 상세 정보 조회
-     * 
-     * @param storeIdx 가게 인덱스
-     * @return 가게 상세 정보 DTO
-     */
-    public StoreDto getStoreDetail(Integer storeIdx) {
-        log.debug("가게 상세 정보 조회 시작 - storeIdx: {}", storeIdx);
-        
-        // 가게 정보 조회 (사용 중인 가게만)
-        Store store = storeRepository.findByStoreIdxAndIsUse(storeIdx, (byte) 1)
-                .orElse(null);
-        
-        if (store == null) {
-            log.warn("사용 가능한 가게를 찾을 수 없음 - storeIdx: {}", storeIdx);
-            return null;
-        }
-        
-        // 기존 convertToDto 메서드 활용
-        StoreDto storeDto = convertToDto(store);
-        
-        log.debug("가게 상세 정보 조회 완료 - storeName: {}", storeDto.storeName());
-        return storeDto;
-    }
-
-    /**
-     * Entity -> DTO 변환 (Store)
-     */
-    private StoreDto convertToDto(Store store) {
+    private StoreDto convertToStoreDto(Store store) {
         return new StoreDto(
-            store.getStoreIdx(),
-            store.getStoreName(),
-            store.getStoreAddress(),
-            store.getStoreOpenTime(),
-            store.getStoreCloseTime(),
-            store.getEventStartTime(),
-            store.getEventEndTime(),
-            store.getEventState(),
-            store.getEventNote(),
-            store.getStorePictureIdx(),
-            store.getIsUse(),
-            store.getCreateAt(),
-            store.getStoreLat(),
-            store.getStoreLng()
+                store.getStoreIdx(),
+                store.getStoreName(),
+                store.getStoreAddress(),
+                store.getStoreOpenTime(),
+                store.getStoreCloseTime(),
+                store.getEventStartTime(),
+                store.getEventEndTime(),
+                store.getEventState(),
+                store.getEventNote(),
+                store.getStorePictureIdx(),
+                store.getIsUse(),
+                store.getCreateAt(),
+                store.getStoreLat(),
+                store.getStoreLng()
         );
     }
 
     /**
-     * Entity -> DTO 변환 (StoreProduct)
+     * StoreProduct 엔티티를 StoreProductDto로 변환
      */
-    private StoreProductDto convertToDto(StoreProduct product) {
+    private StoreProductDto convertToStoreProductDto(StoreProduct product) {
         return new StoreProductDto(
-            product.getProductNum(),
-            product.getStore().getStoreIdx(),
-            product.getStore().getStoreName(),
-            product.getCategory(),
-            product.getProductName(),
-            product.getPrice(),
-            product.getEventPrice(),
-            product.getProductQuantity(),
-            product.getProductPictureIdx()
-        );
-    }
-    
-    /**
-     * Entity -> DTO 변환 (UserOrder)
-     */
-    private UserOrderDto convertToOrderDto(UserOrder order) {
-        return new UserOrderDto(
-            order.getOrderIndex(),
-            order.getUserIndex().getUserIdx(),  // ⭐ getUser → getUserIndex
-            order.getStoreProduct().getProductNum(),
-            order.getStore().getStoreIdx(),
-            order.getProductName(),
-            order.getTotalPrice(),
-            order.getOrderQuantity(),
-            order.getOrderTime(),
-            order.getOrderStatus().intValue(),
-            order.getCancelledAt(),
-            order.getCancelReason() != null ? order.getCancelReason().intValue() : null
+                product.getProductNum(),
+                product.getStore().getStoreIdx(),
+                product.getStore().getStoreName(),
+                product.getCategory(),
+                product.getProductName(),
+                product.getPrice(),
+                product.getEventPrice(),
+                product.getProductQuantity(),
+                product.getProductPictureIdx()
         );
     }
 }

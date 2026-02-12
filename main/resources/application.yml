@@ -17,8 +17,9 @@ spring:
     password: ${DB_PASSWORD}
     hikari:
       auto-commit: false
-      idle-timeout: 600000
-      max-lifetime: 1800000
+      idle-timeout: 30000
+      max-lifetime: 50000   # ⭐ 핵심 (DB timeout보다 짧게)
+      connection-timeout: 30000
       leak-detection-threshold: 60000
 
   jpa:
@@ -64,6 +65,10 @@ spring:
     type: redis
     redis:
       time-to-live: 600000
+
+  file:
+    upload:
+      path: ${UPLOAD_PATH:/upload}
 
 server:
   port: 8080

@@ -1,4 +1,4 @@
-<div class="detail-content no-scrollbar">
+<div class="detail-content no-scrollbar" th:fragment="div">
     <div class="net-worth-label">순자산</div>
     <div class="net-worth-amount">1억 582만 3,000원</div>
     <div class="net-worth-diff">어제보다 20억 줄었어요</div>
@@ -29,14 +29,14 @@
             <div class="budget-row">
                 <div class="row-left"><span class="dot-bullet"></span> 예산</div>
                 <div class="row-right">
-                    <div class="amount-text clickable" onclick="alert('기능 추가 예정입니다.')">2,500,000,000</div>
+                    <div class="amount-text clickable budget-amount">2,500,000,000</div>
                     <div class="sub-text">누르면 (설정 가능)</div>
                 </div>
             </div>
             <div class="budget-row">
                 <div class="row-left"><span class="dot-bullet"></span> 지출</div>
                 <div class="row-right">
-                    <div class="amount-text clickable" onclick="alert('기능 추가 예정입니다.')">1,700,000,000</div>
+                    <div class="amount-text clickable expense-amount">1,700,000,000</div>
                 </div>
             </div>
         </div>
@@ -44,94 +44,278 @@
 
     <div class="calendar-sheet">
         <div class="cal-header">
-            <span class="cal-title" onclick="toggleCalendarView()">January 2026</span>
+            <span class="cal-title toggle-calendar-view">January 2026</span>
         </div>
         <div id="calendarContainer" class="date-scroller"></div>
     </div>
+
+    <div id="dayDetailSection" class="day-detail-section">
+        <div class="dd-header-date" id="ddDateTitle"></div>
+
+        <div class="dd-summary-row">
+            <span class="dd-label">잔액보기</span>
+            <span class="dd-count" id="ddCount">0건</span>
+        </div>
+
+        <div id="ddList"></div>
+
+        <div class="fab-edit open-modal">
+            <ion-icon name="pencil"></ion-icon>
+        </div>
+    </div>
+
     <div style="height: 100px;"></div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            finance.init();
+        });
 
-    Chart.register(ChartDataLabels);
-    const allCategories = ['식비', '통신비', '교통비', '여행비', '생활비', '경조사비', '이자비', '세금'];
-    function getRandomCategories() { return [...allCategories].sort(() => 0.5 - Math.random()).slice(0, 4); }
-    function getRandomData() { return Array.from({ length: 4 }, () => Math.floor(Math.random() * 30) + 10); }
-    const commonOpts = { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: { color: 'white', font: { weight: 'bold', size: 9 }, formatter: (v, c) => v > 15 ? c.chart.data.labels[c.dataIndex] : '' } }, elements: { arc: { borderWidth: 0 } } };
-    new Chart(document.getElementById('chartLast'), { type: 'doughnut', data: { labels: getRandomCategories(), datasets: [{ data: getRandomData(), backgroundColor: ['#EF4444', '#10B981', '#3B82F6', '#8B5CF6'] }] }, options: commonOpts });
-    new Chart(document.getElementById('chartThis'), { type: 'doughnut', data: { labels: getRandomCategories(), datasets: [{ data: getRandomData(), backgroundColor: ['#10B981', '#EF4444', '#3B82F6', '#F59E0B'] }] }, options: commonOpts });
+        const finance = {
+            selectedDay: null,
+            isGridView: false,
+            mockDB: {
+                1: [{ cat: '월급', amount: '5,000,000', type: 'plus', memo: '1월 급여 입금완료', time: '09:00' }, { cat: '통신비', amount: '60,000', type: 'minus', memo: '휴대폰 요금 자동이체', time: '13:00' }],
+                4: [{ cat: '카드대금', amount: '999,950', type: 'minus', memo: '신용카드 대금 결제', time: '15:30' }],
+                21: [{ cat: '코인 떡상!', amount: '999,999,999', type: 'plus', memo: '무슨 말이 필요해~~', time: '11:30' }],
+                25: [{ cat: '편의점', amount: '4,500', type: 'minus', memo: '커피, 삼각김밥', time: '08:20' }]
+            },
 
-    // 달력 로직
-    const calendarContainer = document.getElementById('calendarContainer');
-    const today = new Date();
-    const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-    const dummyData = { 1: { inc: '+ 5,000', exp: '- 6,000' }, 4: { inc: '+ 50', exp: '- 999,950' } };
+            init: () => {
+                finance.initCharts();
+                finance.evtHandler();
+                finance.renderScroller();
+            },
 
-    let isGridView = false; // 현재 뷰 상태
+            evtHandler: () => {
+                document.querySelector('.toggle-calendar-view').addEventListener('click', () => finance.toggleCalendarView());
+                document.querySelector('.open-modal').addEventListener('click', () => finance.openModal());
+                document.querySelector('.budget-amount').addEventListener('click', () => finance.showBudgetAlert());
+                document.querySelector('.expense-amount').addEventListener('click', () => finance.showExpenseAlert());
+                document.querySelector('.modal-btn-save').addEventListener('click', () => finance.saveData());
+                document.querySelector('.modal-close-btn').addEventListener('click', () => finance.closeModal());
+            },
 
-    // 1. 가로 스크롤러
-    function renderScroller() {
-        calendarContainer.innerHTML = '';
-        calendarContainer.className = 'date-scroller';
+            initCharts: () => {
+                Chart.register(ChartDataLabels);
+                const commonOpts = { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: { color: 'white', font: { weight: 'bold', size: 9 }, formatter: (v, c) => v > 15 ? c.chart.data.labels[c.dataIndex] : '' } }, elements: { arc: { borderWidth: 0 } } };
+                new Chart(document.getElementById('chartLast'), { type: 'doughnut', data: { labels: ['A', 'B'], datasets: [{ data: [70, 30], backgroundColor: ['#EF4444', '#10B981'] }] }, options: commonOpts });
+                new Chart(document.getElementById('chartThis'), { type: 'doughnut', data: { labels: ['A', 'B'], datasets: [{ data: [40, 60], backgroundColor: ['#3B82F6', '#F59E0B'] }] }, options: commonOpts });
+            },
 
-        for (let i = -10; i <= 10; i++) {
-            const d = new Date(today); d.setDate(today.getDate() + i);
-            const num = d.getDate();
-            const dayStr = dayNames[d.getDay()];
-            const data = dummyData[Math.abs(num) % 8] || { inc: '', exp: '' };
+            renderScroller: () => {
+                const calendarContainer = document.getElementById('calendarContainer');
+                const today = new Date();
+                const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
-            const el = document.createElement('div');
-            el.className = `date-card ${i === 0 ? 'active' : ''}`;
-            el.innerHTML = `<div style="font-size: 10px; color: #BBB; font-weight: 600; margin-bottom: 4px;">${dayStr}</div><div class="date-number">${num}</div><span class="money-tag money-inc">${data.inc}</span><span class="money-tag money-exp">${data.exp}</span>`;
-            el.onclick = () => { localStorage.setItem('selectedDate', num); location.href = 'details.html'; };
-            calendarContainer.appendChild(el);
-        }
+                calendarContainer.innerHTML = '';
+                calendarContainer.className = 'date-scroller';
+                for (let i = -10; i <= 10; i++) {
+                    const d = new Date(today);
+                    d.setDate(today.getDate() + i);
+                    const num = d.getDate();
+                    const dayStr = dayNames[d.getDay()];
+                    let moneyTag = '';
+                    if (finance.mockDB[num]) {
+                        const first = finance.mockDB[num][0];
+                        if (first.type === 'plus') moneyTag = `<span class="money-tag money-inc">+${first.amount}</span>`;
+                        else moneyTag = `<span class="money-tag money-exp">-${first.amount}</span>`;
+                    }
+                    const el = document.createElement('div');
+                    el.className = `date-card ${i === 0 ? 'active' : ''}`;
+                    el.id = `day-card-${num}`;
+                    el.innerHTML = `<div style="font-size: 10px; color: #BBB; font-weight: 600; margin-bottom: 4px;">${dayStr}</div><div class="date-number">${num}</div><div style="height:12px">${moneyTag}</div>`;
+                    el.addEventListener('click', () => finance.showDetails(num));
+                    calendarContainer.appendChild(el);
+                }
+                setTimeout(() => {
+                    const active = document.querySelector('.date-card.active');
+                    if (active) calendarContainer.scrollLeft = active.offsetLeft - calendarContainer.clientWidth / 2 + active.clientWidth / 2;
+                }, 10);
+            },
 
-        const active = document.querySelector('.date-card.active');
-        if (active) calendarContainer.scrollLeft = active.offsetLeft - (calendarContainer.clientWidth / 2) + (active.clientWidth / 2);
-    }
+            renderGrid: () => {
+                const calendarContainer = document.getElementById('calendarContainer');
+                const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
-    // 2. 전체 그리드
-    function renderGrid() {
-        calendarContainer.innerHTML = '';
-        calendarContainer.className = 'calendar-grid';
+                calendarContainer.innerHTML = '';
+                calendarContainer.className = 'calendar-grid';
+                let html = '<div class="grid-header-row">';
+                dayNames.forEach(d => html += `<div class="grid-header-cell">${d}</div>`);
+                html += '</div><div class="grid-dates-container">';
+                for (let i = 0; i < 3; i++) html += `<div class="grid-date-cell"></div>`;
+                for (let i = 1; i <= 31; i++) {
+                    let moneyHtml = '';
+                    if (finance.mockDB[i]) {
+                        const first = finance.mockDB[i][0];
+                        const cls = first.type === 'plus' ? 'money-inc' : 'money-exp';
+                        moneyHtml = `<div class="grid-money ${cls}">${first.type === 'plus' ? '+' : '-'} ${first.amount}</div>`;
+                    }
+                    html += `<div class="grid-date-cell" data-day="${i}"><div class="grid-date-num">${i}</div>${moneyHtml}</div>`;
+                }
+                html += '</div>';
+                calendarContainer.innerHTML = html;
 
-        let html = '<div class="grid-header-row">';
-        const gridDays = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-        gridDays.forEach(day => { html += `<div class="grid-header-cell">${day}</div>`; });
-        html += '</div><div class="grid-dates-container">';
+                // 그리드 셀 이벤트 핸들러 추가
+                document.querySelectorAll('.grid-date-cell').forEach(cell => {
+                    cell.addEventListener('click', () => {
+                        const day = parseInt(cell.getAttribute('data-day'));
+                        finance.showDetails(day);
+                    });
+                });
+            },
 
-        // 2026년 1월 1일 = 목요일 (인덱스 3)
-        const emptyDays = 3;
-        for (let i = 0; i < emptyDays; i++) { html += `<div class="grid-date-cell"></div>`; }
+            showDetails: (day) => {
+                finance.selectedDay = day;
 
-        for (let i = 1; i <= 31; i++) {
-            const data = dummyData[Math.abs(i) % 8] || { inc: '', exp: '' };
-            html += `
-            <div class="grid-date-cell" onclick="goDetails(${i})">
-                <div class="grid-date-num">${i}</div>
-                <div class="grid-money inc">${data.inc}</div>
-                <div class="grid-money exp">${data.exp}</div>
+                document.querySelectorAll('.date-card').forEach(e => e.classList.remove('active'));
+                const target = document.getElementById(`day-card-${day}`);
+                if (target) target.classList.add('active');
+
+                const detailSection = document.getElementById('dayDetailSection');
+                detailSection.style.display = 'block';
+
+                document.getElementById('ddDateTitle').innerText = `2026 January ${day}`;
+
+                const list = finance.mockDB[day] || [];
+                document.getElementById('ddCount').innerText = `${list.length}건`;
+
+                const listContainer = document.getElementById('ddList');
+                listContainer.innerHTML = '';
+
+                if (list.length === 0) {
+                    listContainer.innerHTML = '<div class="empty-msg">내역이 없습니다.</div>';
+                } else {
+                    list.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'dd-item';
+                        const colorClass = item.type === 'plus' ? 'plus' : 'minus';
+                        const icon = item.type === 'plus' ? 'caret-up' : 'caret-down';
+                        div.innerHTML = `
+                            <div class="dd-item-top">
+                                <span class="dd-title">${item.cat}</span>
+                                <span class="dd-amount ${colorClass}">
+                                    ${item.amount}
+                                    <ion-icon name="${icon}"></ion-icon>
+                                </span>
+                            </div>
+                            <div class="dd-memo-box">
+                                ${item.memo}
+                            </div>
+                            <div class="dd-time">${item.time}</div>
+                        `;
+                        listContainer.appendChild(div);
+                    });
+                }
+                detailSection.scrollIntoView({ behavior: 'smooth' });
+            },
+
+            toggleCalendarView: () => {
+                finance.isGridView = !finance.isGridView;
+                if (finance.isGridView) finance.renderGrid();
+                else finance.renderScroller();
+            },
+
+            openModal: () => {
+                if (typeof finance.selectedDay === 'undefined' || !finance.selectedDay) {
+                    alert("먼저 달력에서 날짜를 선택해주세요.");
+                    return;
+                }
+                document.getElementById('inpAmount').value = '';
+                document.getElementById('inpMemo').value = '';
+                document.getElementById('writeModal').style.display = 'flex';
+            },
+
+            closeModal: () => {
+                document.getElementById('writeModal').style.display = 'none';
+            },
+
+            saveData: () => {
+                const cat = document.getElementById('inpCategory').value;
+                const type = document.getElementById('inpType').value;
+                const amt = document.getElementById('inpAmount').value;
+                const memo = document.getElementById('inpMemo').value;
+
+                if (!amt) {
+                    alert("금액을 입력해주세요.");
+                    return;
+                }
+
+                const now = new Date();
+                const timeStr = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
+
+                const newItem = {
+                    cat: cat,
+                    amount: Number(amt).toLocaleString(),
+                    type: type,
+                    memo: memo,
+                    time: timeStr
+                };
+
+                if (!finance.mockDB[finance.selectedDay]) finance.mockDB[finance.selectedDay] = [];
+                finance.mockDB[finance.selectedDay].unshift(newItem);
+
+                finance.showDetails(finance.selectedDay);
+                finance.closeModal();
+            },
+
+            showBudgetAlert: () => {
+                alert('기능 추가 예정입니다.');
+            },
+
+            showExpenseAlert: () => {
+                alert('기능 추가 예정입니다.');
+            },
+
+            goToWrite: () => {
+                if (finance.selectedDay) {
+                    localStorage.setItem('selectedDate', finance.selectedDay);
+                }
+                location.href = 'detailswrite.html';
+            },
+
+        };
+    </script>
+    <div id="writeModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-title">입출금</div>
+
+            <div class="input-group">
+                <label class="modal-label">카테고리</label>
+                <div style="position:relative;">
+                    <select id="inpCategory" class="modal-input">
+                        <option value="식비">식비</option>
+                        <option value="교통비">교통비</option>
+                        <option value="쇼핑">쇼핑</option>
+                        <option value="월급">월급</option>
+                        <option value="용돈">용돈</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
             </div>
-        `;
-        }
-        html += '</div>';
-        calendarContainer.innerHTML = html;
-    }
+            <button class="modal-btn-save">입력</button>
+            <div class="modal-close-btn">
+                <div class=" row-inputs">
+                    <div class="input-group sm">
+                        <label class="modal-label">구분</label>
+                        <select id="inpType" class="modal-input text-center">
+                            <option value="minus">-</option>
+                            <option value="plus">+</option>
+                        </select>
+                    </div>
+                    <div class="input-group lg">
+                        <label class="modal-label">금액 (원)</label>
+                        <input type="number" id="inpAmount" class="modal-input" placeholder="0">
+                    </div>
+                </div>
 
-    function goDetails(day) {
-        localStorage.setItem('selectedDate', day);
-        location.href = 'details.html';
-    }
+                <div class="input-group">
+                    <textarea id="inpMemo" class="modal-textarea" placeholder="내용을 입력하세요... (예: 친구에게 빌림)"></textarea>
+                </div>
 
-    function toggleCalendarView() {
-        isGridView = !isGridView;
-        if (isGridView) renderGrid();
-        else renderScroller();
-    }
-
-    renderScroller(); // 초기 실행
-});
-</script>
-
+                <button class="modal-btn" onclick="saveData()">입력</button>
+                <div class="modal-close-btn" onclick="closeModal()">닫기</div>
+            </div>
+        </div>
+    </div>
 </div>

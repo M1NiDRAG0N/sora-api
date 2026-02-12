@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "STORE_PRODUCT")
@@ -20,6 +21,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
+@Setter
 public class StoreProduct {
     
     @Id
@@ -48,24 +50,4 @@ public class StoreProduct {
 
     @Column(name = "PRODUCT_PICTURE_IDX", length = 100)
     private String productPictureIdx;
-    
-    /**
-     * 재고 감소
-     */
-    public void decreaseStock(Integer quantity) {
-        if (this.productQuantity < quantity) {
-            throw new IllegalArgumentException(
-                String.format("재고가 부족합니다. 현재 재고: %d, 요청 수량: %d", 
-                    this.productQuantity, quantity)
-            );
-        }
-        this.productQuantity -= quantity;
-    }
-    
-    /**
-     * 재고 증가
-     */
-    public void increaseStock(Integer quantity) {
-        this.productQuantity += quantity;
-    }
 }

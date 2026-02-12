@@ -1,5 +1,6 @@
 <!-- ✅ 스크롤 컨텐츠 -->
-<div class="detail-content" id="detailContent">
+<div th:fragment="div" class="detail-content" id="detailContent">
+    <input type="hidden" id="loginUserIdx" th:value="${#authentication.principal.userIdx}">
     <!-- 가게 정보 카드 -->
     <div class="detail-store-card" id="storeInfo">
         <div class="detail-store-header">
@@ -49,10 +50,10 @@
                 <div class="modal-product-info">
                     <h3 class="modal-product-name" id="modalProductName">상품명</h3>
                     <div class="modal-price-wrap">
-                        <span class="modal-price-current" id="modalPrice">0엔</span>
-                        <span class="modal-price-original" id="modalOriginalPrice">0엔</span>
+                        <span class="modal-price-current" id="modalPrice">0원</span>
+                        <span class="modal-price-original" id="modalOriginalPrice">0원</span>
                     </div>
-                    <div class="modal-sale-time" id="modalSaleTime">제고 0개 남음</div>
+                    <div class="modal-sale-time" id="modalSaleTime">재고 0개 남음</div>
                 </div>
             </div>
 
@@ -74,7 +75,7 @@
             <!-- 이 예약 금액 -->
             <div class="modal-section">
                 <h4 class="modal-section-title">이 예약 금액</h4>
-                <div class="modal-total-price" id="modalTotalPrice">1,500엔</div>
+                <div class="modal-total-price" id="modalTotalPrice">1,500원</div>
             </div>
 
             <!-- 안내 문구 -->
@@ -92,6 +93,26 @@
         </div>
     </div>
     <script>
+        /**
+         * ✅ 이미지 URL 생성 헬퍼 함수
+         * @param {string|number} pictureIdx - 파일 인덱스 또는 파일 그룹 인덱스
+         * @param {string} type - 'file' 또는 'group' (기본값: 'file')
+         * @returns {string} - FileController를 통한 이미지 URL
+         */
+        function getImageUrl(pictureIdx, type = 'file') {
+            if (!pictureIdx) {
+                return '/images/no-image.png'; // 기본 이미지
+            }
+
+            // type이 'group'이면 썸네일 엔드포인트 사용
+            if (type === 'group') {
+                return `/img/group/${pictureIdx}`;
+            }
+
+            // 기본은 파일 ID로 조회
+            return `/img/${pictureIdx}`;
+        }
+
         /**
          * 타임세일 상세 페이지 관리
          */
@@ -236,14 +257,10 @@
 
                 console.log('[renderStoreInfo] 렌더링 시작:', store);
 
-                // 가게 이미지
-                if (store.storePictureIdx) {
-                    storeImage.src = `/upload/${store.storePictureIdx}`;
-                    storeImage.alt = store.storeName;
-                } else {
-                    storeImage.src = '/images/default-store.png';
-                    storeImage.alt = '기본 가게 이미지';
-                }
+                // ✅ 가게 이미지 - FileController를 통해 썸네일 로드
+                const imageUrl = getImageUrl(store.storePictureIdx, 'group');
+                storeImage.src = imageUrl;
+                storeImage.alt = store.storeName;
 
                 // 가게 이름
                 storeName.textContent = store.storeName || '가게명 없음';
@@ -306,7 +323,7 @@
             },
 
             /**
-             * 상품 목록 렌더링
+             * 상품 렌더링
              */
             renderProducts: function (products) {
                 const foodList = document.getElementById('foodList');
@@ -395,7 +412,7 @@
             },
 
             /**
-             * 상품 카드 생성 (이미지 예시 스타일)
+             * 상품 카드 생성
              */
             createProductCard: function (product) {
                 const card = document.createElement('div');
@@ -417,15 +434,18 @@
                     endTimeText = `${this.formatTime(this.storeData.eventEndTime)}까지`;
                 }
 
+                // ✅ FileController를 통해 상품 이미지 로드
+                const imageUrl = getImageUrl(product.productPictureIdx, 'file');
+
                 card.innerHTML = `
-            <img src="${product.productPictureIdx ? `/upload/${product.productPictureIdx}` : '/images/default-food.png'}" 
+            <img src="${imageUrl}" 
                  alt="${product.productName}" 
                  class="detail-food-img">
             <div class="detail-food-info">
                 <h3 class="detail-food-name">${product.productName}</h3>
                 <div class="detail-food-price-wrap">
-                    <span class="detail-food-price">${Utils.formatNumber(currentPrice)}엔</span>
-                    ${hasDiscount ? `<span class="detail-food-original-price">원가 ${Utils.formatNumber(product.price)}엔</span>` : ''}
+                    <span class="detail-food-price">${Utils.formatNumber(currentPrice)}원</span>
+                    ${hasDiscount ? `<span class="detail-food-original-price">원가 ${Utils.formatNumber(product.price)}원</span>` : ''}
                 </div>
                 <div class="detail-food-meta">
                     ${hasDiscount ? `<span class="detail-food-discount">할인율 ${discountRate}%</span>` : ''}
@@ -434,8 +454,9 @@
             </div>
         `;
 
-                // 카드 클릭 시 예약 모달 열기 (추후 구현)
+                // 카드 클릭 시 예약 모달 열기
                 card.addEventListener('click', () => {
+                    console.log('[상품클릭]', product.productName, 'productNum:', product.productNum);
                     openReservationModal(product.productNum);
                 });
 
@@ -488,303 +509,287 @@
         document.addEventListener('DOMContentLoaded', () => {
             TimeSaleDetail.init();
         });
-        /**
- * 예약 모달 관리
- * timesale.html과 timesaledetail.html 공통 사용
- */
-const ReservationModal = {
-    // 현재 선택된 상품 정보
-    currentProduct: null,
-    currentStore: null,
-    
-    // 수량 설정
-    quantity: 1,
-    maxQuantity: 10,
 
-    /**
-     * 예약 모달 열기
-     * @param {number} productNum - 상품 번호
-     */
-    open: async function(productNum) {
-        console.log('[예약모달] 열기 시작 - productNum:', productNum);
-        
-        if (!productNum) {
-            Utils.notify('상품 정보를 찾을 수 없습니다.', 'error');
-            return;
-        }
+        // 예약 모달 JavaScript
+        const ReservationModal = {
+            modal: null,
+            overlay: null,
+            currentProduct: null,
+            quantity: 1,
+            maxQuantity: 10,
 
-        try {
-            // 상품 상세 정보 조회
-            const product = await API.get(`/timesale/product/${productNum}`);
-            
-            if (!product) {
-                Utils.notify('상품 정보를 불러올 수 없습니다.', 'error');
-                return;
-            }
+            /**
+             * 초기화
+             */
+            init: function () {
+                this.modal = document.getElementById('reservationModal');
+                this.overlay = this.modal.querySelector('.modal-overlay');
 
-            console.log('[예약모달] 상품 정보:', product);
+                // 이벤트 바인딩
+                document.getElementById('modalCloseBtn').addEventListener('click', () => this.close());
+                document.getElementById('decreaseBtn').addEventListener('click', () => this.decreaseQuantity());
+                document.getElementById('increaseBtn').addEventListener('click', () => this.increaseQuantity());
+                document.getElementById('confirmBtn').addEventListener('click', () => this.reserve());
+            },
 
-            // 가게 상세 정보 조회 (할인 시간 정보 필요)
-            const store = await API.get(`/timesale/detail/${product.storeIdx}`);
-            
-            console.log('[예약모달] 가게 정보:', store);
+            /**
+             * userIdx 가져오기
+             */
+            getUserIdx: function () {
+                // 1순위: Hidden Input
+                const hiddenInput = document.getElementById('loginUserIdx');
+                if (hiddenInput && hiddenInput.value) {
+                    return hiddenInput.value;
+                }
 
-            // 데이터 저장
-            this.currentProduct = product;
-            this.currentStore = store;
+                // 2순위: Cookie
+                const cookieUserIdx = Utils.getCookie('userIdx');
+                if (cookieUserIdx) {
+                    return cookieUserIdx;
+                }
 
-            // 최대 수량 설정 (재고와 10 중 작은 값)
-            this.maxQuantity = Math.min(product.productQuantity, 10);
-            this.quantity = 1;
+                // 3순위: localStorage
+                const localUserIdx = localStorage.getItem('userIdx');
+                if (localUserIdx) {
+                    return localUserIdx;
+                }
 
-            // 모달 렌더링
-            this.render();
+                return null;
+            },
 
-            // 모달 표시
-            const modal = document.getElementById('reservationModal');
-            if (modal) {
-                modal.classList.add('active');
-            }
+            /**
+             * 모달 열기
+             */
+            open: async function (productNum) {
+                console.log('[예약모달] 열기 시작 - productNum:', productNum);
 
-            // 이벤트 리스너 설정
-            this.bindEvents();
+                try {
+                    // 상품 정보 조회
+                    const product = await API.get(`/timesale/product/${productNum}`);
+                    console.log('[예약모달] 상품 정보:', product);
 
-        } catch (error) {
-            console.error('[예약모달] 로드 실패:', error);
-            Utils.notify('상품 정보를 불러오는데 실패했습니다.', 'error');
-        }
-    },
+                    if (!product) {
+                        throw new Error('상품 정보를 찾을 수 없습니다.');
+                    }
 
-    /**
-     * 예약 모달 닫기
-     */
-    close: function() {
-        console.log('[예약모달] 닫기');
-        
-        const modal = document.getElementById('reservationModal');
-        if (modal) {
-            modal.classList.remove('active');
-        }
+                    // 현재 상품 저장
+                    this.currentProduct = product;
+                    this.quantity = 1;
+                    this.maxQuantity = Math.min(10, product.productQuantity);
 
-        // 데이터 초기화
-        this.currentProduct = null;
-        this.currentStore = null;
-        this.quantity = 1;
-    },
+                    // 모달 렌더링
+                    this.render();
 
-    /**
-     * 모달 내용 렌더링
-     */
-    render: function() {
-        if (!this.currentProduct || !this.currentStore) {
-            console.error('[예약모달] 데이터가 없습니다');
-            return;
-        }
+                    // 모달 표시
+                    this.modal.classList.add('active');
+                    this.overlay.classList.add('active');
+                    document.body.style.overflow = 'hidden';
 
-        const product = this.currentProduct;
-        const store = this.currentStore;
+                } catch (error) {
+                    console.error('[예약모달] 열기 실패:', error);
+                    Utils.notify('상품 정보를 불러오는데 실패했습니다.', 'error');
+                }
+            },
 
-        // 가게 이름
-        const modalStoreName = document.getElementById('modalStoreName');
-        if (modalStoreName) {
-            modalStoreName.textContent = product.storeName;
-        }
+            /**
+             * 모달 닫기
+             */
+            close: function () {
+                this.modal.classList.remove('active');
+                this.overlay.classList.remove('active');
+                document.body.style.overflow = '';
+                this.currentProduct = null;
+                this.quantity = 1;
+            },
 
-        // 상품 이미지
-        const modalProductImg = document.getElementById('modalProductImg');
-        if (modalProductImg) {
-            modalProductImg.src = product.productPictureIdx 
-                ? `/upload/${product.productPictureIdx}` 
-                : '/images/default-food.png';
-            modalProductImg.alt = product.productName;
-        }
-
-        // 상품 이름
-        const modalProductName = document.getElementById('modalProductName');
-        if (modalProductName) {
-            modalProductName.textContent = product.productName;
-        }
-
-        // 가격 정보
-        const currentPrice = product.eventPrice || product.price;
-        const hasDiscount = product.eventPrice && product.eventPrice < product.price;
-
-        const modalPrice = document.getElementById('modalPrice');
-        if (modalPrice) {
-            modalPrice.textContent = `${Utils.formatNumber(currentPrice)}엔`;
-        }
-
-        const modalOriginalPrice = document.getElementById('modalOriginalPrice');
-        if (modalOriginalPrice) {
-            if (hasDiscount) {
-                modalOriginalPrice.textContent = `${Utils.formatNumber(product.price)}엔`;
-                modalOriginalPrice.style.display = 'inline';
-            } else {
-                modalOriginalPrice.style.display = 'none';
-            }
-        }
-
-        // 재고 정보
-        const modalSaleTime = document.getElementById('modalSaleTime');
-        if (modalSaleTime) {
-            modalSaleTime.textContent = `재고 ${product.productQuantity}개 남음`;
-        }
-
-        // 수량 설정
-        const quantityInput = document.getElementById('quantityInput');
-        if (quantityInput) {
-            quantityInput.value = this.quantity;
-            quantityInput.max = this.maxQuantity;
-        }
-
-        // 최대 수량 안내
-        const modalQuantityNote = document.querySelector('.modal-quantity-note');
-        if (modalQuantityNote) {
-            modalQuantityNote.textContent = `최대 ${this.maxQuantity}개 예약 가능`;
-        }
-
-        // 총 금액 업데이트
-        this.updateTotalPrice();
-
-        console.log('[예약모달] 렌더링 완료');
-    },
-
-    /**
-     * 이벤트 바인딩
-     */
-    bindEvents: function() {
-        // 닫기 버튼
-        const modalCloseBtn = document.getElementById('modalCloseBtn');
-        const modalOverlay = document.querySelector('.modal-overlay');
-        
-        if (modalCloseBtn) {
-            modalCloseBtn.onclick = () => this.close();
-        }
-        if (modalOverlay) {
-            modalOverlay.onclick = () => this.close();
-        }
-
-        // 수량 감소 버튼
-        const decreaseBtn = document.getElementById('decreaseBtn');
-        if (decreaseBtn) {
-            decreaseBtn.onclick = () => {
+            /**
+             * 수량 감소
+             */
+            decreaseQuantity: function () {
                 if (this.quantity > 1) {
                     this.quantity--;
-                    this.updateQuantity();
+                    this.updateQuantityDisplay();
                 }
-            };
-        }
+            },
 
-        // 수량 증가 버튼
-        const increaseBtn = document.getElementById('increaseBtn');
-        if (increaseBtn) {
-            increaseBtn.onclick = () => {
+            /**
+             * 수량 증가
+             */
+            increaseQuantity: function () {
                 if (this.quantity < this.maxQuantity) {
                     this.quantity++;
-                    this.updateQuantity();
+                    this.updateQuantityDisplay();
                 }
-            };
-        }
+            },
 
-        // 예약 버튼
-        const confirmBtn = document.getElementById('confirmBtn');
-        if (confirmBtn) {
-            confirmBtn.onclick = () => this.reserve();
-        }
-    },
+            /**
+             * 수량 표시 업데이트
+             */
+            updateQuantityDisplay: function () {
+                const quantityInput = document.getElementById('quantityInput');
+                const totalPriceEl = document.getElementById('modalTotalPrice');
 
-    /**
-     * 수량 업데이트
-     */
-    updateQuantity: function() {
-        const quantityInput = document.getElementById('quantityInput');
-        if (quantityInput) {
-            quantityInput.value = this.quantity;
-        }
-        
-        this.updateTotalPrice();
-    },
+                if (quantityInput) {
+                    quantityInput.value = this.quantity;
+                }
 
-    /**
-     * 총 금액 업데이트
-     */
-    updateTotalPrice: function() {
-        if (!this.currentProduct) return;
+                if (totalPriceEl && this.currentProduct) {
+                    const price = this.currentProduct.eventPrice || this.currentProduct.price;
+                    const total = price * this.quantity;
+                    totalPriceEl.textContent = total.toLocaleString() + '원';
+                }
+            },
 
-        const unitPrice = this.currentProduct.eventPrice || this.currentProduct.price;
-        const totalPrice = unitPrice * this.quantity;
+            /**
+             * 모달 렌더링
+             */
+            render: function () {
+                if (!this.currentProduct) return;
 
-        // 총 금액 표시
-        const modalTotalPrice = document.getElementById('modalTotalPrice');
-        if (modalTotalPrice) {
-            modalTotalPrice.textContent = `${Utils.formatNumber(totalPrice)}엔`;
-        }
+                const product = this.currentProduct;
+                const price = product.eventPrice || product.price;
+                const totalPrice = price * this.quantity;
+                const hasDiscount = product.eventPrice && product.eventPrice < product.price;
 
-        // 버튼 텍스트 업데이트
-        const reserveButtonText = document.getElementById('reserveButtonText');
-        if (reserveButtonText) {
-            reserveButtonText.textContent = `${this.quantity}개 예약하기`;
-        }
-    },
+                console.log('[예약모달] 렌더링 시작 - product:', product);
 
-    /**
-     * 예약 처리
-     */
-    reserve: async function() {
-        console.log('[예약] 시작 - 수량:', this.quantity);
+                // 가게 이름
+                const storeNameEl = document.getElementById('modalStoreName');
+                if (storeNameEl) {
+                    storeNameEl.textContent = product.storeName || '로딩 중...';
+                }
 
-        if (!this.currentProduct) {
-            Utils.notify('상품 정보가 없습니다.', 'error');
-            return;
-        }
+                // ✅ 상품 이미지 - FileController를 통해 로드
+                const productImg = document.getElementById('modalProductImg');
+                if (productImg) {
+                    const imageUrl = getImageUrl(product.productPictureIdx, 'file');
+                    productImg.src = imageUrl;
+                    productImg.alt = product.productName;
+                }
 
-        try {
-            // 로그인 체크 (세션 또는 로컬스토리지에서 확인)
-            const userIdx = Utils.getStorage('userIdx');
-            if (!userIdx) {
-                Utils.notify('로그인이 필요합니다.', 'warning');
-                setTimeout(() => {
-                    window.location.href = '/login';
-                }, 1000);
-                return;
+                // 상품명
+                const productNameEl = document.getElementById('modalProductName');
+                if (productNameEl) {
+                    productNameEl.textContent = product.productName;
+                }
+
+                // 현재 가격
+                const priceEl = document.getElementById('modalPrice');
+                if (priceEl) {
+                    priceEl.textContent = price.toLocaleString() + '원';
+                }
+
+                // 원래 가격 (할인 있을 때만)
+                const originalPriceEl = document.getElementById('modalOriginalPrice');
+                if (originalPriceEl) {
+                    if (hasDiscount) {
+                        originalPriceEl.textContent = product.price.toLocaleString() + '원';
+                        originalPriceEl.style.display = 'inline';
+                    } else {
+                        originalPriceEl.style.display = 'none';
+                    }
+                }
+
+                // 재고 정보
+                const saleTimeEl = document.getElementById('modalSaleTime');
+                if (saleTimeEl) {
+                    saleTimeEl.textContent = `재고 ${product.productQuantity}개 남음`;
+                }
+
+                // 수량
+                const quantityInput = document.getElementById('quantityInput');
+                if (quantityInput) {
+                    quantityInput.value = this.quantity;
+                    quantityInput.max = this.maxQuantity;
+                }
+
+                // 수량 안내
+                const quantityNote = this.modal.querySelector('.modal-quantity-note');
+                if (quantityNote) {
+                    quantityNote.textContent = `최대 ${this.maxQuantity}개 예약 가능`;
+                }
+
+                // 총 금액
+                const totalPriceEl = document.getElementById('modalTotalPrice');
+                if (totalPriceEl) {
+                    totalPriceEl.textContent = totalPrice.toLocaleString() + '원';
+                }
+
+                console.log('[예약모달] 렌더링 완료');
+            },
+
+            /**
+             * 예약 처리
+             */
+            reserve: async function () {
+                console.log('[예약] 시작 - 수량:', this.quantity);
+
+                if (!this.currentProduct) {
+                    Utils.notify('상품 정보가 없습니다.', 'error');
+                    return;
+                }
+
+                try {
+                    // ⭐ userIdx 가져오기 (우선순위: Hidden Input → Cookie → localStorage)
+                    const userIdx = this.getUserIdx();
+
+                    if (!userIdx) {
+                        Utils.notify('로그인이 필요합니다.', 'warning');
+                        setTimeout(() => {
+                            window.location.href = '/auth/login';
+                        }, 1000);
+                        return;
+                    }
+
+                    console.log('[예약] userIdx:', userIdx);
+
+                    // 예약 데이터 준비
+                    const reservationData = {
+                        userIdx: parseInt(userIdx),  // ⭐ 숫자로 변환
+                        productNum: this.currentProduct.productNum,
+                        storeIdx: this.currentProduct.storeIdx,
+                        productName: this.currentProduct.productName,
+                        orderQuantity: this.quantity,
+                        totalPrice: (this.currentProduct.eventPrice || this.currentProduct.price) * this.quantity,
+                        orderTime: null,
+                        orderStatus: null,
+                        orderIndex: null,
+                        cancelledAt: null,
+                        cancelReason: null
+                    };
+
+                    console.log('[예약] 데이터:', reservationData);
+
+                    // 예약 API 호출
+                    const response = await API.post('/timesale/reserve', reservationData);
+
+                    Utils.notify('예약이 완료되었습니다!', 'success');
+                    this.close();
+
+                    // 페이지 새로고침 (재고 업데이트 반영)
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+
+                } catch (error) {
+                    console.error('[예약] 실패:', error);
+                    Utils.notify(error.message || '예약에 실패했습니다.', 'error');
+                }
             }
+        };
 
-            // 예약 데이터 준비
-            const reservationData = {
-                userIdx: userIdx,
-                productNum: this.currentProduct.productNum,
-                storeIdx: this.currentProduct.storeIdx,
-                productName: this.currentProduct.productName,
-                orderQuantity: this.quantity,
-                totalPrice: (this.currentProduct.eventPrice || this.currentProduct.price) * this.quantity
-            };
+        // 전역 함수로 노출
+        window.openReservationModal = function (productNum) {
+            ReservationModal.open(productNum);
+        };
 
-            console.log('[예약] 데이터:', reservationData);
+        window.closeReservationModal = function () {
+            ReservationModal.close();
+        };
 
-            const response = await API.post('/timesale/reserve', reservationData);
-
-            Utils.notify('예약이 완료되었습니다!', 'success');
-            this.close();
-
-            // 페이지 새로고침 (재고 업데이트 반영)
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
-
-        } catch (error) {
-            console.error('[예약] 실패:', error);
-            Utils.notify(error.message || '예약에 실패했습니다.', 'error');
-        }
-    }
-};
-
-// 전역 함수로 노출 (HTML onclick 및 다른 스크립트에서 사용 가능)
-window.openReservationModal = function(productNum) {
-    ReservationModal.open(productNum);
-};
-
-window.closeReservationModal = function() {
-    ReservationModal.close();
-};
+        // DOM 로드 후 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+            ReservationModal.init();
+        });
     </script>
 </div>

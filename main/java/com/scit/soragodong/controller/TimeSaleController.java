@@ -1,14 +1,17 @@
 package com.scit.soragodong.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.scit.soragodong.domain.dto.StoreDto;
@@ -28,6 +31,33 @@ import lombok.extern.slf4j.Slf4j;
 public class TimeSaleController {
     
     private final TimesaleService timeSaleService;
+    
+    /**
+     * 타임세일 메인 페이지
+     */
+    @GetMapping("")
+    public String getTimesalePage(Model model) {
+        model.addAttribute("currentUri", "/timesale");
+        return "common";
+    }
+    /**
+     * 타임세일 상세 페이지
+     */
+    @GetMapping("/detail")
+    public String getTimesaleDetailPage(
+            @RequestParam(value = "storeIdx", required = true) Integer storeIdx,
+            Model model) {
+        
+        log.info("타임세일 상세 페이지 요청 - storeIdx: {}", storeIdx);
+        
+        // storeIdx를 모델에 추가
+        model.addAttribute("storeIdx", storeIdx);
+        
+        // currentUri를 정확하게 설정 (common.html에서 사용)
+        model.addAttribute("currentUri", "/timesale/detail");
+        
+        return "common";
+    }
 
     /**
      * 음식(상품) 리스트 조회
@@ -50,7 +80,8 @@ public class TimeSaleController {
     }
     
     /**
-     * 가게 상세 정보 조회
+     * 가게 상세 정보 조회 (API용)
+     * URL: /timesale/detail/{storeIdx}
      * 
      * @param storeIdx 가게 인덱스
      * @return 가게 상세 정보
@@ -76,32 +107,10 @@ public class TimeSaleController {
             return ResponseEntity.internalServerError().build();
         }
     }
-    
-    /**
-     * 테스트용: 가게 정보 간단 조회 (디버깅용)
-     */
-    @GetMapping("/test/{storeIdx}")
-    @ResponseBody
-    public ResponseEntity<String> testStoreDetail(@PathVariable("storeIdx") Integer storeIdx) {
-        log.info("테스트 요청 - storeIdx: {}", storeIdx);
-        
-        try {
-            StoreDto storeDto = timeSaleService.getStoreDetail(storeIdx);
-            
-            if (storeDto == null) {
-                return ResponseEntity.ok("가게를 찾을 수 없습니다. DB를 확인하세요.");
-            }
-            
-            return ResponseEntity.ok("성공! 가게명: " + storeDto.storeName());
-            
-        } catch (Exception e) {
-            log.error("테스트 실패:", e);
-            return ResponseEntity.ok("에러 발생: " + e.getMessage());
-        }
-    }
-    
+
     /**
      * 가게별 상품 목록 조회 (재고가 있는 상품만)
+     * URL: /timesale/detail/{storeIdx}/products
      * 
      * @param storeIdx 가게 인덱스
      * @return 상품 목록
@@ -124,7 +133,8 @@ public class TimeSaleController {
     }
     
     /**
-     * 상품 상세 정보 조회 (예약 모달용)
+     * 상품 단건 조회 (예약 모달용)
+     * URL: /timesale/product/{productNum}
      * 
      * @param productNum 상품 번호
      * @return 상품 상세 정보
@@ -142,44 +152,45 @@ public class TimeSaleController {
                 return ResponseEntity.notFound().build();
             }
             
-            log.info("상품 상세 정보 조회 성공 - productName: {}, storeIdx: {}", 
-                product.productName(), product.storeIdx());
+            log.info("상품 상세 정보 조회 성공 - productName: {}", product.productName());
             return ResponseEntity.ok(product);
             
         } catch (Exception e) {
-            log.error("상품 상세 정보 조회 중 오류 발생 - productNum: {}, error: {}", 
-                productNum, e.getMessage(), e);
+            log.error("상품 상세 정보 조회 중 오류 발생 - productNum: {}, error: {}", productNum, e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }
     
     /**
-     * 상품 예약
+     * 상품 예약 처리
+     * URL: POST /timesale/reserve
      * 
-     * @param request 예약 요청 정보
-     * @return 예약 결과
+     * @param orderDto 주문 정보
+     * @return 생성된 주문 정보
      */
     @PostMapping("/reserve")
     @ResponseBody
-    public ResponseEntity<UserOrderDto> createReservation(@RequestBody UserOrderDto request) {
-        log.info("예약 요청 - userIdx: {}, productNum: {}, quantity: {}", 
-            request.userIdx(), request.productNum(), request.orderQuantity());
+    public ResponseEntity<?> reserveProduct(@RequestBody UserOrderDto orderDto) {
+        log.info("상품 예약 요청 - userIdx: {}, productNum: {}, quantity: {}", 
+                orderDto.userIdx(), orderDto.productNum(), orderDto.orderQuantity());
         
         try {
-            UserOrderDto order = timeSaleService.createReservation(request);
+            UserOrderDto result = timeSaleService.reserveProduct(orderDto);
             
-            log.info("예약 성공 - orderIndex: {}, productName: {}", 
-                order.orderIndex(), order.productName());
-            
-            return ResponseEntity.ok(order);
+            log.info("상품 예약 성공 - orderIndex: {}", result.orderIndex());
+            return ResponseEntity.ok(result);
             
         } catch (IllegalArgumentException e) {
-            log.warn("예약 실패 (잘못된 요청) - {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            log.error("잘못된 요청 - error: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            
+        } catch (IllegalStateException e) {
+            log.error("예약 실패 (재고 부족 등) - error: {}", e.getMessage());
+            return ResponseEntity.status(409).body(Map.of("error", e.getMessage()));
             
         } catch (Exception e) {
-            log.error("예약 중 오류 발생 - error: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().build();
+            log.error("상품 예약 중 오류 발생 - error: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(Map.of("error", "시스템 오류가 발생했습니다."));
         }
     }
 }

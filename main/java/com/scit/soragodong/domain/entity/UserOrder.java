@@ -31,7 +31,7 @@ public class UserOrder {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "USER_IDX", nullable = false)
-    private Users userIndex;
+    private Users users;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "PRODUCT_NUM", nullable = false)
