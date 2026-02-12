@@ -21,11 +21,6 @@ public class MainController {
         return "common";
     }
 
-    @GetMapping("/timesale")
-    public String getTimesalePage(Model model) {
-        model.addAttribute("currentUri", "/timesale");
-        return "common";
-    }
 
     /**
      * 세션 정보 확인 (테스트용)

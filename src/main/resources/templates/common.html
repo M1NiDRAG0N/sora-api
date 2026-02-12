@@ -36,6 +36,7 @@
         <th:block th:if="${currentUri == '/finance'}" th:insert="~{finance/finance :: div}"></th:block>
         <th:block th:if="${currentUri == '/community'}" th:insert="~{community/community :: div}"></th:block>
         <th:block th:if="${currentUri == '/timesale'}" th:insert="~{timesale/timesale :: div}"></th:block>
+        <th:block th:if="${currentUri == '/timesale/detail'}" th:insert="~{timesale/timesaledetail :: div}"></th:block>
         <th:block th:if="${currentUri == '/used-market'}" th:insert="~{usedmarket/usedmarket :: div}"></th:block>
 
         <div th:replace="~{layout/nav :: nav}"></div>
