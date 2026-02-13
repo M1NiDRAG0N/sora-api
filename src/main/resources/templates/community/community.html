@@ -46,13 +46,12 @@
         <input type="hidden" id="loginUserIdx" th:value="${#authentication.principal.userIdx}">
 
         <div class="category-select-area">
-            <div class="select-chip selected" onclick="CommunityMain.selectCategoryWrite(this)"
-                data-value="DISTRIBUTINO">소분/나눔
+            <div class="select-chip selected" onclick="CommunityMain.selectCategoryWrite(this)" data-value="소분/나눔">소분/나눔
             </div>
-            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="TIP">꿀팁/정보</div>
-            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="HUMOR">자유/수다</div>
-            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="COOK">요리/집밥</div>
-            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="QUESTION">질문/고민</div>
+            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="꿀팁/정보">꿀팁/정보</div>
+            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="자유/수다">자유/수다</div>
+            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="요리/집밥">요리/집밥</div>
+            <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="질문/고민">질문/고민</div>
         </div>
 
         <div class="write-card">
@@ -193,46 +192,46 @@
         </div>
     </div>
     <script>
-/**
- * [공통 유틸] 가로 스크롤 영역 마우스 드래그 기능
- * @param {String} selector - 적용할 클래스명 (예: '.cat-scroll')
- */
-const enableDragScroll = (selector) => {
-    const slider = document.querySelector(selector);
-    if (!slider) return; // 요소가 없으면 종료
+        /**
+         * [공통 유틸] 가로 스크롤 영역 마우스 드래그 기능
+         * @param {String} selector - 적용할 클래스명 (예: '.cat-scroll')
+         */
+        const enableDragScroll = (selector) => {
+            const slider = document.querySelector(selector);
+            if (!slider) return; // 요소가 없으면 종료
 
-    let isDown = false;
-    let startX;
-    let scrollLeft;
+            let isDown = false;
+            let startX;
+            let scrollLeft;
 
-    // 마우스 클릭 시 (시작)
-    slider.addEventListener('mousedown', (e) => {
-        isDown = true;
-        slider.classList.add('active'); // 커서 모양 변경
-        startX = e.pageX - slider.offsetLeft;
-        scrollLeft = slider.scrollLeft;
-    });
+            // 마우스 클릭 시 (시작)
+            slider.addEventListener('mousedown', (e) => {
+                isDown = true;
+                slider.classList.add('active'); // 커서 모양 변경
+                startX = e.pageX - slider.offsetLeft;
+                scrollLeft = slider.scrollLeft;
+            });
 
-    // 드래그 종료 공통 함수
-    const stopDrag = () => {
-        isDown = false;
-        slider.classList.remove('active');
-    };
+            // 드래그 종료 공통 함수
+            const stopDrag = () => {
+                isDown = false;
+                slider.classList.remove('active');
+            };
 
-    // 마우스가 떠나거나 뗐을 때 (종료)
-    slider.addEventListener('mouseleave', stopDrag);
-    slider.addEventListener('mouseup', stopDrag);
+            // 마우스가 떠나거나 뗐을 때 (종료)
+            slider.addEventListener('mouseleave', stopDrag);
+            slider.addEventListener('mouseup', stopDrag);
 
-    // 마우스 움직일 때 (스크롤 이동)
-    slider.addEventListener('mousemove', (e) => {
-        if (!isDown) return; // 클릭 상태 아니면 무시
-        e.preventDefault();  // 텍스트 선택 방지
-        
-        const x = e.pageX - slider.offsetLeft;
-        const walk = (x - startX) * 1.5; // 스크롤 속도 조절
-        slider.scrollLeft = scrollLeft - walk;
-    });
-};
+            // 마우스 움직일 때 (스크롤 이동)
+            slider.addEventListener('mousemove', (e) => {
+                if (!isDown) return; // 클릭 상태 아니면 무시
+                e.preventDefault();  // 텍스트 선택 방지
+
+                const x = e.pageX - slider.offsetLeft;
+                const walk = (x - startX) * 1.5; // 스크롤 속도 조절
+                slider.scrollLeft = scrollLeft - walk;
+            });
+        };
         // ✅ [전역 변수] 사용자가 선택한 파일들을 저장할 배열
         let selectedFiles = [];       // 새로 추가한 파일들
         let deletedFileIdxs = [];     // 삭제할 기존 파일 ID들
@@ -1036,6 +1035,10 @@ const enableDragScroll = (selector) => {
             sendReply: async () => {
                 const replyContent = document.querySelector('.input-field2').value;
                 const boardIdx = currentBoardIdx;
+                if (!replyContent) {
+                    Utils.notify("댓글을 입력하세요.", "error");
+                    return;
+                }
                 document.querySelector('.input-field2').value = '';
                 const data = {
                     replyContent: replyContent
@@ -1045,7 +1048,7 @@ const enableDragScroll = (selector) => {
                 console.log(boardIdx);
 
                 const response = await API.post(`/community/reply/${boardIdx}`, data);
-                const html = CommunityReply.createReplyCardHTML(response)
+                const html = CommunityReply.createReplyCardHTML(response);
                 const container = document.querySelector('#reply-card');
 
                 container.insertAdjacentHTML('beforeend', html);
