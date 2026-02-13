@@ -46,6 +46,7 @@
 
 /* ▼ 헤더 한 줄 (검색 영역, 필터 등) */
 .page-wrapper .header-row {
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -433,8 +434,8 @@
    ======================================== */
 
 .page-wrapper .page-floating-btn {
-    position: fixed;
-    bottom: 80px;
+    position: absolute;
+    bottom: 90px;
     right: 16px;
     width: 56px;
     height: 56px;
