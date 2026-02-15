@@ -11,10 +11,9 @@ import org.springframework.web.context.request.WebRequest;
 
 import com.scit.soragodong.domain.response.ApiResponse;
 
-
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
@@ -34,24 +33,26 @@ public class GlobalExceptionHandler {
      * Spring Security 인증 예외 처리
      */
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ApiResponse<?>> handleAuthenticationException(AuthenticationException ex, WebRequest request) {
+    public ResponseEntity<ApiResponse<?>> handleAuthenticationException(AuthenticationException ex,
+            WebRequest request) {
         log.error("AuthenticationException: {}", ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error(ErrorCode.LOGIN_FAILED));
     }
-    
+
     /**
      * IllegalArgumentException 처리
      */
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiResponse<?>> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
+    public ResponseEntity<ApiResponse<?>> handleIllegalArgumentException(IllegalArgumentException ex,
+            WebRequest request) {
         log.error("IllegalArgumentException: {}", ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(ErrorCode.INVALID_INPUT));
     }
-    
+
     /**
      * 일반 예외 처리
      */

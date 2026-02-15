@@ -35,14 +35,24 @@ public class Finance extends BaseEntity {
     @Column(name = "FINANCE_MEMO", length = 200)
     private String financeMemo;
 
-    @Column(name = "FINANCE_AT", nullable = false)
+    @Column(name = "FINANCE_AT", nullable = false, updatable = false) // ★ updatable = false 추가!
     private LocalDateTime financeAt;
 
-    public void updateFinance(String category, Long amount, String type, String memo, LocalDateTime at) {
+    @Column(name = "IS_FIXED")
+    private Boolean isFixed;
+
+    @Column(name = "DURATION")
+    private Integer duration;
+
+    // Finance.java 엔티티 내부
+    public void updateFinance(String category, Long amount, String type, String memo,
+            LocalDateTime at, Boolean isFixed, Integer duration) {
         this.financeCategory = category;
         this.financeAmount = amount;
         this.financeType = type;
         this.financeMemo = memo;
         this.financeAt = at;
+        this.isFixed = isFixed;
+        this.duration = duration; // 이 줄이 있어야 DB에 값이 들어갑니다.
     }
 }
