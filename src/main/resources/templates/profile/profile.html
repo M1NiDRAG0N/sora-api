@@ -1,0 +1,236 @@
+<div id="profileLayer" class="page-layer profile-layer" th:fragment="div">
+    <link rel="stylesheet" href="/css/profile.css">
+
+    <header class="profile-header">
+        <!-- 뒤로가기: 레이어 닫기 -->
+        <div class="icon-btn" onclick="Profile.close()"><ion-icon name="chevron-back"></ion-icon></div>
+        <div class="header-title" id="profile-page-title">내 프로필</div>
+        <div class="icon-btn" id="profile-header-right-icon"><ion-icon name="settings-outline"></ion-icon></div>
+    </header>
+
+    <div class="profile-scroll-content">
+        <div class="profile-info">
+            <img src="" class="profile-img" id="profile-user-img">
+            <div class="profile-text">
+                <div class="profile-user-name" id="profile-user-name"></div>
+                <div class="user-desc" id="profile-user-email"></div>
+            </div>
+        </div>
+
+        <div class="stats-box" id="profile-stats-box">
+            <!-- 자바스크립트로 렌더링 -->
+        </div>
+
+        <button class="profile-action-btn edit" id="profile-main-btn" onclick="alert('프로필 수정 기능은 준비중입니다.')">프로필 수정</button>
+
+        <div class="manner-card">
+            <div class="manner-header">
+                <span>매너 점수</span>
+                <span class="manner-score" id="profile-manner-val">0°C</span>
+            </div>
+            <div class="progress-bg">
+                <div class="progress-bar" id="profile-manner-bar" style="width: 0%;"></div>
+            </div>
+        </div>
+
+        <div id="profile-dynamic-area" class="dynamic-content"></div>
+    </div>
+    
+    <script>
+        const Profile = {
+            currentTab: 'posts', // posts, comments, likes
+            currentSubTab: 'community', // market, community (기본값을 커뮤니티로 변경)
+            cachedPosts: [], // 작성한 글 목록 캐싱용
+
+            open: async () => {
+                try {
+                    const data = await API.get('/profile/my');
+                    Profile.renderHeader(data);
+                    Profile.changeTab('posts'); // 기본 탭 로딩
+                    document.getElementById('profileLayer').classList.add('active');
+                } catch (e) {
+                    console.error(e);
+                    // alert('프로필 정보를 불러오는데 실패했습니다.');
+                }
+            },
+
+            close: () => {
+                document.getElementById('profileLayer').classList.remove('active');
+            },
+
+            renderHeader: (data) => {
+                const imgUrl = data.profileIdx ? `/images/profiles/${data.profileIdx}.png` : '/images/default-profile.png';
+                document.getElementById('profile-user-img').src = imgUrl;
+                document.getElementById('profile-user-name').innerText = data.userNickname;
+                document.getElementById('profile-user-email').innerText = data.userEmail;
+
+                // 매너점수
+                const score = data.mannerScore || 36.5;
+                document.getElementById('profile-manner-val').innerText = score + "°C";
+                document.getElementById('profile-manner-bar').style.width = score + "%"; // 100점 만점 기준
+
+                // 통계 박스 (탭 버튼 역할) - 클래스명 변경 반영 (stat-item -> profile-stat-item 등)
+                const statsBox = document.getElementById('profile-stats-box');
+                statsBox.innerHTML = `
+                    <div class="profile-stat-item" onclick="Profile.changeTab('posts')" id="tab-posts">
+                        <div class="profile-stat-label">작성한 글</div>
+                        <div class="profile-stat-value">${data.postCount}</div>
+                    </div>
+                    <div class="profile-stat-item" onclick="Profile.changeTab('comments')" id="tab-comments">
+                        <div class="profile-stat-label">작성한 댓글</div>
+                        <div class="profile-stat-value">${data.commentCount}</div>
+                    </div>
+                    <div class="profile-stat-item" onclick="Profile.changeTab('likes')" id="tab-likes">
+                        <div class="profile-stat-label">좋아요</div>
+                        <div class="profile-stat-value">${data.likeCount}</div>
+                    </div>
+                `;
+            },
+
+            changeTab: async (tab) => {
+                Profile.currentTab = tab;
+                Profile.currentSubTab = 'community'; // 탭 변경 시 기본을 커뮤니티로 설정
+
+                // 탭 활성화 UI 처리 - 클래스명 변경 반영
+                document.querySelectorAll('.profile-stat-item').forEach(el => el.classList.remove('active'));
+                const activeTab = document.getElementById(`tab-${tab}`);
+                if (activeTab) activeTab.classList.add('active');
+
+                // 리스트 불러오기
+                const container = document.getElementById('profile-dynamic-area');
+                container.innerHTML = '<div style="text-align:center; padding:20px;">로딩중...</div>';
+
+                try {
+                    let list = [];
+                    if (tab === 'posts') {
+                        list = await API.get('/profile/posts');
+                        Profile.cachedPosts = list; // 캐싱
+                    }
+                    else if (tab === 'comments') list = await API.get('/profile/comments');
+                    else if (tab === 'likes') list = await API.get('/profile/likes');
+
+                    Profile.renderList(list, tab);
+                } catch (e) {
+                    console.error(e);
+                    container.innerHTML = '<div style="text-align:center; padding:20px;">데이터를 불러오지 못했습니다.</div>';
+                }
+            },
+
+            // 서브탭 필터링 (작성한 글 전용)
+            filterPosts: (subTab) => {
+                Profile.currentSubTab = subTab;
+                Profile.renderList(Profile.cachedPosts, 'posts');
+            },
+
+            renderList: (list, tab) => {
+                const container = document.getElementById('profile-dynamic-area');
+                
+                let html = '';
+                // 제목 표시
+                const titles = { posts: '작성한 글 목록', comments: '내가 쓴 댓글', likes: '좋아요 목록' };
+                html += `<div class="profile-section-title">${titles[tab]}</div>`;
+
+                // 작성한 글(posts)일 경우 서브 탭 표시
+                if (tab === 'posts') {
+                    const mkActive = Profile.currentSubTab === 'market' ? 'active' : '';
+                    const cmActive = Profile.currentSubTab === 'community' ? 'active' : '';
+                    
+                    html += `
+                        <div class="sub-tabs">
+                            <button class="sub-tab-btn ${mkActive}" onclick="Profile.filterPosts('market')">중고거래</button>
+                            <button class="sub-tab-btn ${cmActive}" onclick="Profile.filterPosts('community')">커뮤니티</button>
+                        </div>
+                    `;
+
+                    // 필터링 로직
+                    if (Profile.currentSubTab === 'market') {
+                        // 중고거래: 아직 기능 없음 -> 빈 리스트
+                        list = [];
+                    } else {
+                        // 커뮤니티: 모든 작성 글 표시
+                        // list = list; (그대로 유지)
+                    }
+                }
+
+                if (!list || list.length === 0) {
+                    let emptyMsg = '내역이 없습니다.';
+                    if (tab === 'posts' && Profile.currentSubTab === 'market') {
+                        emptyMsg = '중고거래 내역이 없습니다. (준비중)';
+                    }
+                    html += `<div style="text-align:center; padding: 40px; color:#aaa; font-size:13px;">${emptyMsg}</div>`;
+                    container.innerHTML = html;
+                    return;
+                }
+
+                list.forEach(item => {
+                    // 카테고리 뱃지 색상 결정
+                    let badgeClass = 'comm';
+                    let badgeText = item.boardCategory || '기타';
+                    
+                    if (tab === 'comments') {
+                        badgeClass = 'comm';
+                        badgeText = '댓글';
+                    }
+
+                    if (tab === 'comments') {
+                        // 댓글인 경우
+                        html += `
+                            <div class="profile-list-item" onclick="Profile.moveToPost(${item.boardIdx})">
+                                <div class="profile-list-thumb" style="display:flex;align-items:center;justify-content:center;color:#ccc;font-size:24px;background:#eee;">
+                                    <ion-icon name="chatbubble-outline"></ion-icon>
+                                </div>
+                                <div class="profile-list-info">
+                                    <div class="profile-list-title"><span class="badge ${badgeClass}">${badgeText}</span> ${item.replyContent}</div>
+                                    <div class="profile-list-meta">원글: ${item.boardTitle || '제목 없음'} · ${Utils.timeAgo(item.createdAt)}</div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // 글 또는 좋아요
+                         const thumbHtml = item.fileGrpIdx
+                            ? `<img src="/img/group/${item.fileGrpIdx}" class="profile-list-thumb">`
+                            : `<div class="profile-list-thumb" style="display:flex;align-items:center;justify-content:center;color:#ccc;font-size:24px;background:#eee;"><ion-icon name="document-text-outline"></ion-icon></div>`;
+
+                        html += `
+                            <div class="profile-list-item" onclick="Profile.moveToPost(${item.boardIdx})">
+                                ${thumbHtml}
+                                <div class="profile-list-info">
+                                    <div class="profile-list-title"><span class="badge ${badgeClass}">${badgeText}</span> ${item.boardTitle}</div>
+                                    <div class="profile-list-meta">${item.boardCategory} · ${Utils.timeAgo(item.createdAt)}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+
+                container.innerHTML = html;
+            },
+
+            moveToPost: (boardIdx) => {
+                if (!boardIdx) return;
+
+                // 현재 페이지가 커뮤니티 페이지인지 확인
+                if (location.pathname === '/community') {
+                    Profile.close();
+                    
+                    if (typeof CommunityView !== 'undefined' && CommunityView.openView) {
+                        // 같은 페이지이므로 플래그 설정
+                        CommunityView.returnToProfile = true;
+
+                        const fakeEl = {
+                            getAttribute: (attr) => {
+                                if (attr === 'data-boardIdx') return boardIdx;
+                                return null;
+                            }
+                        };
+                        CommunityView.openView(fakeEl);
+                    } else {
+                         location.href = `/community?viewBoardIdx=${boardIdx}&from=profile`;
+                    }
+                } else {
+                    location.href = `/community?viewBoardIdx=${boardIdx}&from=profile`;
+                }
+            }
+        };
+    </script>
+</div>

@@ -260,7 +260,6 @@ public class CommunityService {
                     .boardIdx(boardReply.getBoard().getBoardIdx())
                     .userNickname(boardReply.getUser().getUserNickname())
                     .userIdx(boardReply.getUser().getUserIdx())
-                    .profileIdx(boardReply.getUser().getProfileIdx())
                     .replyContent(boardReply.getReplyContent())
                     .createdAt((boardReply.getCreatedAt()))
                     .build();
@@ -293,7 +292,6 @@ public class CommunityService {
                     .userIdx(baordReplyEntity.getUser().getUserIdx())
                     .userNickname(
                             baordReplyEntity.getUser().getUserNickname())
-                    .profileIdx(baordReplyEntity.getUser().getProfileIdx())
                     .replyContent(baordReplyEntity.getReplyContent())
                     .isUse(baordReplyEntity.getIsUse())
                     .createdAt(baordReplyEntity.getCreatedAt())
@@ -317,7 +315,6 @@ public class CommunityService {
                 .boardIdx(replyEntity.getBoard().getBoardIdx())
                 .userNickname(replyEntity.getUser().getUserNickname())
                 .userIdx(replyEntity.getUser().getUserIdx())
-                .profileIdx(replyEntity.getUser().getProfileIdx())
                 .createdAt((replyEntity.getCreatedAt()))
                 .replyContent(replyEntity.getReplyContent())
                 .build();
