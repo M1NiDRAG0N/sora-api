@@ -41,4 +41,8 @@ public class BoardReply extends BaseEntity {
     public void delete() {
         this.isUse = false;
     }
+
+    public void updateContent(String content) {
+        this.replyContent = content;
+    }
 }
