@@ -8,7 +8,7 @@ import lombok.*;
 
 @Entity
 @Table(name = "BOARD_REPLY")
-@Data
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
