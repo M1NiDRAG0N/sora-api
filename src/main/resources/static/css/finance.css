@@ -614,7 +614,7 @@
 /* ===================================================================
    [SECTION 6] 모달 팝업 (Modal) - 공통 스타일과 별도 운영
    =================================================================== */
-.modal-overlay {
+.modal-overlaies {
     position: fixed;
     top: 0;
     left: 0;
@@ -630,7 +630,7 @@
     animation: fadeIn 0.2s ease-out;
 }
 
-.modal-overlay.active {
+.modal-overlaies.active {
     display: flex;
 }
 
