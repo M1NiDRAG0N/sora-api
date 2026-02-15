@@ -35,7 +35,7 @@
 
 
     <!-- 글쓰기 페이지 시작 -->
-    <div class="app-container bg-gradient" id="writeForm">
+    <div class="bg-gradient" id="writeForm">
 
         <div class="write-header">
             <div class="btn-cancel" onclick="CommunityWrite.close()">취소</div>
@@ -76,7 +76,7 @@
     <!-- 글쓰기 페이지 끗 -->
 
     <!-- 게시글 상세보기 시작 -->
-    <div class="app-container bg-gradient" id="viewForm">
+    <div class="bg-gradient" id="viewForm">
         <input type="hidden" id="loginUserIdxMain" th:value="${#authentication.principal.userIdx}">
         <div class="view-header">
             <button type="button" class="header-btn-icon" onclick="CommunityView.closeView()">
