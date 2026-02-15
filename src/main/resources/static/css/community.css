@@ -322,16 +322,19 @@
 }
 
 /* 드래그 가능한 영역의 기본 커서 */
-.cat-scroll, .category-select-area {
-    cursor: grab; /* 손바닥 모양 */
+.cat-scroll,
+.category-select-area {
+    cursor: grab;
+    /* 손바닥 모양 */
     overflow-x: auto;
     /* 드래그할 때 텍스트가 선택되는 것을 방지 */
-    user-select: none; 
+    user-select: none;
     -webkit-user-select: none;
 }
 
 /* 드래그 중일 때 커서 (움켜쥔 손) */
-.cat-scroll.active, .category-select-area.active {
+.cat-scroll.active,
+.category-select-area.active {
     cursor: grabbing;
     cursor: -webkit-grabbing;
 }
@@ -843,27 +846,9 @@ body.modal-open {
     overflow: hidden;
 }
 
-/* 글쓰기 폼을 화면 위에 붕 띄우기 */
-#writeForm {
-    position: absolute;
-    /* 화면 기준 고정 */
-    top: 100%;
-    /* 처음엔 화면 아래쪽(100%)에 숨겨둠 */
-    left: 0;
-    width: 100%;
-    height: 100%;
-    /* 화면 꽉 차게 */
-    z-index: 9999;
-    /* 다른 모든 요소보다 위에 오도록 (헤더, 네비보다 높게) */
-    background-color: #fff;
-    /* 배경색 필수 (투명하면 뒤가 비침) */
-    transition: top 0.3s ease-in-out;
-    /* 부드럽게 올라오는 애니메이션 */
-    overflow-y: auto;
-    /* 내용이 길면 스크롤 가능하게 */
-}
 
-#viewForm {
+#viewForm,
+#writeForm {
     position: absolute;
     /* 화면 기준 고정 */
     top: 0;
@@ -882,13 +867,10 @@ body.modal-open {
     /* 내용이 길면 스크롤 가능하게 */
 }
 
-/* 이 클래스가 붙으면 화면에 나타남 */
-#writeForm.active {
-    top: 0;
-    /* 화면 맨 위로 이동 */
-}
 
-#viewForm.active {
+
+#viewForm.active,
+#writeForm.active {
     left: 0;
     /* 화면 맨 위로 이동 */
 }
