@@ -9,7 +9,7 @@ import lombok.*;
 
 @Entity
 @Table(name = "BOARD")
-@Getter
+@Data
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -50,11 +50,22 @@ public class Board extends BaseEntity {
     @JoinColumn(name = "FILE_GRP_IDX")
     private FileGrp fileGrp;
 
-    @Formula("(SELECT count(1) FROM BOARD_REPLY r WHERE r.BOARD_IDX = BOARD_IDX)")
+    @Formula("(SELECT count(1) FROM BOARD_REPLY r WHERE r.BOARD_IDX = BOARD_IDX and r.IS_USE = true)")
     private int replyCount;
 
     public void delete() {
         this.isUse = false;
     }
 
+    public void updateBoard(String title, String content, String category) {
+        this.boardTitle = title;
+        this.boardContent = content;
+        this.boardCategory = category;
+    }
+
+    // 추천 증가 메서드
+    // 서비스 단에서 그냥 1더해서 저장해도 되지만 여기서 숫자 증가 로직을 만들어놓는게 더 안정적임.
+    public void increaseLike() {
+        this.likeCount++;
+    }
 }
