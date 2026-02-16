@@ -1,3 +1,5 @@
+@charset "UTF-8";
+
 /* ===================================================================
    [FINANCE PAGE] - 정리된 CSS (중복 제거)
    
@@ -29,6 +31,35 @@
     font-size: 12px;
     color: #999;
     margin-bottom: 10px;
+}
+/*    
+   [Finance.css] 가계부 전용 스타일
+   * 공통 스타일(common.css, profile.css 등)과 함께 사용됩니다.
+   =================================================================== */
+
+/* [SECTION 1] 변수 및 레이아웃 보정 */
+:root {
+    /* 가계부 전용 상태 컬러 (공통 변수에 없다면 유지, 있다면 제거 가능) */
+    --danger-red: #ff4757;
+    --success-green: #2ecc71;
+    --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+/* ===================================================================
+   [SECTION 2] 대시보드 (자산 & 차트)
+   =================================================================== */
+.dashboard-card {
+    background-color: var(--white, #ffffff);
+    border-radius: 28px;
+    padding: 24px 20px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 20px;
+}
+
+.net-worth-label {
+    font-size: 14px;
+    color: var(--text-sub, #888);
+    margin-bottom: 4px;
     font-weight: 500;
     letter-spacing: 0px;
     text-transform: uppercase;
@@ -105,32 +136,57 @@
 .finance-page .chart-title {
     font-size: 12px;
     font-weight: 600;
-    color: var(--text-main);
+    color: var(--text-main, #333);
     margin-bottom: 2px;
 }
 
 .finance-page .chart-box {
-    width: 120px;
-    height: 120px;
     position: relative;
+    width: 100%;
+    height: 180px;
+    margin: 10px 0;
 }
 
 .finance-page .chart-center-text {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -45%);
     text-align: center;
+    width: 100%;
     pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+
+.chart-center-label {
+    display: block;
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 2px;
+    font-weight: 500;
 }
 
 .finance-page .chart-center-value {
     font-size: 13px;
+    display: block;
     font-weight: 800;
-    color: var(--text-main);
+    color: var(--text-main, #333);
+    word-break: break-all;
+    line-height: 1.2;
 }
 
 /* 예산 섹션 */
+.chart-center-value.expense {
+    color: var(--danger-red);
+}
+
+/* ===================================================================
+   [SECTION 3] 예산 바 (Budget Bar)
+   =================================================================== */
 .finance-page .budget-header {
     font-size: 13px;
     font-weight: 700;
@@ -143,28 +199,30 @@
     display: flex;
     width: 100%;
     height: 36px;
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
     margin-bottom: 24px;
+    background-color: #f1f2f6;
 }
 
 .finance-page .bar-segment {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     color: white;
+    transition: width 0.5s ease-in-out;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .finance-page .bg-red {
     background-color: var(--danger-red);
-    width: 68%;
 }
 
 .finance-page .bg-green {
     background-color: var(--success-green);
-    width: 32%;
 }
 
 .finance-page .budget-info-container {
@@ -234,11 +292,12 @@
 }
 
 .finance-page .cal-header {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 20px;
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 60px;
+    margin-bottom: 10px;
 }
 
 .finance-page .cal-nav-btn {
@@ -248,8 +307,13 @@
 .finance-page .cal-title {
     font-size: 16px;
     font-weight: 700;
-    color: var(--text-main);
+    color: var(--text-main, #333);
+    letter-spacing: -0.5px;
+    min-width: 120px;
+    text-align: center;
+    margin: 0 10px;
     cursor: pointer;
+    user-select: none;
     transition: color 0.2s;
 }
 
@@ -258,7 +322,32 @@
 }
 
 /* 스크롤 달력 모드 */
-.finance-page .date-scroller {
+
+.cal-title:active {
+    color: var(--primary, #B2A4FF);
+}
+
+.cal-nav-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+    color: var(--text-sub, #888);
+    background: transparent;
+    border-radius: 50%;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.cal-nav-btn:active {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-main, #333);
+}
+
+/* 날짜 스크롤러 */
+.date-scroller {
     display: flex;
     overflow-x: auto;
     padding: 0 20px 20px 20px;
@@ -296,10 +385,15 @@
 .finance-page .money-exp {
     color: var(--danger-red);
 }
+.date-card.active .date-number {
+    background-color: #EBE5FF;
+    color: var(--primary-dark, #8F7DF5);
+    font-weight: 800;
+}
 
 .finance-page .date-number {
     font-size: 16px;
-    color: var(--text-main);
+    color: var(--text-main, #333);
     width: 36px;
     height: 36px;
     line-height: 36px;
@@ -362,6 +456,7 @@
     font-size: 9px;
     margin-bottom: 2px;
     height: 12px;
+    display: block;
     white-space: nowrap;
 }
 
@@ -708,6 +803,15 @@
 }
 
 .finance-page .dd-header-date {
+    position: relative;
+    animation: slideUp 0.3s ease-out;
+}
+
+.day-detail-section.active {
+    display: block;
+}
+
+.dd-header-date {
     text-align: center;
     font-size: 20px;
     font-weight: 800;
@@ -740,6 +844,13 @@
 
 .finance-page .dd-item {
     margin-bottom: 25px;
+    border-bottom: 1px solid #f9f9f9;
+    padding-bottom: 15px;
+}
+
+.dd-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
 }
 
 .finance-page .dd-item-top {
@@ -787,6 +898,7 @@
     font-size: 11px;
     color: #ccc;
     margin-left: 8px;
+    text-align: left;
 }
 
 .finance-page .empty-msg {
@@ -795,7 +907,56 @@
     padding: 40px 0;
 }
 
-.finance-page .fab-edit {
+.badge-fixed {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    background-color: var(--primary, #B2A4FF);
+    padding: 2px 6px;
+    border-radius: 6px;
+    margin-left: 6px;
+    vertical-align: middle;
+    transform: translateY(-1px);
+}
+
+.btn-edit-small,
+.btn-delete-small {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 14px;
+    margin-left: 8px;
+    cursor: pointer;
+    vertical-align: middle;
+    transition: all 0.2s;
+}
+
+.btn-edit-small {
+    background-color: #f0f0f0;
+    color: #999;
+}
+
+.btn-edit-small:active {
+    background-color: #e0e0e0;
+    transform: scale(0.9);
+}
+
+.btn-delete-small {
+    background-color: #fff0f0;
+    color: #ff7675;
+}
+
+.btn-delete-small:active {
+    background-color: #ffe0e0;
+    transform: scale(0.9);
+}
+
+/* 글쓰기 플로팅 버튼 */
+.fab-edit {
     position: absolute;
     bottom: 20px;
     right: 20px;
@@ -813,139 +974,326 @@
     z-index: 100;
 }
 
+.fab-edit:active {
+    transform: scale(0.95);
+    background-color: #f0f0f0;
+}
+
 /* ===================================================================
-   [PART 6] 모달 OVERRIDE (FINANCE-PAGE만의 스타일 - 중앙 팝업)
-   
-   주의: 기본 모달 입력필드 스타일은 unified-layout.css에서 제공
-         여기서는 finance-page만의 포지셔닝/테마 override만 정의
+   [SECTION 6] 모달 팝업 (Modal) - 공통 스타일과 별도 운영
    =================================================================== */
-
-/* ▼ Finance 모달 컨테이너 - 중앙 팝업으로 변경 */
-.finance-page .modal-container {
+.modal-overlaies {
     position: fixed;
-    inset: auto;
-    left: 50%;
-    top: 50%;
-    right: auto;
-    bottom: auto;
-    width: 90%;
-    max-width: 360px;
-    height: auto;
-    max-height: 90vh;
-    transform: translate(-50%, -50%) scale(0);
-    border-radius: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(5px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    padding: 20px;
+    animation: fadeIn 0.2s ease-out;
 }
 
-.finance-page .modal-container.active {
-    transform: translate(-50%, -50%) scale(1);
+.modal-overlaies.active {
+    display: flex;
 }
 
-/* ▼ Finance 모달 콘텐츠 - form 레이아웃 */
-.finance-page .modal-content {
-    display: block;
-    flex: initial;
-    overflow-y: visible;
-    max-height: none;
-    padding: 28px 24px 24px 24px;
+.modal-card {
+    background: var(--white, #ffffff);
+    width: 100%;
+    max-width: 320px;
+    border-radius: 30px;
+    padding: 30px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ▼ Finance 모달 제목 - 중앙 정렬 */
-.finance-page .modal-content .modal-title {
-    font-size: 18px;
+.modal-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-main, #333);
+    text-align: center;
+    margin-bottom: 5px;
+    line-height: 1.2;
+}
+
+.modal-label {
+    font-size: 13px;
     font-weight: 700;
-    color: #1a1a1a;
-    margin-bottom: 24px;
+    color: var(--text-sub, #888);
+    margin-left: 4px;
+}
+
+.modal-input,
+.modal-textarea {
+    width: 100%;
+    height: 48px;
+    background-color: #F8F9FD;
+    border: 1px solid transparent;
+    border-radius: 16px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 500;
+    font-size: 15px;
+    color: var(--text-main, #333);
+    outline: none;
+    transition: all 0.2s;
+    appearance: none;
+    display: block;
+    line-height: 46px;
+    padding: 0 16px;
+}
+
+.modal-input:focus,
+.modal-textarea:focus {
+    background-color: var(--white, #fff);
+    border-color: var(--primary, #B2A4FF);
+    box-shadow: 0 0 0 3px rgba(178, 164, 255, 0.2);
+}
+
+select.modal-input {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 16px;
+    padding-right: 40px;
+    cursor: pointer;
+}
+
+.modal-textarea {
+    height: 100px;
+    padding: 14px 16px;
+    line-height: 1.5;
+    resize: none;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+
+.input-relative {
+    position: relative;
+}
+
+.input-center {
+    width: 100%;
     text-align: center;
 }
 
-/* ▼ Finance 모달 입력 그룹 */
-.finance-page .modal-content .input-group {
-    margin-bottom: 16px;
-}
-
-/* ▼ Finance 모달 입력필드 - 테마 focus 상태 */
-.finance-page .modal-content .modal-input:focus {
-    background: rgba(178, 164, 255, 0.04);
-}
-
-/* ▼ Finance 모달 textarea - 레이아웃 및 테마 */
-.finance-page .modal-content .modal-textarea {
-    margin-bottom: 20px;
-}
-
-.finance-page .modal-content .modal-textarea:focus {
-    background: rgba(178, 164, 255, 0.04);
-}
-
-/* ▼ 가로 배치 레이아웃 (구분 + 금액) */
-.finance-page .modal-content .row-inputs {
+.row-inputs {
     display: flex;
     gap: 12px;
-    margin-bottom: 16px;
+    align-items: flex-end;
 }
 
-.finance-page .modal-content .input-group.sm {
-    width: 35%;
+.input-group.sm {
+    flex: 0 0 90px;
 }
 
-.finance-page .modal-content .input-group.lg {
+.input-group.lg {
     flex: 1;
 }
 
-/* ▼ 모달 푸터 버튼 - Finance 테마 */
-.finance-page .modal-content .modal-footer {
-    display: flex;
-    gap: 10px;
-    padding-top: 20px;
-    border-top: 1px solid #F0F0F0;
-}
-
-.finance-page .modal-content .modal-btn-save {
-    flex: 1;
-    height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--primary);
-    color: white;
-    border-radius: 12px;
-    font-size: 14px;
+#inpAmount {
+    text-align: right;
     font-weight: 700;
 }
 
-.finance-page .modal-content .modal-btn-save:active {
-    background: var(--primary-dark);
-    transform: scale(0.98);
-}
-
-.finance-page .modal-content .modal-close-btn {
-    flex: 1;
-    height: 50px;
+/* 체크박스 & 기간 입력 */
+.check-group-wrapper {
     display: flex;
     align-items: center;
-    justify-content: center;
-    background: #F5F5F5;
+    justify-content: space-between;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+.check-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 2px;
+    cursor: pointer;
+    margin: 0;
+}
+
+.check-input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-dark, #8F7DF5);
+    cursor: pointer;
+}
+
+.check-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #444;
+    cursor: pointer;
+    user-select: none;
+}
+
+.duration-input-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-input.small-input {
+    width: 60px;
+    height: 36px;
+    line-height: 34px;
+    padding: 0 10px;
+    text-align: center;
+    border-radius: 10px;
+    font-weight: 700;
+}
+
+.duration-text {
+    font-size: 13px;
     color: #666;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 700;
+    font-weight: 500;
 }
 
-.finance-page .modal-content .modal-close-btn:active {
-    background: #E8E8E8;
+/* 모달 버튼 */
+.modal-btn {
+    width: 100%;
+    height: 52px;
+    background-color: var(--primary, #B2A4FF);
+    color: var(--white, #fff);
+    font-weight: 700;
+    font-size: 16px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    margin-top: 15px;
+    box-shadow: 0 5px 15px rgba(178, 164, 255, 0.4);
+    transition: transform 0.1s;
+}
+
+.modal-btn:active {
     transform: scale(0.98);
+    background-color: var(--primary-dark, #8F7DF5);
+}
+
+.modal-close-btn {
+    width: 100%;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-sub, #888);
+    background-color: transparent;
+    border-radius: 16px;
+    cursor: pointer;
+    margin-top: 5px;
+}
+
+.modal-close-btn:hover {
+    background-color: #f5f5f5;
+    color: var(--text-main, #333);
+}
+
+/* [삭제 모달 전용] 버튼 오버라이드 */
+.modal-btn.btn-secondary {
+    background-color: #f1f2f6;
+    color: #666;
+    margin-top: 0;
+    box-shadow: none;
+}
+
+.modal-btn.btn-danger {
+    background-color: var(--danger-red);
+    color: white;
+    margin-top: 0;
+    box-shadow: 0 5px 15px rgba(255, 75, 75, 0.3);
+}
+
+.modal-btn.btn-danger:active {
+    background-color: #e04040;
 }
 
 /* ===================================================================
-   [ANIMATION]
+   [SECTION 7] 알림 토스트 (Toast - 우측 상단)
    =================================================================== */
+.toast-box {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    left: auto;
+    background-color: rgba(51, 51, 51, 0.95);
+    color: #fff;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(30px);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.toast-box.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+}
+
+/* ===================================================================
+   [SECTION 8] 카테고리 컬러 및 애니메이션
+   =================================================================== */
+.cat-salary {
+    background-color: #2ecc71;
+}
+
+.cat-food {
+    background-color: #ff7675;
+}
+
+.cat-transport {
+    background-color: #fdcb6e;
+}
+
+.cat-shopping {
+    background-color: #a29bfe;
+}
+
+.cat-event {
+    background-color: #fab1a0;
+}
+
+.cat-saving {
+    background-color: #74b9ff;
+}
+
+.cat-etc {
+    background-color: #dfe6e9;
+    color: #636e72;
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;
         transform: translateY(-5px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -961,4 +1309,79 @@
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+@keyframes modalSlideUp {
+    from {
+        transform: translateY(30px) scale(0.95);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+/* 레거시 호환 */
+.clean-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.clean-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px 5px;
+    border-bottom: 1px solid #F5F5F5;
+}
+
+.item-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    padding-right: 10px;
+}
+
+.item-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #333;
+}
+
+.item-memo {
+    font-size: 13px;
+    color: #666;
+    background: #f9f9f9;
+    padding: 8px;
+    border-radius: 8px;
+    margin-top: 4px;
+}
+
+.item-date {
+    font-size: 11px;
+    color: #999;
+    margin-top: 2px;
+}
+
+.item-right {
+    text-align: right;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.item-amount {
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.item-amount.inc {
+    color: var(--success-green);
+}
+
+.item-amount.exp {
+    color: var(--danger-red);
 }

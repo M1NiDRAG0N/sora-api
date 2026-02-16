@@ -1,12 +1,25 @@
 <!-- 통일된 구조: 가계부 페이지 -->
 <div class="page-wrapper finance-page" th:fragment="div">
-    
-    <!-- [2] 콘텐츠 (스크롤 영역) -->
-    <div class="page-content">
-        <div class="net-worth-section">
-            <div class="net-worth-label">순자산</div>
-            <div class="net-worth-amount">1억 582만 3,000원</div>
-            <div class="net-worth-diff" id="netWorthMessage">어제보다 20억 줄었어요</div>
+        <div class="dashboard-card">
+        <div class="charts-row">
+            <div class="chart-col">
+                <div class="chart-title">Last Month</div>
+                <div class="chart-box">
+                    <canvas id="chartLast"></canvas>
+                    <div id="chartLastBox" class="chart-center-text">
+                        <span class="chart-center-value">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-col">
+                <div class="chart-title">This Month</div>
+                <div class="chart-box">
+                    <canvas id="chartThis"></canvas>
+                    <div id="chartThisBox" class="chart-center-text">
+                        <span class="chart-center-value">0</span>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="content-inner">
             <!-- 대시보드 -->
@@ -26,351 +39,596 @@
                     </div>
                 </div>
 
-                <div class="budget-header">한 달 지출 목표 금액</div>
-                <div class="budget-bar-wrap">
-                    <div class="bar-segment bg-red">68%</div>
-                    <div class="bar-segment bg-green">32%</div>
-                </div>
+        <div class="budget-header">한 달 지출 목표 금액</div>
+        <div class="budget-bar-wrap">
+            <div class="bar-segment bg-red">Wait</div>
+            <div class="bar-segment bg-green">Wait</div>
+        </div>
 
-                <div class="budget-info-container">
-                    <div class="budget-row">
-                        <div class="row-left"><span class="dot-bullet"></span> 예산</div>
-                        <div class="row-right">
-                            <div class="amount-text clickable budget-amount">2,500,000,000</div>
-                            <div class="sub-text">누르면 (설정 가능)</div>
-                        </div>
-                    </div>
-                    <div class="budget-row">
-                        <div class="row-left"><span class="dot-bullet"></span> 지출</div>
-                        <div class="row-right">
-                            <div class="amount-text clickable expense-amount">1,700,000,000</div>
-                        </div>
-                    </div>
+        <div class="budget-info-container">
+            <div class="budget-row">
+                <div class="row-left"><span class="dot-bullet"></span> 예산</div>
+                <div class="row-right">
+                    <div class="amount-text clickable budget-amount">0</div>
+                    <div class="sub-text">누르면 (설정 가능)</div>
                 </div>
             </div>
-
-            <!-- 달력 -->
-            <div class="calendar-sheet">
-                <div class="cal-header">
-                    <span class="cal-title toggle-calendar-view">January 2026</span>
-                </div>
-                <div id="calendarContainer" class="date-scroller"></div>
-            </div>
-
-            <!-- 거래 목록 -->
-            <div id="dayDetailSection" class="day-detail-section">
-                <div class="dd-header-date" id="ddDateTitle"></div>
-
-                <div class="dd-summary-row">
-                    <span class="dd-label">잔액보기</span>
-                    <span class="dd-count" id="ddCount">0건</span>
-                </div>
-
-                <div id="ddList"></div>
-
-                <div class="fab-edit open-modal">
-                    <ion-icon name="pencil"></ion-icon>
+            <div class="budget-row">
+                <div class="row-left"><span class="dot-bullet"></span> 한 달 지출 </div>
+                <div class="row-right">
+                    <div class="amount-text clickable expense-amount">0</div>
                 </div>
             </div>
-
-            <div style="height: 100px;"></div>
         </div>
     </div>
 
-    <!-- [3] 모달 레이어 (고정) -->
-    <div class="modal-layers">
-        <!-- 공용 오버레이 (배경) -->
-        <div class="modal-overlay"></div>
-        
-        <!-- 입출금 모달 -->
-        <div class="modal-container" id="writeModal">
-            <div class="modal-content">
-                <div class="modal-title">입출금</div>
+    <div class="calendar-sheet">
+        <div class="cal-header">
+            <button class="cal-nav-btn" id="btnPrevMonth">
+                <ion-icon name="chevron-back-outline"></ion-icon>
+            </button>
+            <span class="cal-title toggle-calendar-view" id="calTitle">Loading...</span>
+            <button class="cal-nav-btn" id="btnNextMonth">
+                <ion-icon name="chevron-forward-outline"></ion-icon>
+            </button>
+        </div>
+        <div id="calendarContainer" class="date-scroller"></div>
+    </div>
 
-                <div class="input-group">
-                    <label class="modal-label">카테고리</label>
-                    <div style="position:relative;">
-                        <select id="inpCategory" class="modal-input">
-                            <option value="식비">식비</option>
-                            <option value="교통비">교통비</option>
-                            <option value="쇼핑">쇼핑</option>
-                            <option value="월급">월급</option>
-                            <option value="용돈">용돈</option>
-                            <option value="기타">기타</option>
-                        </select>
-                    </div>
+    <div id="dayDetailSection" class="day-detail-section">
+        <div class="dd-header-date" id="ddDateTitle"></div>
+
+        <div class="dd-summary-row">
+            <span class="dd-label">잔액보기</span>
+            <span class="dd-count" id="ddCount">0건</span>
+        </div>
+
+        <div id="ddList"></div>
+
+        <div class="fab-edit open-modal">
+            <ion-icon name="pencil"></ion-icon>
+        </div>
+    </div>
+
+    <div class="bottom-spacer"></div>
+
+    <div id="writeModal" class="modal-overlaies">
+        <div class="modal-card">
+            <div class="modal-title">입출금</div>
+
+            <div class="input-group">
+                <label class="modal-label">카테고리</label>
+                <div class="input-relative">
+                    <select id="inpCategory" class="modal-input">
+                        <option value="월급">월급</option>
+                        <option value="식비">식비</option>
+                        <option value="교통비">교통비</option>
+                        <option value="쇼핑">쇼핑</option>
+                        <option value="경조사">경조사</option>
+                        <option value="저축">저축</option>
+                        <option value="기타">기타</option>
+                    </select>
                 </div>
+            </div>
 
+            <div>
                 <div class="row-inputs">
                     <div class="input-group sm">
-                        <label class="modal-label">구분</label>
-                        <select id="inpType" class="modal-input text-center">
-                            <option value="minus">-</option>
-                            <option value="plus">+</option>
+                        <label class="modal-label" for="inpType">입/출</label>
+                        <select id="inpType" class="modal-input input-center">
+                            <option value="plus">입금</option>
+                            <option value="minus">출금</option>
                         </select>
                     </div>
                     <div class="input-group lg">
                         <label class="modal-label">금액 (원)</label>
-                        <input type="number" id="inpAmount" class="modal-input" placeholder="0">
+                        <input type="text" id="inpAmount" class="modal-input" placeholder="0" inputmode="numeric">
                     </div>
                 </div>
 
-                <div class="input-group">
-                    <textarea id="inpMemo" class="modal-textarea" placeholder="내용을 입력하세요... (예: 친구에게 빌림)"></textarea>
+                <div class="check-group-wrapper">
+                    <div class="check-group">
+                        <input type="checkbox" id="inpFixed" class="check-input">
+                        <label for="inpFixed" class="check-label">매월 반복 (고정 지출)</label>
+                    </div>
+
+                    <div id="durationArea" class="duration-input-box" style="display: none;">
+                        <input type="number" id="inpDuration" class="modal-input small-input" value="12" min="1">
+                        <span class="duration-text">개월 동안</span>
+                    </div>
+                </div>
+                <div class="input-group mt-5">
+                    <textarea id="inpMemo" class="modal-textarea" placeholder="내용을 입력하세요..."></textarea>
                 </div>
 
-                <div class="modal-footer">
-                    <button class="modal-btn-save" onclick="finance.saveData()">입력</button>
-                    <button class="modal-close-btn" onclick="finance.closeModal()">닫기</button>
-                </div>
+                <button type="button" class="modal-btn">입력</button>
+                <div class="modal-close-btn">닫기</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="deleteModal" class="modal-overlaies">
+        <div class="modal-card" style="max-width: 300px; padding: 30px 20px;">
+            <div class="modal-title" style="color: var(--danger-red);">삭제 확인</div>
+            <p style="text-align: center; color: #666; font-size: 14px; margin: 10px 0 20px; line-height: 1.5;">
+                정말 이 내역을 삭제하시겠습니까?<br>삭제 후에는 복구할 수 없습니다.
+            </p>
+
+            <div style="display: flex; gap: 10px; width: 100%;">
+                <button type="button" class="modal-btn btn-secondary"
+                    style="background-color: #f1f2f6; color: #666; margin-top:0; box-shadow:none;"
+                    onclick="finance.closeDeleteModal()">취소</button>
+                <button type="button" class="modal-btn"
+                    style="background-color: var(--danger-red); color: white; margin-top:0;"
+                    onclick="finance.confirmDelete()">삭제</button>
             </div>
         </div>
     </div>
 
     <script>
         const finance = {
+            currentDate: new Date(),
             selectedDay: null,
             isGridView: false,
-            messageIndex: 0,
-            messages: [
-                '어제보다 20억 줄었어요',
-                '이번 달 저축이 잘되고 있어요!',
-                '목표까지 남은 금액: 1억원',
-                '지난주 지출이 늘었어요',
-                '평균보다 30% 많이 저축했어요'
-            ],
-            mockDB: {
-                1: [{ cat: '월급', amount: '5,000,000', type: 'plus', memo: '1월 급여 입금완료', time: '09:00' }, { cat: '통신비', amount: '60,000', type: 'minus', memo: '휴대폰 요금 자동이체', time: '13:00' }],
-                4: [{ cat: '카드대금', amount: '999,950', type: 'minus', memo: '신용카드 대금 결제', time: '15:30' }],
-                21: [{ cat: '코인 떡상!', amount: '999,999,999', type: 'plus', memo: '무슨 말이 필요해~~', time: '11:30' }],
-                25: [{ cat: '편의점', amount: '4,500', type: 'minus', memo: '커피, 삼각김밥', time: '08:20' }]
-            },
+            editingIndex: null,
+            editingId: null,
+            pendingDeleteId: null,
+            mockDB: {},
+
+            chartLast: null,
+            chartThis: null,
 
             init: () => {
                 finance.initCharts();
                 finance.evtHandler();
-                finance.renderScroller();
-                finance.startMessageRotation();
+                finance.updateHeader();
+                finance.loadData();
             },
 
-            evtHandler: () => {
-                document.querySelector('.toggle-calendar-view').addEventListener('click', () => finance.toggleCalendarView());
-                document.querySelector('.open-modal').addEventListener('click', () => finance.openModal());
-                document.querySelector('.budget-amount').addEventListener('click', () => finance.showBudgetAlert());
-                document.querySelector('.expense-amount').addEventListener('click', () => finance.showExpenseAlert());
-                document.querySelector('.modal-btn-save').addEventListener('click', () => finance.saveData());
-                document.querySelector('.modal-close-btn').addEventListener('click', () => finance.closeModal());
+            showToast: (message) => {
+                const oldToast = document.querySelector('.toast-box');
+                if (oldToast) oldToast.remove();
+
+                const toast = document.createElement('div');
+                toast.className = 'toast-box';
+                toast.innerHTML = message;
+                document.body.appendChild(toast);
+
+                requestAnimationFrame(() => { toast.classList.add('show'); });
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 400);
+                }, 2500);
+            },
+
+            loadData: () => {
+                fetch('/finance/list', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                    .then(response => response.json())
+                    .then(list => {
+                        const newDB = {};
+                        const curYear = finance.currentDate.getFullYear();
+                        const curMonth = finance.currentDate.getMonth() + 1;
+
+                        let thisMonthIncome = 0;
+                        let thisMonthExpense = 0;
+                        const thisMonthStats = {};
+                        let thisMonthChartTotal = 0;
+
+                        list.forEach(dto => {
+                            const amt = Number(dto.amount);
+                            const isPlus = (dto.type === 'plus' || dto.type === '+');
+                            const dateObj = new Date(dto.date);
+                            if (isNaN(dateObj)) return;
+
+                            const startY = dateObj.getFullYear();
+                            const startM = dateObj.getMonth() + 1;
+                            const d = dateObj.getDate();
+
+                            const isCurrentMonth = (startY === curYear && startM === curMonth);
+                            let isValidFixed = false;
+
+                            if (dto.isFixed) {
+                                const diffYear = curYear - startY;
+                                const diffMonth = curMonth - startM;
+                                const monthsPassed = (diffYear * 12) + diffMonth;
+                                let maxDuration = (dto.duration > 0) ? dto.duration : 999;
+
+                                if (monthsPassed >= 0 && monthsPassed < maxDuration) {
+                                    isValidFixed = true;
+                                }
+                            }
+
+                            if (isCurrentMonth || isValidFixed) {
+                                if (!newDB[d]) newDB[d] = [];
+                                newDB[d].push({
+                                    financeIdx: dto.financeIdx,
+                                    cat: dto.category,
+                                    amount: amt.toLocaleString(),
+                                    rawAmount: amt,
+                                    type: dto.type,
+                                    memo: dto.memo,
+                                    time: dto.time,
+                                    isFixed: dto.isFixed,
+                                    duration: dto.duration
+                                });
+
+                                if (isPlus) {
+                                    thisMonthIncome += amt;
+                                } else {
+                                    thisMonthExpense += amt;
+                                    if (!thisMonthStats[dto.category]) thisMonthStats[dto.category] = 0;
+                                    thisMonthStats[dto.category] += amt;
+                                    thisMonthChartTotal += amt;
+                                }
+                            }
+                        });
+
+                        finance.mockDB = newDB;
+
+                        const budgetAmtEl = document.querySelector('.budget-amount');
+                        const expenseAmtEl = document.querySelector('.expense-amount');
+                        const barRed = document.querySelector('.bar-segment.bg-red');
+                        const barGreen = document.querySelector('.bar-segment.bg-green');
+
+                        if (budgetAmtEl) budgetAmtEl.innerText = thisMonthIncome.toLocaleString();
+                        if (expenseAmtEl) {
+                            expenseAmtEl.innerText = thisMonthExpense > 0 ? `${thisMonthExpense.toLocaleString()}원` : "0원";
+                            expenseAmtEl.classList.add('text-red');
+                        }
+
+                        let usagePercent = thisMonthIncome > 0 ? (thisMonthExpense / thisMonthIncome) * 100 : (thisMonthExpense > 0 ? 100 : 0);
+                        if (usagePercent > 100) usagePercent = 100;
+                        const remainPercent = 100 - usagePercent;
+
+                        if (barRed) {
+                            barRed.style.width = `${usagePercent}%`;
+                            barRed.innerText = usagePercent > 5 ? `${Math.round(usagePercent)}% 씀` : '';
+                        }
+                        if (barGreen) {
+                            barGreen.style.width = `${remainPercent}%`;
+                            barGreen.innerText = remainPercent > 5 ? `${Math.round(remainPercent)}% 남음` : '';
+                        }
+
+                        if (finance.isGridView) finance.renderGrid();
+                        else finance.renderScroller();
+
+                        if (finance.selectedDay) finance.showDetails(finance.selectedDay);
+
+                        finance.updateCharts(list, thisMonthStats, thisMonthChartTotal);
+                    })
+                    .catch(error => console.error("에러:", error));
+            },
+
+            updateCharts: (list, thisStats, thisTotal) => {
+                const curDate = finance.currentDate;
+                const lastDate = new Date(curDate.getFullYear(), curDate.getMonth() - 1, 1);
+                const lastYear = lastDate.getFullYear();
+                const lastMonth = lastDate.getMonth() + 1;
+
+                const lastMonthStats = {};
+                let lastTotal = 0;
+
+                list.forEach(item => {
+                    if (item.type === 'plus' || item.type === '+') return;
+                    const dObj = new Date(item.date);
+                    if (isNaN(dObj)) return;
+                    const startY = dObj.getFullYear();
+                    const startM = dObj.getMonth() + 1;
+
+                    let isLastMonthTarget = (startY === lastYear && startM === lastMonth);
+
+                    if (item.isFixed) {
+                        const diffYear = lastYear - startY;
+                        const diffMonth = lastMonth - startM;
+                        const monthsPassedLast = (diffYear * 12) + diffMonth;
+                        let maxDuration = (item.duration > 0) ? item.duration : 999;
+
+                        if (monthsPassedLast >= 0 && monthsPassedLast < maxDuration) {
+                            isLastMonthTarget = true;
+                        }
+                    }
+
+                    if (isLastMonthTarget) {
+                        const amt = Number(item.amount);
+                        if (!lastMonthStats[item.category]) lastMonthStats[item.category] = 0;
+                        lastMonthStats[item.category] += amt;
+                        lastTotal += amt;
+                    }
+                });
+
+                const applyToChart = (chart, stats, totalVal, centerTextId) => {
+                    if (!chart) return;
+                    const labels = Object.keys(stats);
+                    const realData = Object.values(stats); // 실제 데이터 (텍스트 표시용)
+
+                    // [핵심] 차트 렌더링용 가짜 데이터 생성 (최소 2% 보장)
+                    const displayData = realData.map(val => {
+                        const percent = totalVal > 0 ? (val / totalVal) * 100 : 0;
+                        if (val > 0 && percent < 2) {
+                            return totalVal * 0.02; // 최소 2% 크기 확보
+                        }
+                        return val;
+                    });
+
+                    const box = document.getElementById(centerTextId);
+                    const initialLabel = "Total 지출";
+                    const initialValue = totalVal > 0 ? `${totalVal.toLocaleString()}원` : "0원";
+
+                    const renderCenterText = (label, value) => {
+                        box.innerHTML = `
+                            <span class="chart-center-label">${label}</span>
+                            <span class="chart-center-value">${value}</span>
+                        `;
+                    };
+
+                    renderCenterText(initialLabel, initialValue);
+
+                    chart.data.labels = labels.length > 0 ? labels : ['내역 없음'];
+                    chart.data.datasets[0].data = displayData.length > 0 ? displayData : [1];
+
+                    const colorMap = {
+                        '월급': '#2ecc71', '식비': '#ff7675', '교통비': '#fdcb6e',
+                        '쇼핑': '#a29bfe', '경조사': '#fab1a0', '저축': '#74b9ff', '기타': '#dfe6e9'
+                    };
+                    chart.data.datasets[0].backgroundColor = labels.length > 0
+                        ? labels.map(label => colorMap[label] || '#C9CBCF')
+                        : ['#E5E5E5'];
+
+                    chart.options.plugins.tooltip.enabled = false;
+                    chart.options.onHover = (event, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = chart.data.labels[index];
+                            // [중요] 실제 값을 보여줌 (realData)
+                            const value = realData[index];
+
+                            if (label !== '내역 없음') {
+                                renderCenterText(label, `${value.toLocaleString()}원`);
+                            }
+                        } else {
+                            renderCenterText(initialLabel, initialValue);
+                        }
+                    };
+                    chart.update();
+                };
+
+                applyToChart(finance.chartLast, lastMonthStats, lastTotal, 'chartLastBox');
+                applyToChart(finance.chartThis, thisStats, thisTotal, 'chartThisBox');
             },
 
             initCharts: () => {
                 Chart.register(ChartDataLabels);
-                const commonOpts = { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: { color: 'white', font: { weight: 'bold', size: 9 }, formatter: (v, c) => v > 15 ? c.chart.data.labels[c.dataIndex] : '' } }, elements: { arc: { borderWidth: 0 } } };
-                new Chart(document.getElementById('chartLast'), { type: 'doughnut', data: { labels: ['A', 'B'], datasets: [{ data: [70, 30], backgroundColor: ['#EF4444', '#10B981'] }] }, options: commonOpts });
-                new Chart(document.getElementById('chartThis'), { type: 'doughnut', data: { labels: ['A', 'B'], datasets: [{ data: [40, 60], backgroundColor: ['#3B82F6', '#F59E0B'] }] }, options: commonOpts });
+                const getCommonOpts = () => ({
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: { display: false } },
+                    elements: { arc: { borderWidth: 0 } }
+                });
+
+                if (document.getElementById('chartLast')) {
+                    finance.chartLast = new Chart(document.getElementById('chartLast'), {
+                        type: 'doughnut',
+                        data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
+                        options: getCommonOpts()
+                    });
+                }
+                if (document.getElementById('chartThis')) {
+                    finance.chartThis = new Chart(document.getElementById('chartThis'), {
+                        type: 'doughnut',
+                        data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
+                        options: getCommonOpts()
+                    });
+                }
             },
 
-            renderScroller: () => {
-                const calendarContainer = document.getElementById('calendarContainer');
-                const today = new Date();
-                const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+            evtHandler: () => {
+                const chkFixed = document.getElementById('inpFixed');
+                const durationArea = document.getElementById('durationArea');
+                const amtInput = document.getElementById('inpAmount'); // 금액 입력창
 
-                calendarContainer.innerHTML = '';
-                calendarContainer.className = 'date-scroller';
-                for (let i = -10; i <= 10; i++) {
-                    const d = new Date(today);
-                    d.setDate(today.getDate() + i);
-                    const num = d.getDate();
-                    const dayStr = dayNames[d.getDay()];
+                if (chkFixed && durationArea) {
+                    chkFixed.addEventListener('change', function () {
+                        if (this.checked) {
+                            durationArea.style.display = 'flex';
+                            document.getElementById('inpDuration').value = 12;
+                        } else {
+                            durationArea.style.display = 'none';
+                        }
+                    });
+                }
+
+                // [NEW] 금액 입력 시 실시간 콤마 적용
+                if (amtInput) {
+                    amtInput.addEventListener('input', function () {
+                        // 숫자 이외의 문자 제거
+                        let val = this.value.replace(/[^0-9]/g, '');
+                        if (val) {
+                            // 천 단위 콤마 포맷팅
+                            this.value = Number(val).toLocaleString();
+                        } else {
+                            this.value = '';
+                        }
+                    });
+                }
+
+                document.querySelector('.toggle-calendar-view').addEventListener('click', () => finance.toggleCalendarView());
+                document.querySelector('.open-modal').addEventListener('click', () => finance.openModal(null));
+                document.querySelector('.modal-btn').addEventListener('click', () => finance.saveData());
+                document.querySelector('.modal-close-btn').addEventListener('click', () => finance.closeModal());
+                document.getElementById('btnPrevMonth').addEventListener('click', () => { finance.changeMonth(-1); finance.loadData(); });
+                document.getElementById('btnNextMonth').addEventListener('click', () => { finance.changeMonth(1); finance.loadData(); });
+            },
+
+            changeMonth: (offset) => { finance.currentDate.setDate(1); finance.currentDate.setMonth(finance.currentDate.getMonth() + offset); finance.updateHeader(); },
+            updateHeader: () => { const options = { year: 'numeric', month: 'long' }; const dateStr = finance.currentDate.toLocaleDateString('en-US', options); document.getElementById('calTitle').innerText = dateStr; },
+            calcDaySummary: (day) => {
+                if (!finance.mockDB[day]) return { inc: 0, exp: 0 };
+                let inc = 0, exp = 0;
+                finance.mockDB[day].forEach(item => {
+                    const val = Number(String(item.amount).replace(/,/g, ''));
+                    if (item.type === 'plus' || item.type === '+') inc += val;
+                    else exp += val;
+                });
+                return { inc, exp };
+            },
+            renderScroller: () => {
+                const container = document.getElementById('calendarContainer');
+                const year = finance.currentDate.getFullYear(), month = finance.currentDate.getMonth();
+                const lastDay = new Date(year, month + 1, 0).getDate();
+                const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+                container.innerHTML = '';
+                container.className = 'date-scroller';
+                for (let i = 1; i <= lastDay; i++) {
+                    const d = new Date(year, month, i), summary = finance.calcDaySummary(i);
                     let moneyTag = '';
-                    if (finance.mockDB[num]) {
-                        const first = finance.mockDB[num][0];
-                        if (first.type === 'plus') moneyTag = `<span class="money-tag money-inc">+${first.amount}</span>`;
-                        else moneyTag = `<span class="money-tag money-exp">-${first.amount}</span>`;
-                    }
+                    if (summary.inc > 0) moneyTag += `<span class="money-tag money-inc">+${summary.inc.toLocaleString()}</span>`;
+                    if (summary.exp > 0) moneyTag += `<span class="money-tag money-exp">-${summary.exp.toLocaleString()}</span>`;
                     const el = document.createElement('div');
-                    el.className = `date-card ${i === 0 ? 'active' : ''}`;
-                    el.id = `day-card-${num}`;
-                    el.innerHTML = `<div style="font-size: 10px; color: #BBB; font-weight: 600; margin-bottom: 4px;">${dayStr}</div><div class="date-number">${num}</div><div style="height:12px">${moneyTag}</div>`;
-                    el.addEventListener('click', () => finance.showDetails(num));
-                    calendarContainer.appendChild(el);
+                    const isToday = new Date().toDateString() === d.toDateString();
+                    el.className = `date-card ${isToday ? 'active' : ''}`;
+                    el.id = `day-card-${i}`;
+                    el.innerHTML = `<div class="date-day-label">${dayNames[d.getDay()]}</div><div class="date-number">${i}</div><div class="date-money-space">${moneyTag}</div>`;
+                    el.addEventListener('click', () => finance.showDetails(i));
+                    container.appendChild(el);
                 }
                 setTimeout(() => {
-                    const active = document.querySelector('.date-card.active');
-                    if (active) calendarContainer.scrollLeft = active.offsetLeft - calendarContainer.clientWidth / 2 + active.clientWidth / 2;
-                }, 10);
+                    let activeEl = container.querySelector('.date-card.active');
+                    if (!activeEl) activeEl = document.getElementById('day-card-1');
+                    if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                }, 100);
             },
-
             renderGrid: () => {
-                const calendarContainer = document.getElementById('calendarContainer');
+                const container = document.getElementById('calendarContainer');
+                const year = finance.currentDate.getFullYear(), month = finance.currentDate.getMonth();
+                const firstDay = new Date(year, month, 1).getDay(), lastDay = new Date(year, month + 1, 0).getDate();
                 const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-
-                calendarContainer.innerHTML = '';
-                calendarContainer.className = 'calendar-grid';
-                let html = '<div class="grid-header-row">';
-                dayNames.forEach(d => html += `<div class="grid-header-cell">${d}</div>`);
-                html += '</div><div class="grid-dates-container">';
-                for (let i = 0; i < 3; i++) html += `<div class="grid-date-cell"></div>`;
-                for (let i = 1; i <= 31; i++) {
-                    let moneyHtml = '';
-                    if (finance.mockDB[i]) {
-                        const first = finance.mockDB[i][0];
-                        const cls = first.type === 'plus' ? 'money-inc' : 'money-exp';
-                        moneyHtml = `<div class="grid-money ${cls}">${first.type === 'plus' ? '+' : '-'} ${first.amount}</div>`;
-                    }
-                    html += `<div class="grid-date-cell" data-day="${i}"><div class="grid-date-num">${i}</div>${moneyHtml}</div>`;
+                const realToday = new Date();
+                container.innerHTML = ''; container.className = 'calendar-grid';
+                let html = '<div class="grid-header-row">' + dayNames.map(d => `<div class="grid-header-cell">${d}</div>`).join('') + '</div><div class="grid-dates-container">';
+                for (let i = 0; i < firstDay; i++) html += `<div class="grid-date-cell empty"></div>`;
+                for (let i = 1; i <= lastDay; i++) {
+                    const summary = finance.calcDaySummary(i);
+                    let moneyHtml = (summary.inc > 0 ? `<div class="grid-money inc">+${summary.inc.toLocaleString()}</div>` : '') + (summary.exp > 0 ? `<div class="grid-money exp">-${summary.exp.toLocaleString()}</div>` : '');
+                    const isToday = (year === realToday.getFullYear() && month === realToday.getMonth() && i === realToday.getDate());
+                    html += `<div class="grid-date-cell" data-day="${i}"><div class="grid-date-num ${isToday ? 'today' : ''}">${i}</div>${moneyHtml}</div>`;
                 }
-                html += '</div>';
-                calendarContainer.innerHTML = html;
-
-                // 그리드 셀 이벤트 핸들러 추가
-                document.querySelectorAll('.grid-date-cell').forEach(cell => {
-                    cell.addEventListener('click', () => {
-                        const day = parseInt(cell.getAttribute('data-day'));
-                        finance.showDetails(day);
-                    });
-                });
+                container.innerHTML = html + '</div>';
+                document.querySelectorAll('.grid-date-cell:not(.empty)').forEach(cell => cell.addEventListener('click', () => finance.showDetails(parseInt(cell.getAttribute('data-day')))));
             },
-
+            toggleCalendarView: () => { finance.isGridView = !finance.isGridView; if (finance.isGridView) finance.renderGrid(); else finance.renderScroller(); },
             showDetails: (day) => {
-                finance.selectedDay = day;
-
-                document.querySelectorAll('.date-card').forEach(e => e.classList.remove('active'));
-                const target = document.getElementById(`day-card-${day}`);
-                if (target) target.classList.add('active');
-
-                const detailSection = document.getElementById('dayDetailSection');
-                detailSection.style.display = 'block';
-
-                document.getElementById('ddDateTitle').innerText = `2026 January ${day}`;
-
-                const list = finance.mockDB[day] || [];
-                document.getElementById('ddCount').innerText = `${list.length}건`;
-
-                const listContainer = document.getElementById('ddList');
-                listContainer.innerHTML = '';
-
-                if (list.length === 0) {
-                    listContainer.innerHTML = '<div class="empty-msg">내역이 없습니다.</div>';
-                } else {
-                    list.forEach(item => {
-                        const div = document.createElement('div');
-                        div.className = 'dd-item';
-                        const colorClass = item.type === 'plus' ? 'plus' : 'minus';
-                        const icon = item.type === 'plus' ? 'caret-up' : 'caret-down';
-                        div.innerHTML = `
-                            <div class="dd-item-top">
-                                <span class="dd-title">${item.cat}</span>
-                                <span class="dd-amount ${colorClass}">
-                                    ${item.amount}
-                                    <ion-icon name="${icon}"></ion-icon>
-                                </span>
-                            </div>
-                            <div class="dd-memo-box">
-                                ${item.memo}
-                            </div>
-                            <div class="dd-time">${item.time}</div>
-                        `;
-                        listContainer.appendChild(div);
-                    });
-                }
+                finance.selectedDay = day; document.querySelectorAll('.date-card').forEach(e => e.classList.remove('active'));
+                const detailSection = document.getElementById('dayDetailSection'); detailSection.classList.add('active');
+                const dateStr = new Date(finance.currentDate.getFullYear(), finance.currentDate.getMonth(), day).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                document.getElementById('ddDateTitle').innerText = dateStr;
+                const list = finance.mockDB[day] || []; document.getElementById('ddCount').innerText = `${list.length}건`;
+                const listContainer = document.getElementById('ddList'); listContainer.innerHTML = '';
+                if (list.length === 0) listContainer.innerHTML = '<div class="empty-msg">내역이 없습니다.</div>';
+                else list.forEach((item, index) => {
+                    const div = document.createElement('div'); div.className = 'dd-item';
+                    const colorClass = item.type === 'plus' ? 'plus' : 'minus', sign = item.type === 'plus' ? '+' : '-';
+                    div.innerHTML = `<div class="dd-item-top"><span class="dd-title">${item.cat}${item.isFixed ? '<span class="badge-fixed">고정</span>' : ''} <span class="btn-edit-small" onclick="finance.openModal(${index})"><ion-icon name="pencil" class="icon-sm"></ion-icon></span><span class="btn-delete-small" onclick="finance.deleteData(${item.financeIdx})"><ion-icon name="trash-outline" class="icon-sm"></ion-icon></span></span><span class="dd-amount ${colorClass}">${sign} ${item.amount}</span></div><div class="dd-memo-box">${item.memo}</div><div class="dd-time">${item.time}</div>`;
+                    listContainer.appendChild(div);
+                });
                 detailSection.scrollIntoView({ behavior: 'smooth' });
             },
-
-            toggleCalendarView: () => {
-                finance.isGridView = !finance.isGridView;
-                if (finance.isGridView) finance.renderGrid();
-                else finance.renderScroller();
-            },
-
-            getOverlay: () => {
-                return document.querySelector('.modal-overlay');
-            },
-            
-            updateOverlay: () => {
-                const overlay = finance.getOverlay();
-                const hasActiveModal = document.querySelector('.modal-container.active');
-                if (overlay) {
-                    if (hasActiveModal) {
-                        overlay.classList.add('active');
-                    } else {
-                        overlay.classList.remove('active');
-                    }
-                }
-            },
-
-            openModal: () => {
-                if (typeof finance.selectedDay === 'undefined' || !finance.selectedDay) {
-                    alert("먼저 달력에서 날짜를 선택해주세요.");
+            openModal: (editIndex) => {
+                if (!finance.selectedDay) {
+                    finance.showToast("날짜를 먼저 선택해주세요! 📅");
                     return;
                 }
-                document.getElementById('inpAmount').value = '';
-                document.getElementById('inpMemo').value = '';
-                document.getElementById('writeModal').classList.add('active');
-                finance.updateOverlay();
-            },
+                finance.editingIndex = editIndex;
+                const chkFixed = document.getElementById('inpFixed'), durationArea = document.getElementById('durationArea'), inpDuration = document.getElementById('inpDuration');
+                if (editIndex !== null) {
+                    const item = finance.mockDB[finance.selectedDay][editIndex];
+                    finance.editingId = item.financeIdx;
+                    document.getElementById('inpCategory').value = item.cat;
+                    document.getElementById('inpType').value = item.type;
 
-            closeModal: () => {
-                document.getElementById('writeModal').classList.remove('active');
-                finance.updateOverlay();
+                    // [수정] 수정 시 기존 금액에 콤마 넣어서 보여주기
+                    document.getElementById('inpAmount').value = Number(String(item.amount).replace(/,/g, '')).toLocaleString();
+
+                    document.getElementById('inpMemo').value = item.memo;
+                    chkFixed.checked = item.isFixed;
+                    durationArea.style.display = item.isFixed ? 'flex' : 'none';
+                    inpDuration.value = item.duration || 12;
+                } else {
+                    finance.editingId = null;
+                    document.getElementById('inpCategory').value = '식비';
+                    document.getElementById('inpAmount').value = '';
+                    document.getElementById('inpMemo').value = '';
+                    chkFixed.checked = false;
+                    durationArea.style.display = 'none';
+                }
+                document.getElementById('writeModal').classList.add('active');
             },
+            closeModal: () => { document.getElementById('writeModal').classList.remove('active'); },
 
             saveData: () => {
-                const cat = document.getElementById('inpCategory').value;
-                const type = document.getElementById('inpType').value;
-                const amt = document.getElementById('inpAmount').value;
-                const memo = document.getElementById('inpMemo').value;
+                const cat = document.getElementById('inpCategory').value, type = document.getElementById('inpType').value, memo = document.getElementById('inpMemo').value, isFixed = document.getElementById('inpFixed').checked;
 
-                if (!amt) {
-                    alert("금액을 입력해주세요.");
+                // [수정] 저장할 때는 콤마를 제거하고 숫자로 변환
+                const rawAmtStr = document.getElementById('inpAmount').value.replace(/,/g, '');
+                const rawAmt = Number(rawAmtStr);
+
+                let duration = isFixed ? (parseInt(document.getElementById('inpDuration').value) || 12) : 0;
+
+                if (!rawAmtStr || rawAmt < 0) {
+                    finance.showToast("금액을 정확히 입력해주세요! 💸");
                     return;
                 }
+                const dateStr = `${finance.currentDate.getFullYear()}-${String(finance.currentDate.getMonth() + 1).padStart(2, '0')}-${String(finance.selectedDay).padStart(2, '0')}`;
+                const now = new Date(), timeStr = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
 
-                const now = new Date();
-                const timeStr = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
-
-                const newItem = {
-                    cat: cat,
-                    amount: Number(amt).toLocaleString(),
-                    type: type,
-                    memo: memo,
-                    time: timeStr
-                };
-
-                if (!finance.mockDB[finance.selectedDay]) finance.mockDB[finance.selectedDay] = [];
-                finance.mockDB[finance.selectedDay].unshift(newItem);
-
-                finance.showDetails(finance.selectedDay);
-                finance.closeModal();
+                fetch('/finance/write', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ financeIdx: finance.editingId, category: cat, amount: rawAmt, type: type, memo: memo, date: dateStr, time: timeStr, isFixed: isFixed, duration: duration })
+                }).then(res => {
+                    if (res.ok) {
+                        finance.showToast('저장되었습니다! 🎉');
+                        finance.closeModal();
+                        finance.loadData();
+                    } else {
+                        res.text().then(msg => finance.showToast('실패: ' + msg));
+                    }
+                }).catch(err => finance.showToast('서버 오류가 발생했습니다.'));
             },
 
-            showBudgetAlert: () => {
-                alert('기능 추가 예정입니다.');
+            showBudgetAlert: () => { finance.showToast('예산 설정 기능은 준비 중입니다 🚧'); },
+            showExpenseAlert: () => { finance.showToast('지출 상세 리포트는 준비 중입니다 📊'); },
+
+            deleteData: (id) => {
+                finance.pendingDeleteId = id;
+                document.getElementById('deleteModal').classList.add('active');
             },
 
-            showExpenseAlert: () => {
-                alert('기능 추가 예정입니다.');
+            closeDeleteModal: () => {
+                finance.pendingDeleteId = null;
+                document.getElementById('deleteModal').classList.remove('active');
             },
 
-            goToWrite: () => {
-                if (finance.selectedDay) {
-                    localStorage.setItem('selectedDate', finance.selectedDay);
-                }
-                location.href = 'detailswrite.html';
-            },
+            confirmDelete: () => {
+                if (!finance.pendingDeleteId) return;
 
-            startMessageRotation: () => {
-                const msgEl = document.getElementById('netWorthMessage');
-                if (!msgEl) return;
-                
-                setInterval(() => {
-                    finance.messageIndex = (finance.messageIndex + 1) % finance.messages.length;
-                    msgEl.style.opacity = '0.5';
-                    
-                    setTimeout(() => {
-                        msgEl.innerText = finance.messages[finance.messageIndex];
-                        msgEl.style.opacity = '0.95';
-                    }, 150);
-                }, 5000);
+                fetch('/finance/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ financeIdx: finance.pendingDeleteId })
+                })
+                    .then(res => {
+                        if (res.ok) {
+                            finance.showToast("삭제되었습니다. 🗑️");
+                            finance.closeDeleteModal();
+                            finance.loadData();
+                        } else {
+                            finance.showToast("삭제 실패!");
+                        }
+                    });
             }
         };
 

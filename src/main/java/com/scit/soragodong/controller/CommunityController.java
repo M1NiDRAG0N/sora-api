@@ -27,6 +27,7 @@ import com.scit.soragodong.service.CommunityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PutMapping;
 
 @Controller
 @Slf4j
@@ -34,25 +35,35 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class CommunityController {
     private final CommunityService cs;
 
+    // 커뮤니티 메인 조회
     @GetMapping("/community")
     public String communityPage(Model model) {
         model.addAttribute("currentUri", "/community");
-        int page = 0;
-        List<BoardDto> boardDtoList = cs.getBoardList10(page);
-        log.debug("{}", boardDtoList);
+        // int page = 0;
+        // String category = "ALL";
+        // String keyword = "";
+        // List<BoardDto> boardDtoList = cs.getBoardList10Sorted(page, category,
+        // keyword);
+        // log.debug("{}", boardDtoList);
 
-        model.addAttribute("boardDtoList", boardDtoList);
         return "common";
     }
 
-    @GetMapping("/community/list")
+    // 커뮤니티 메인 무한스크롤 비동기 조회
+    @GetMapping("/community/list") // POST -> GET으로 변경
     @ResponseBody
-    public List<BoardDto> getBoardListAll(@RequestParam(name = "page", defaultValue = "1") int page) {
-        log.info("AJAX 게시글 요청 페이지: {}", page);
-
-        return cs.getBoardList10(page);
+    public List<BoardDto> getBoardList(
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "category", required = false) String category,
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        log.info("페이지 {}", page);
+        log.info("카테고리 {}", category);
+        log.info("키워드 {}", keyword);
+        return cs.getBoardList10Sorted(page, category, keyword, userDetails.getUserIdx());
     }
 
+    // 글쓰기
     @PostMapping("/community/write")
     @ResponseBody
     public BoardDto write(@RequestPart("board") BoardDto boardDto,
@@ -65,21 +76,25 @@ public class CommunityController {
         return newBoardDto;
     }
 
+    // 상세보기 데이터 불러오기
     @GetMapping("/community/view/{boardIdx}")
     @ResponseBody
-    public BoardDto view(@PathVariable("boardIdx") Integer boardIdx) {
+    public BoardDto view(@PathVariable("boardIdx") Integer boardIdx,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         log.info("상세보기 index {}", boardIdx);
 
-        BoardDto boardDto = cs.getBoardOne(boardIdx);
+        BoardDto boardDto = cs.getBoardOne(boardIdx, userDetails.getUserIdx());
         return boardDto;
     }
 
+    // 커뮤니티 파일 불러오기
     @GetMapping("/community/files/{boardIdx}")
     @ResponseBody
     public List<FileRes> getBoardFiles(@PathVariable("boardIdx") Integer boardIdx) {
         return cs.getBoardFiles(boardIdx);
     }
 
+    // 댓글 리스트 조회
     @GetMapping("/community/reply/{boardIdx}")
     @ResponseBody
     public List<BoardReplyDto> reply(@PathVariable("boardIdx") Integer boardIdx) {
@@ -89,6 +104,7 @@ public class CommunityController {
         return replyList;
     }
 
+    // 댓글 작성
     @PostMapping("/community/reply/{boardIdx}")
     @ResponseBody
     public BoardReplyDto writeReply(@PathVariable("boardIdx") Integer boardIdx,
@@ -111,6 +127,18 @@ public class CommunityController {
         return boardReplyDto;
     }
 
+    // 댓글 하나만 불러오기
+    @GetMapping("/community/replyOne/{replyIdx}")
+    @ResponseBody
+    public BoardReplyDto readReplyOneForUpdate(@PathVariable("replyIdx") Integer replyIdx) {
+        log.info("댓글 수정 replyIdx {}", replyIdx);
+
+        BoardReplyDto boardReplyDto = cs.getReplyOne(replyIdx);
+        log.info("view로 보내기 전 dto 확인 {}", boardReplyDto);
+        return boardReplyDto;
+    }
+
+    // 게시글 삭제
     @DeleteMapping("/community/delete/{boardIdx}")
     public ResponseEntity<ApiResponse<?>> delete(@PathVariable("boardIdx") Integer boardIdx) {
         log.info("삭제 요청 boardIdx: {}", boardIdx);
@@ -120,6 +148,59 @@ public class CommunityController {
 
         // 성공 시 응답 (ApiResponse 사용)
         return ResponseEntity.ok(ApiResponse.success("게시글이 삭제되었습니다."));
+    }
+
+    // 댓글 삭제
+    @DeleteMapping("/community/deleteReply/{replyIdx}")
+    public ResponseEntity<ApiResponse<?>> deleteReply(@PathVariable("replyIdx") Integer replyIdx) {
+        log.info("삭제 요청 replyIdx: {}", replyIdx);
+
+        cs.replyDelete(replyIdx);
+
+        // 성공 시 응답 (ApiResponse 사용)
+        return ResponseEntity.ok(ApiResponse.success("댓글이 삭제되었습니다."));
+    }
+
+    // 댓글 수정
+    @PutMapping("/community/reply/update/{replyIdx}")
+    public ResponseEntity<ApiResponse<?>> putMethodName(@PathVariable("replyIdx") Integer replyIdx,
+            @RequestBody BoardReplyDto boardReplyDto) {
+        log.info("댓글 수정 요청 replyIdx: {}", replyIdx);
+        log.info("댓글 수정 요청 boardReplydto: {}", boardReplyDto);
+
+        cs.replyUpdate(replyIdx, boardReplyDto.replyContent());
+
+        return ResponseEntity.ok(ApiResponse.success("댓글이 수정되었습니다."));
+    }
+
+    @PutMapping("/community/edit")
+    public ResponseEntity<ApiResponse<?>> editPost(
+            @RequestPart("board") BoardDto boardDto,
+            @RequestPart(value = "newFiles", required = false) List<MultipartFile> newFiles,
+            @RequestPart(value = "deleteFileIdxs", required = false) List<Integer> deleteFileIdxs,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        log.info("수정 요청: {}", boardDto);
+        log.info("삭제할 파일 ID 목록: {}", deleteFileIdxs);
+        log.info("새로 추가할 파일 개수: {}", (newFiles != null ? newFiles.size() : 0));
+
+        // 서비스 호출
+        cs.updateBoard(boardDto, newFiles, deleteFileIdxs, userDetails.getUserIdx());
+
+        return ResponseEntity.ok(ApiResponse.success("수정 성공"));
+    }
+
+    @GetMapping("/community/like/{boardIdx}")
+    @ResponseBody
+    public ResponseEntity<ApiResponse<?>> getMethodName(@PathVariable("boardIdx") Integer boardIdx,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        log.info("좋아요 boardIdx 확인 {}", boardIdx);
+        log.info("좋아요 userIdx 확인 {}", userDetails.getUserIdx());
+        Integer userIdx = userDetails.getUserIdx();
+
+        cs.addLike(boardIdx, userIdx);
+
+        return ResponseEntity.ok(ApiResponse.success("좋아요 성공"));
     }
 
 }
