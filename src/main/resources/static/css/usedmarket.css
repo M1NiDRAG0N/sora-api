@@ -618,12 +618,9 @@
 
 .usedmarket-page .modal-keyword .keyword-input-row {
     display: flex;
+    flex-direction: column;
     gap: 8px;
     margin-bottom: 20px;
-}
-
-.usedmarket-page .modal-keyword .keyword-input-row .input-box-styled {
-    flex: 1;
 }
 
 .usedmarket-page .modal-keyword .keyword-input-row .btn-primary {

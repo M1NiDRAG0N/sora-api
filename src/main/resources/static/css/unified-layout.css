@@ -182,7 +182,7 @@
 /* ▼ 모달 컨테이너 (개별 모달) */
 .page-wrapper .modal-container {
     position: fixed;
-    right: 0;
+    left: 50%;
     top: 0;
     bottom: 0;
     z-index: 1000;
@@ -199,7 +199,7 @@
 }
 
 .page-wrapper .modal-container.active {
-    transform: translateX(0);
+    transform: translate(-50%, 0);
     pointer-events: auto;
     opacity: 1;
 }
