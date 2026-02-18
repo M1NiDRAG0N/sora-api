@@ -29,7 +29,8 @@ public enum ErrorCode {
     REQUIRED_VALUE_MISSING(400, "필수 입력값이 누락되었습니다."),
 
     // ===== 공통 =====
-    INTERNAL_ERROR(500, "시스템 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    INTERNAL_ERROR(500, "시스템 오류가 발생했습니다. 잠시 후 다시 시도해주세요."),
+    NOT_FOUND(404, "요청한 리소스를 찾을 수 없습니다.");
 
     private final int status;
     private final String message;

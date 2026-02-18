@@ -1,5 +1,8 @@
 package com.scit.soragodong.domain.response;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.scit.soragodong.exception.ErrorCode;
 
 import lombok.AllArgsConstructor;
@@ -16,6 +19,9 @@ public class ApiResponse<T> {
     private int status;
     private String message;
     private T data;
+    
+    @Builder.Default
+    private Map<String, Object> detail = new HashMap<>();
     
     /**
      * 성공 응답
@@ -57,6 +63,27 @@ public class ApiResponse<T> {
             .status(errorCode.getStatus())
             .message(errorCode.getMessage())
             .build();
+    }
+    
+    /**
+     * 상세 정보 추가
+     * @param key 키
+     * @param value 값
+     * @return ApiResponse (체이닝 가능)
+     */
+    public ApiResponse<T> addDetail(String key, Object value) {
+        this.detail.put(key, value);
+        return this;
+    }
+    
+    /**
+     * 여러 상세 정보 추가
+     * @param details 상세 정보 맵
+     * @return ApiResponse (체이닝 가능)
+     */
+    public ApiResponse<T> addDetails(Map<String, Object> details) {
+        this.detail.putAll(details);
+        return this;
     }
     
     /**

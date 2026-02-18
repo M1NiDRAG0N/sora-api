@@ -20,8 +20,12 @@
 .finance-page {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 0;
     padding-bottom: 100px;
+    -webkit-overflow-scrolling: touch;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 /* ===================================================================
