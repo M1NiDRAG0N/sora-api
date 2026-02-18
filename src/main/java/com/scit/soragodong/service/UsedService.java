@@ -144,7 +144,11 @@ public class UsedService {
         // 판매자 정보 조회
         Users seller = userRepository.findById(used.getCreatedUser()).orElse(null);
 
-        return UsedDetailRes.from(used, images, likeCount, isLiked, seller, 0);
+        // 작성자 여부
+        boolean isOwner = currentUserId != null &&
+                currentUserId.equals(used.getCreatedUser());
+
+        return UsedDetailRes.from(used, images, likeCount, isLiked, isOwner, seller, 0);
     }
 
     /**

@@ -89,9 +89,18 @@
                         <ion-icon name="chevron-back"></ion-icon>
                     </button>
                     <div>상세보기</div>
-                    <button type="button" class="modal-close-btn">
-                        <ion-icon name="ellipsis-horizontal"></ion-icon>
-                    </button>
+                    <div class="detail-option-wrapper">
+                        <button type="button" class="detail-option-btn">
+                            <ion-icon name="ellipsis-horizontal"></ion-icon>
+                        </button>
+                        <div class="custom-dropdown-menu hide" id="ownerMenu">
+                            <button class="menu-item edit-post-btn">게시글 수정</button>
+                            <button class="menu-item danger delete-post-btn">게시글 삭제</button>
+                        </div>
+                        <div class="custom-dropdown-menu hide" id="guestMenu">
+                            <button class="menu-item danger report-post-btn">신고하기</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="modal-view-body">
@@ -278,6 +287,26 @@
                 // 모달 닫기 버튼
                 document.querySelectorAll('.modal-close-btn').forEach(btn => {
                     btn.addEventListener('click', () => this.closeAllModals());
+                });
+
+                // 상세 옵션 드롭다운 토글
+                document.querySelector('.detail-option-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const ownerMenu = document.getElementById('ownerMenu');
+                    const guestMenu = document.getElementById('guestMenu');
+                    if (this.currentIsOwner) {
+                        ownerMenu.classList.toggle('hide');
+                        guestMenu.classList.add('hide');
+                    } else {
+                        guestMenu.classList.toggle('hide');
+                        ownerMenu.classList.add('hide');
+                    }
+                });
+
+                // 드롭다운 외부 클릭 시 닫기
+                document.addEventListener('click', () => {
+                    document.getElementById('ownerMenu').classList.add('hide');
+                    document.getElementById('guestMenu').classList.add('hide');
                 });
 
                 // 검색 기능
@@ -539,8 +568,9 @@
                     heartIcon.style.color = data.isLiked ? '#ff6b6b' : '';
                 }
 
-                // 현재 상품 ID 저장 (좋아요 등에 사용)
+                // 현재 상품 ID 및 작성자 여부 저장
                 this.currentUsedIdx = data.usedIdx;
+                this.currentIsOwner = data.isOwner || false;
             },
             
             closeViewModal: function() {
