@@ -68,4 +68,9 @@ public class Board extends BaseEntity {
     public void increaseLike() {
         this.likeCount++;
     }
+
+    // 조회수 증가 메서드
+    public void increaseViewCount() {
+        this.viewCount++;
+    }
 }

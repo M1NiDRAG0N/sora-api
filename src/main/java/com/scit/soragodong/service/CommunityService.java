@@ -416,4 +416,11 @@ public class CommunityService {
         board.increaseLike();
     }
 
+    @Transactional
+    public void incrementViewCount(Integer boardIdx) {
+        Board board = br.findById(boardIdx)
+                .orElseThrow(() -> new CustomException(ErrorCode.BOARD_NOT_FOUND));
+        board.increaseViewCount();
+    }
+
 }
