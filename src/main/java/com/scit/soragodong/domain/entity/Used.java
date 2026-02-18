@@ -46,6 +46,12 @@ public class Used extends BaseEntity {
     @Column(name = "TRADING_LOC", length = 500)
     private String tradingLoc;
 
+    @Column(name = "TRADING_LAT")
+    private Double tradingLat;
+
+    @Column(name = "TRADING_LNG")
+    private Double tradingLng;
+
     @Column(name = "VIEW_COUNT")
     private Integer viewCount;
 
