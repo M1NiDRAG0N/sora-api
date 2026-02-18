@@ -1,236 +1,393 @@
-<div id="profileLayer" class="page-layer profile-layer" th:fragment="div">
-    <link rel="stylesheet" href="/css/profile.css">
+<div th:fragment="div" id="profile-layer" class="profile-layer">
 
-    <header class="profile-header">
-        <!-- 뒤로가기: 레이어 닫기 -->
-        <div class="icon-btn" onclick="Profile.close()"><ion-icon name="chevron-back"></ion-icon></div>
-        <div class="header-title" id="profile-page-title">내 프로필</div>
-        <div class="icon-btn" id="profile-header-right-icon"><ion-icon name="settings-outline"></ion-icon></div>
-    </header>
-
-    <div class="profile-scroll-content">
-        <div class="profile-info">
-            <img src="" class="profile-img" id="profile-user-img">
-            <div class="profile-text">
-                <div class="profile-user-name" id="profile-user-name"></div>
-                <div class="user-desc" id="profile-user-email"></div>
+    <div class="app-container" style="background: transparent; box-shadow: none;">
+        <!-- Header -->
+        <header class="profile-header">
+            <button class="profile-icon-btn" onclick="ProfileApp.close()">
+                <ion-icon name="chevron-back"></ion-icon>
+            </button>
+            <div class="profile-header-title" id="profile-title">내 프로필</div>
+            <div class="profile-icon-btn" id="profile-header-right-icon">
+                <ion-icon name="settings-outline"></ion-icon>
             </div>
-        </div>
+        </header>
 
-        <div class="stats-box" id="profile-stats-box">
-            <!-- 자바스크립트로 렌더링 -->
-        </div>
-
-        <button class="profile-action-btn edit" id="profile-main-btn" onclick="alert('프로필 수정 기능은 준비중입니다.')">프로필 수정</button>
-
-        <div class="manner-card">
-            <div class="manner-header">
-                <span>매너 점수</span>
-                <span class="manner-score" id="profile-manner-val">0°C</span>
+        <div class="profile-scroll-content">
+            <!-- Profile Info -->
+            <div class="profile-info-section">
+                <img src="/images/default-profile.png" class="profile-img" id="profile-user-img">
+                <div class="profile-text-group">
+                    <div class="profile-user-name" id="profile-user-name">Loading...</div>
+                    <div class="profile-user-desc" id="profile-user-desc">...</div>
+                </div>
             </div>
-            <div class="progress-bg">
-                <div class="progress-bar" id="profile-manner-bar" style="width: 0%;"></div>
-            </div>
-        </div>
 
-        <div id="profile-dynamic-area" class="dynamic-content"></div>
+            <!-- Stats Box -->
+            <div class="profile-stats-box" id="profile-stats-box">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Action Button -->
+            <button class="profile-action-btn edit" id="profile-main-btn" onclick="alert('준비중입니다.')">프로필 수정</button>
+
+            <!-- Manner Score -->
+            <div class="profile-manner-card">
+                <div class="profile-manner-header">
+                    <span>매너 점수</span>
+                    <span class="profile-manner-score" id="profile-manner-val">0°C</span>
+                </div>
+                <div class="profile-progress-bg">
+                    <div class="profile-progress-bar" id="profile-manner-bar" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <!-- Dynamic Content List -->
+            <div id="profile-dynamic-area" class="profile-dynamic-content"></div>
+
+        </div>
     </div>
-    
+
     <script>
-        const Profile = {
-            currentTab: 'posts', // posts, comments, likes
-            currentSubTab: 'community', // market, community (기본값을 커뮤니티로 변경)
-            cachedPosts: [], // 작성한 글 목록 캐싱용
+        /**
+         * 프로필 모달 기능을 담당하는 메인 객체
+         * - 상태 관리 (data, currentTab, subTab)
+         * - UI 제어 (open, close, render)
+         * - 데이터 통신 (loadData)
+         */
+        const ProfileApp = {
+            data: null,            // 서버에서 받아온 프로필 데이터 저장소
+            currentTab: 'posts',   // 현재 선택된 메인 탭 (posts: 작성글, comments: 댓글, likes: 좋아요)
+            subTab: 'community',   // 현재 선택된 서브 탭 (market: 중고거래, community: 커뮤니티)
 
-            open: async () => {
-                try {
-                    const data = await API.get('/profile/my');
-                    Profile.renderHeader(data);
-                    Profile.changeTab('posts'); // 기본 탭 로딩
-                    document.getElementById('profileLayer').classList.add('active');
-                } catch (e) {
-                    console.error(e);
-                    // alert('프로필 정보를 불러오는데 실패했습니다.');
+            /**
+             * 프로필 모달 열기
+             * @param {number|null} targetUserIdx - 조회할 유저의 ID (null이면 내 프로필 조회)
+             */
+            open: async (targetUserIdx = null) => {
+                const layer = document.getElementById('profile-layer');
+                layer.style.display = 'flex'; // 모달을 화면에 표시 (flex layout)
+
+                // 강제 리플로우 (Reflow): 브라우저가 변경된 스타일을 인지하고 애니메이션을 시작하도록 함
+                void layer.offsetWidth;
+                layer.classList.add('active'); // CSS 트랜지션 효과 실행
+
+                // History API 사용: 브라우저 뒤로가기 버튼 처리
+                // 현재 상태가 이미 프로필 모달 상태가 아닐 경우에만 새로운 상태를 푸시
+                if (!history.state || history.state.modal !== 'profile') {
+                    history.pushState({ modal: 'profile', userIdx: targetUserIdx }, 'Profile', '');
                 }
+
+                // 뒤로가기 이벤트 핸들러 등록 (popstate)
+                window.onpopstate = function (event) {
+                    // 만약 다른 모달(예: 게시글 상세 ViewForm)이 떠 있다면 그 모달을 먼저 닫음
+                    const viewForm = document.querySelector('#viewForm');
+                    if (viewForm && viewForm.classList.contains('active')) {
+                        if (typeof CommunityView !== 'undefined') CommunityView.closeView();
+                        return;
+                    }
+
+                    // 프로필 모달이 열려있는 상태라면 프로필을 닫음
+                    if (layer.classList.contains('active')) {
+                        ProfileApp.close();
+                    }
+                };
+
+                // 서버로부터 프로필 데이터 로딩 시작
+                await ProfileApp.loadData(targetUserIdx);
             },
 
+            /**
+             * 프로필 모달 닫기
+             * - 애니메이션과 함께 닫히며, 상태를 초기화함
+             */
             close: () => {
-                document.getElementById('profileLayer').classList.remove('active');
+                const layer = document.getElementById('profile-layer');
+                layer.classList.remove('active'); // 화면에서 사라지는 애니메이션 시작
+                layer.classList.add('closing');   // 닫힘 전용 스타일(필요시) 추가
+
+                // 애니메이션 시간(0.3초) 후 실제 display: none 처리 및 초기화
+                setTimeout(() => {
+                    layer.style.display = 'none';
+                    layer.classList.remove('closing');
+
+                    // 탭 상태를 기본값으로 초기화
+                    ProfileApp.currentTab = 'posts';
+                    ProfileApp.subTab = 'community';
+
+                    // 데이터 및 UI 초기화 (이전 사용자의 정보가 남지 않도록)
+                    ProfileApp.reset();
+
+                }, 300);
             },
 
-            renderHeader: (data) => {
-                const imgUrl = data.profileIdx ? `/images/profiles/${data.profileIdx}.png` : '/images/default-profile.png';
-                document.getElementById('profile-user-img').src = imgUrl;
-                document.getElementById('profile-user-name').innerText = data.userNickname;
-                document.getElementById('profile-user-email').innerText = data.userEmail;
+            /**
+             * 데이터 및 UI 초기화
+             * - 모달을 닫거나 새로 열 때 이전 데이터를 깨끗이 비움
+             */
+            reset: () => {
+                // 1. 내부 데이터 변수 초기화
+                ProfileApp.data = null;
+                ProfileApp.currentTab = 'posts';
+                ProfileApp.subTab = 'community';
 
-                // 매너점수
-                const score = data.mannerScore || 36.5;
-                document.getElementById('profile-manner-val').innerText = score + "°C";
-                document.getElementById('profile-manner-bar').style.width = score + "%"; // 100점 만점 기준
+                // 2. 화면의 텍스트와 이미지 초기화
+                document.getElementById('profile-user-name').innerText = ''; // 닉네임 비우기
+                document.getElementById('profile-user-desc').innerText = ''; // 소개글 비우기
+                // 이미지는 기본 이미지로 되돌려 로딩 중 깜빡임 방지
+                document.getElementById('profile-user-img').src = '/images/default-profile.png';
 
-                // 통계 박스 (탭 버튼 역할) - 클래스명 변경 반영 (stat-item -> profile-stat-item 등)
-                const statsBox = document.getElementById('profile-stats-box');
-                statsBox.innerHTML = `
-                    <div class="profile-stat-item" onclick="Profile.changeTab('posts')" id="tab-posts">
-                        <div class="profile-stat-label">작성한 글</div>
-                        <div class="profile-stat-value">${data.postCount}</div>
-                    </div>
-                    <div class="profile-stat-item" onclick="Profile.changeTab('comments')" id="tab-comments">
-                        <div class="profile-stat-label">작성한 댓글</div>
-                        <div class="profile-stat-value">${data.commentCount}</div>
-                    </div>
-                    <div class="profile-stat-item" onclick="Profile.changeTab('likes')" id="tab-likes">
-                        <div class="profile-stat-label">좋아요</div>
-                        <div class="profile-stat-value">${data.likeCount}</div>
-                    </div>
-                `;
+                // 3. 매너 온도 및 게이지 초기화
+                document.getElementById('profile-manner-val').innerText = '0°C';
+                document.getElementById('profile-manner-bar').style.width = '0%';
+
+                // 4. 통계 박스와 리스트 영역 비우기
+                document.getElementById('profile-stats-box').innerHTML = '';
+                document.getElementById('profile-dynamic-area').innerHTML = '';
             },
 
-            changeTab: async (tab) => {
-                Profile.currentTab = tab;
-                Profile.currentSubTab = 'community'; // 탭 변경 시 기본을 커뮤니티로 설정
-
-                // 탭 활성화 UI 처리 - 클래스명 변경 반영
-                document.querySelectorAll('.profile-stat-item').forEach(el => el.classList.remove('active'));
-                const activeTab = document.getElementById(`tab-${tab}`);
-                if (activeTab) activeTab.classList.add('active');
-
-                // 리스트 불러오기
-                const container = document.getElementById('profile-dynamic-area');
-                container.innerHTML = '<div style="text-align:center; padding:20px;">로딩중...</div>';
-
+            /**
+             * 서버에서 프로필 데이터 가져오기
+             * @param {number} userIdx - 대상 유저 ID (없으면 내 프로필)
+             */
+            loadData: async (userIdx) => {
                 try {
-                    let list = [];
-                    if (tab === 'posts') {
-                        list = await API.get('/profile/posts');
-                        Profile.cachedPosts = list; // 캐싱
+                    // API 엔드포인트 설정
+                    let url = '/profile/api/me'; // 기본: 내 프로필
+                    if (userIdx) {
+                        url = `/profile/api/${userIdx}`; // 타인 프로필
                     }
-                    else if (tab === 'comments') list = await API.get('/profile/comments');
-                    else if (tab === 'likes') list = await API.get('/profile/likes');
 
-                    Profile.renderList(list, tab);
+                    // 비동기 요청 (Fetch API)
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error("Failed to load profile");
+
+                    // 응답 JSON 파싱 및 데이터 저장
+                    const data = await res.json();
+                    ProfileApp.data = data;
+
+                    // 데이터를 기반으로 화면 렌더링
+                    ProfileApp.render();
+
                 } catch (e) {
                     console.error(e);
-                    container.innerHTML = '<div style="text-align:center; padding:20px;">데이터를 불러오지 못했습니다.</div>';
+                    alert("프로필 정보를 불러올 수 없습니다.");
+                    ProfileApp.close(); // 에러 발생 시 모달 닫기
                 }
             },
 
-            // 서브탭 필터링 (작성한 글 전용)
-            filterPosts: (subTab) => {
-                Profile.currentSubTab = subTab;
-                Profile.renderList(Profile.cachedPosts, 'posts');
-            },
+            /**
+             * 화면 렌더링 (View Update)
+             * - 받아온 데이터를 HTML 요소에 반영
+             */
+            render: () => {
+                const data = ProfileApp.data;
+                const isMe = data.myProfile; // 본인 여부 확인 (Backend DTO: boolean myProfile)
 
-            renderList: (list, tab) => {
-                const container = document.getElementById('profile-dynamic-area');
-                
-                let html = '';
-                // 제목 표시
-                const titles = { posts: '작성한 글 목록', comments: '내가 쓴 댓글', likes: '좋아요 목록' };
-                html += `<div class="profile-section-title">${titles[tab]}</div>`;
+                // 1. 기본 정보 바인딩 (이름, 소개, 이미지)
+                document.getElementById('profile-title').innerText = isMe ? "내 프로필" : "프로필";
+                document.getElementById('profile-user-name').innerText = data.nickname;
+                document.getElementById('profile-user-desc').innerText = data.description || "소개글이 없습니다.";
+                document.getElementById('profile-user-img').src = data.profileImg || "/images/default-profile.png";
 
-                // 작성한 글(posts)일 경우 서브 탭 표시
-                if (tab === 'posts') {
-                    const mkActive = Profile.currentSubTab === 'market' ? 'active' : '';
-                    const cmActive = Profile.currentSubTab === 'community' ? 'active' : '';
-                    
-                    html += `
-                        <div class="sub-tabs">
-                            <button class="sub-tab-btn ${mkActive}" onclick="Profile.filterPosts('market')">중고거래</button>
-                            <button class="sub-tab-btn ${cmActive}" onclick="Profile.filterPosts('community')">커뮤니티</button>
-                        </div>
-                    `;
+                // 2. 매너 온도 시각화 (0~100%)
+                const score = data.mannerScore || 36;
+                document.getElementById('profile-manner-val').innerText = score + "°C";
+                document.getElementById('profile-manner-bar').style.width = Math.min(score, 100) + "%";
 
-                    // 필터링 로직
-                    if (Profile.currentSubTab === 'market') {
-                        // 중고거래: 아직 기능 없음 -> 빈 리스트
-                        list = [];
-                    } else {
-                        // 커뮤니티: 모든 작성 글 표시
-                        // list = list; (그대로 유지)
-                    }
+                // 3. 우측 상단 아이콘 및 메인 버튼 상태 분기 (본인 vs 타인)
+                const rightIcon = document.getElementById('profile-header-right-icon');
+                const mainBtn = document.getElementById('profile-main-btn');
+
+                if (isMe) {
+                    // 본인일 경우: 설정 아이콘, 프로필 수정 버튼
+                    rightIcon.innerHTML = '<ion-icon name="settings-outline"></ion-icon>';
+                    mainBtn.innerText = "프로필 수정";
+                    mainBtn.className = "profile-action-btn edit";
+                    mainBtn.onclick = () => alert("준비중입니다.");
+                } else {
+                    // 타인일 경우: 더보기 아이콘, 채팅하기 버튼
+                    rightIcon.innerHTML = '<ion-icon name="ellipsis-vertical"></ion-icon>';
+                    mainBtn.innerText = "1:1 채팅하기";
+                    mainBtn.className = "profile-action-btn";
+                    mainBtn.onclick = () => alert("준비중입니다.");
                 }
 
-                if (!list || list.length === 0) {
-                    let emptyMsg = '내역이 없습니다.';
-                    if (tab === 'posts' && Profile.currentSubTab === 'market') {
-                        emptyMsg = '중고거래 내역이 없습니다. (준비중)';
-                    }
-                    html += `<div style="text-align:center; padding: 40px; color:#aaa; font-size:13px;">${emptyMsg}</div>`;
-                    container.innerHTML = html;
-                    return;
-                }
+                // 4. 통계 탭(작성글, 댓글, 좋아요) 렌더링
+                const statsBox = document.getElementById('profile-stats-box');
+                let statsHtml = '';
 
-                list.forEach(item => {
-                    // 카테고리 뱃지 색상 결정
-                    let badgeClass = 'comm';
-                    let badgeText = item.boardCategory || '기타';
-                    
-                    if (tab === 'comments') {
-                        badgeClass = 'comm';
-                        badgeText = '댓글';
-                    }
+                // 탭 구성 정보
+                const tabs = [
+                    { key: 'posts', label: '작성한 글', value: data.postCount, active: true }, // 누구나 볼 수 있음
+                    { key: 'comments', label: '작성한 댓글', value: data.commentCount, active: isMe }, // 본인만 확인 가능
+                    { key: 'likes', label: '좋아요 목록', value: data.likeCount, active: isMe } // 본인만 확인 가능
+                ];
 
-                    if (tab === 'comments') {
-                        // 댓글인 경우
-                        html += `
-                            <div class="profile-list-item" onclick="Profile.moveToPost(${item.boardIdx})">
-                                <div class="profile-list-thumb" style="display:flex;align-items:center;justify-content:center;color:#ccc;font-size:24px;background:#eee;">
-                                    <ion-icon name="chatbubble-outline"></ion-icon>
-                                </div>
-                                <div class="profile-list-info">
-                                    <div class="profile-list-title"><span class="badge ${badgeClass}">${badgeText}</span> ${item.replyContent}</div>
-                                    <div class="profile-list-meta">원글: ${item.boardTitle || '제목 없음'} · ${Utils.timeAgo(item.createdAt)}</div>
-                                </div>
+                tabs.forEach(t => {
+                    // 현재 선택된 탭에 'active' 클래스 부여
+                    const isActive = (ProfileApp.currentTab === t.key) ? 'active' : '';
+
+                    if (t.active) {
+                        // 클릭 가능한 탭
+                        statsHtml += `
+                            <div class="profile-stat-item ${isActive}" onclick="ProfileApp.switchTab('${t.key}')">
+                                <div class="profile-stat-label">${t.label}</div>
+                                <div class="profile-stat-value">${t.value}</div>
                             </div>
                         `;
                     } else {
-                        // 글 또는 좋아요
-                         const thumbHtml = item.fileGrpIdx
-                            ? `<img src="/img/group/${item.fileGrpIdx}" class="profile-list-thumb">`
-                            : `<div class="profile-list-thumb" style="display:flex;align-items:center;justify-content:center;color:#ccc;font-size:24px;background:#eee;"><ion-icon name="document-text-outline"></ion-icon></div>`;
-
-                        html += `
-                            <div class="profile-list-item" onclick="Profile.moveToPost(${item.boardIdx})">
-                                ${thumbHtml}
-                                <div class="profile-list-info">
-                                    <div class="profile-list-title"><span class="badge ${badgeClass}">${badgeText}</span> ${item.boardTitle}</div>
-                                    <div class="profile-list-meta">${item.boardCategory} · ${Utils.timeAgo(item.createdAt)}</div>
-                                </div>
+                        // 비활성화된 탭 (타인의 댓글/좋아요 등)
+                        statsHtml += `
+                            <div class="profile-stat-item readonly">
+                                <div class="profile-stat-label">${t.label}</div>
+                                <div class="profile-stat-value">${t.value}</div>
                             </div>
                         `;
                     }
                 });
+                statsBox.innerHTML = statsHtml;
+
+                // 5. 하단 리스트 영역 렌더링 (게시글 목록 등)
+                ProfileApp.renderList();
+            },
+
+            /**
+             * 메인 탭 변경 핸들러
+             * @param {string} key - 변경할 탭 키 ('posts', 'comments', 'likes')
+             */
+            switchTab: (key) => {
+                ProfileApp.currentTab = key;
+                ProfileApp.subTab = 'community'; // 탭이 바뀌면 서브탭은 기본값으로 리셋
+                ProfileApp.render(); // 화면 갱신 (탭 활성화 스타일 적용 등)
+            },
+
+            /**
+             * 서브 탭 변경 핸들러 (중고거래/커뮤니티)
+             * @param {string} key - 변경할 서브 탭 키
+             */
+            switchSubTab: (key) => {
+                ProfileApp.subTab = key;
+                ProfileApp.renderList(); // 리스트 영역만 부분 갱신
+            },
+
+            /**
+             * 리스트 컨텐츠 렌더링
+             * - 현재 선택된 탭/서브탭에 맞는 데이터를 목록으로 표시
+             */
+            renderList: () => {
+                const container = document.getElementById('profile-dynamic-area');
+                const { currentTab, subTab, data } = ProfileApp;
+
+                let items = [];
+                let title = "";
+                let showSubTabs = false;
+
+                // 탭별 데이터 소스 및 UI 설정
+                if (currentTab === 'posts') {
+                    title = "작성한 글 목록";
+                    showSubTabs = true; // 작성글은 중고/커뮤니티 구분이 필요함
+                    if (subTab === 'community') {
+                        items = data.posts || []; // 커뮤니티 글
+                    } else {
+                        items = []; // 중고거래 글 (미구현 상태)
+                    }
+                } else if (currentTab === 'comments') {
+                    title = "내가 쓴 댓글";
+                    items = data.comments || [];
+                } else if (currentTab === 'likes') {
+                    title = "관심 목록";
+                    showSubTabs = true; // 좋아요도 구분 가능
+                    if (subTab === 'community') {
+                        items = data.likes || [];
+                    } else {
+                        items = [];
+                    }
+                }
+
+                // 리스트 섹션 제목 HTML 구성
+                let html = `<div class="profile-section-title">${title}</div>`;
+
+                // 서브 탭 버튼 HTML 구성 (필요한 경우에만)
+                if (showSubTabs) {
+                    const mkActive = subTab === 'market' ? 'active' : '';
+                    const cmActive = subTab === 'community' ? 'active' : '';
+                    html += `
+                        <div class="profile-sub-tabs">
+                            <button class="profile-sub-tab-btn ${mkActive}" onclick="ProfileApp.switchSubTab('market')">중고거래</button>
+                            <button class="profile-sub-tab-btn ${cmActive}" onclick="ProfileApp.switchSubTab('community')">커뮤니티</button>
+                        </div>
+                    `;
+                }
+
+                // 리스트 아이템 생성 반복문
+                if (items.length > 0) {
+                    items.forEach(item => {
+                        // 썸네일 처리: 이미지가 없으면 기본 아이콘 표시
+                        const thumb = item.thumbnail
+                            ? `<img src="${item.thumbnail}" class="profile-list-thumb">`
+                            : "";
+
+                        // 뱃지 처리 (글/댓글 구분)
+                        let badge = "";
+                        if (currentTab === 'posts' || currentTab === 'likes') {
+                            badge = `<span class="profile-badge comm">${item.category}</span>`;
+                        } else {
+                            badge = `<span class="profile-badge comm">댓글</span>`;
+                        }
+
+                        // 날짜 포맷팅 (Utils 라이브러리 활용 시도)
+                        const timeStr = (typeof Utils !== 'undefined') ? Utils.timeAgo(item.timeAgo) : item.timeAgo;
+
+                        // 개별 아이템 HTML 추가 (클릭 시 상세 이동)
+                        html += `
+                            <div class="profile-list-item" onclick="ProfileApp.goToDetail(${item.id})">
+                                ${thumb}
+                                <div class="profile-list-info">
+                                    <div class="profile-list-meta">${badge} · ${timeStr}</div>
+                                    <div class="profile-list-title"> ${item.title}</div>
+                                    <div class="profile-feed-preview">${item.contentPreview || ''}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    // 데이터가 없을 때 표시할 문구
+                    const msg = (subTab === 'market') ? "중고거래 기능은 준비중입니다." : "내역이 없습니다.";
+                    html += `<div class="profile-empty-state">${msg}</div>`;
+                }
 
                 container.innerHTML = html;
             },
 
-            moveToPost: (boardIdx) => {
-                if (!boardIdx) return;
-
-                // 현재 페이지가 커뮤니티 페이지인지 확인
-                if (location.pathname === '/community') {
-                    Profile.close();
-                    
-                    if (typeof CommunityView !== 'undefined' && CommunityView.openView) {
-                        // 같은 페이지이므로 플래그 설정
-                        CommunityView.returnToProfile = true;
-
-                        const fakeEl = {
-                            getAttribute: (attr) => {
-                                if (attr === 'data-boardIdx') return boardIdx;
-                                return null;
-                            }
-                        };
+            /**
+             * 상세 페이지 이동 핸들러
+             * @param {number} id - 이동할 게시글 ID
+             */
+            goToDetail: (id) => {
+                // 1. 현재 페이지가 커뮤니티인지 확인
+                if (location.pathname.includes('/community')) {
+                    // 이미 커뮤니티 페이지라면 SPA처럼 모달만 띄움
+                    if (typeof CommunityView !== 'undefined') {
+                        // 가상의 Element를 생성하여 CommunityView에 전달 (기존 구조 호환)
+                        const fakeEl = document.createElement('div');
+                        fakeEl.setAttribute('data-boardIdx', id);
                         CommunityView.openView(fakeEl);
                     } else {
-                         location.href = `/community?viewBoardIdx=${boardIdx}&from=profile`;
+                        // CommunityView가 로드되지 않았다면 새로고침 방식 사용
+                        const profileUserIdx = ProfileApp.data ? ProfileApp.data.userIdx : '';
+                        location.href = `/community?openBoard=${id}&from=profile&profileUser=${profileUserIdx}`;
                     }
+
                 } else {
-                    location.href = `/community?viewBoardIdx=${boardIdx}&from=profile`;
+                    // 다른 페이지(메인 등)라면 커뮤니티 페이지로 이동하면서 파라미터 전달
+                    const profileUserIdx = ProfileApp.data ? ProfileApp.data.userIdx : '';
+                    location.href = `/community?openBoard=${id}&from=profile&profileUser=${profileUserIdx}`;
                 }
             }
         };
+
+        // 전역 객체로 등록하여 외부(헤더 등)에서 호출 가능하게 함
+        window.ProfileApp = ProfileApp;
+        window.openProfile = ProfileApp.open;
     </script>
 </div>
