@@ -26,6 +26,10 @@ import com.scit.soragodong.service.CommunityService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
 
@@ -80,8 +84,33 @@ public class CommunityController {
     @GetMapping("/community/view/{boardIdx}")
     @ResponseBody
     public BoardDto view(@PathVariable("boardIdx") Integer boardIdx,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            HttpServletRequest request,
+            HttpServletResponse response) {
         log.info("상세보기 index {}", boardIdx);
+
+        // 쿠키 확인 로직
+        Cookie[] cookies = request.getCookies();
+        boolean viewed = false;
+
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals("viewed_board_" + boardIdx)) {
+                    viewed = true;
+                    break;
+                }
+            }
+        }
+
+        if (!viewed) {
+            cs.incrementViewCount(boardIdx);
+            
+            // 쿠키 생성 (24시간 유지)
+            Cookie cookie = new Cookie("viewed_board_" + boardIdx, "true");
+            cookie.setMaxAge(60 * 60 * 24); 
+            cookie.setPath("/"); // 모든 경로에서 유효
+            response.addCookie(cookie);
+        }
 
         BoardDto boardDto = cs.getBoardOne(boardIdx, userDetails.getUserIdx());
         return boardDto;
