@@ -23,6 +23,7 @@ public record UsedDetailRes(
     Integer likeCount,
     Integer chatCount,
     Boolean isLiked,
+    Boolean isOwner,
     Integer createdUser,
     String sellerNickname,
     Integer sellerProfileIdx,
@@ -33,7 +34,7 @@ public record UsedDetailRes(
     LocalDateTime updatedAt
 ) {
     public static UsedDetailRes from(Used used, List<String> images, Integer likeCount,
-                                      Boolean isLiked, Users seller, Integer chatCount) {
+                                      Boolean isLiked, Boolean isOwner, Users seller, Integer chatCount) {
         return new UsedDetailRes(
                 used.getUsedIdx(),
                 used.getUsedTitle(),
@@ -47,6 +48,7 @@ public record UsedDetailRes(
                 likeCount,
                 chatCount,
                 isLiked,
+                isOwner,
                 used.getCreatedUser(),
                 seller != null ? seller.getUserNickname() : "알 수 없음",
                 seller != null ? seller.getProfileIdx() : null,
