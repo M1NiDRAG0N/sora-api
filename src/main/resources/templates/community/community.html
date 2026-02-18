@@ -57,7 +57,8 @@
         <div class="write-card">
             <input type="text" id="title-input" placeholder="제목을 입력하세요.">
             <div class="divider"></div>
-            <textarea id="content-textarea" placeholder="내용을 입력하세요."></textarea>
+            <textarea id="content-textarea" placeholder="내용을 입력하세요."
+                oninput="CommunityWrite.autoResize(this)"></textarea>
 
             <div class="image-attach-row" id="imageRow">
                 <div class="camera-btn" onclick="document.getElementById('fileInput').click()">
@@ -144,8 +145,17 @@
                     </div>
                 </div>
             </article>
+            <div class="input-container-floating">
+                <input type="text" class="input-field2" placeholder="댓글 입력..." onkeypress="handleEnter(event)">
 
+
+
+                <button type="button" class="btn-send-circle" onclick="CommunityReply.sendReply()">
+                    <ion-icon name="paper-plane"></ion-icon>
+                </button>
+            </div>
             <section>
+
                 <div class="comment-section-title">댓글 <sapn id="reply-count"></sapn>
                 </div>
 
@@ -155,17 +165,6 @@
 
         </div>
 
-        <div class="input-container-floating">
-            <input type="text" class="input-field2" placeholder="메시지 입력..." onkeypress="handleEnter(event)">
-
-            <button type="button" class="btn-mic">
-                <ion-icon name="mic-outline"></ion-icon>
-            </button>
-
-            <button type="button" class="btn-send-circle" onclick="CommunityReply.sendReply()">
-                <ion-icon name="paper-plane"></ion-icon>
-            </button>
-        </div>
 
     </div>
 
@@ -470,7 +469,7 @@
                 onclick="CommunityView.openView(this)">
 
                 <div class="feed-header">
-                    <div class="feed-user-group">
+                    <div class="feed-user-group" onclick="event.stopPropagation(); window.openProfile(${dto.userIdx})">
                             <img src="${profileImg}" class="user-img-md">
                         <div class="user-info-text">
                             <span class="user-name">${dto.userNickname}</span>
@@ -525,6 +524,28 @@
                 }
             })
             CommunityMain.init();
+            CommunityWrite.init();
+            // URL Param Check
+            const params = new URLSearchParams(window.location.search);
+            const from = params.get('from');
+            const profileUser = params.get('profileUser');
+
+            if (from === 'profile') {
+                // 1. Open Profile first (background)
+                if (typeof ProfileApp !== 'undefined') {
+                    // If profileUser is provided, use it. Otherwise, defaults to 'me' or fails gracefully.
+                    if (profileUser) {
+                        ProfileApp.open(profileUser);
+                    } else {
+                        ProfileApp.open(); // My profile
+                    }
+                }
+            }
+
+            // 2. Then Open Board if requested (handled by openBoard param in existing logic)
+            // The existing logic already checks openBoard and calls openView.
+            // Since viewForm has z-index 10001 and profile has 9999, it will stack correctly.
+
             CommunityMain.loadPost(true); // 첫 로딩
 
             // 카테고리 좌우 스크롤
@@ -536,6 +557,24 @@
 
 
         const CommunityWrite = {
+
+            // [신규] 1. 초기화: 페이지 로드 시 이벤트 리스너 연결
+            init: () => {
+                const textarea = document.getElementById('content-textarea');
+                if (textarea) {
+                    // 타이핑할 때마다 늘어나는 이벤트 연결
+                    textarea.addEventListener('input', function () {
+                        CommunityWrite.autoResize(this);
+                    });
+                }
+            },
+
+            // [신규] 2. 리사이징 로직 (공통 함수)
+            autoResize: (target) => {
+                const textarea = target || document.getElementById('content-textarea');
+                textarea.style.height = 'auto'; // 높이 초기화 (줄어들 때를 대비)
+                textarea.style.height = textarea.scrollHeight + 'px'; // 내용만큼 늘리기
+            },
             open: () => {
                 CommunityWrite.resetForm();
                 isEditMode = false;
@@ -547,6 +586,7 @@
 
                 document.querySelector('#writeForm').classList.add('active');
             },
+
 
             // [수정 모드 열기]
             openEdit: async () => {
@@ -571,8 +611,9 @@
                     // (주의) innerText는 줄바꿈이 사라질 수 있으므로, 줄바꿈 유지를 위해 API 데이터를 쓰거나 textarea 값을 확인해야 함
                     // 여기서는 간단히 View 데이터를 넣습니다.
                     // 만약 상세보기가 API로 가져온 데이터라면 CommunityView.board_info 사용
-                    titleInput.value = document.querySelector('.feed-title').innerText;
+                    titleInput.value = CommunityView.board_info.boardTitle;     // ★ 저장해둔 제목 변수 사용
                     contentInput.value = CommunityView.board_info.boardContent;
+                    console.log("저장된 데이터:", CommunityView.board_info);
 
                     // 2. 카테고리 선택
                     const currentCategory = CommunityView.board_info.boardCategory;
@@ -589,7 +630,7 @@
                     CommunityWrite.renderExistingFiles(files);
 
                     document.querySelector('#writeForm').classList.add('active');
-
+                    CommunityWrite.autoResize(contentInput);
                 } catch (error) {
                     console.error(error);
                     Utils.notify("게시글 정보를 불러오는데 실패했습니다.", "error");
@@ -602,7 +643,11 @@
             },
             resetForm: () => {
                 document.querySelector("#title-input").value = '';
-                document.querySelector("#content-textarea").value = '';
+                const textarea = document.querySelector("#content-textarea");
+                textarea.value = '';
+
+                // ★ [핵심] 취소/닫기 시 높이를 'auto'나 기본값으로 되돌림
+                textarea.style.height = 'auto';
                 selectedFiles = [];
                 deletedFileIdxs = [];
 
@@ -737,6 +782,7 @@
                 replyCount: '',
                 userNickname: '',
                 boardCategory: '',
+                boardTitle: '',
                 boardContent: '',
                 likeCount: '',
                 userIdx: ''
@@ -774,6 +820,7 @@
 
 
                 CommunityView.board_info.boardIdx = board.boardIdx;
+                CommunityView.board_info.boardTitle = board.boardTitle;
                 CommunityView.board_info.replyCount = board.replyCount;
                 CommunityView.board_info.userNickname = board.userNickname;
                 CommunityView.board_info.boardCategory = board.boardCategory;
@@ -793,6 +840,14 @@
                 document.querySelector('#reply-count').innerText = board.replyCount;
                 currentBoardIdx = boardIdx;
                 document.querySelector('#view-writer').innerText = board.userNickname;
+
+                // Writer Profile Click
+                const writerInfo = document.querySelector('.writer-info');
+                writerInfo.removeAttribute('href');
+                writerInfo.onclick = () => window.openProfile(board.userIdx);
+                writerInfo.style.cursor = 'pointer';
+
+                document.querySelector('#view-time').innerText = Utils.timeAgo(board.createdAt); // 시간 포맷 적용
                 document.querySelector('#view-category').innerText = board.boardCategory;
                 document.querySelector('#view-content').innerText = board.boardContent; // 줄바꿈 처리가 필요하면 innerHTML 사용
                 document.querySelector('#view-like').innerText = board.likeCount;
@@ -815,6 +870,16 @@
                     }
                 }
 
+                // 히스토리 상태 추가 (뒤로가기 지원용)
+                // 만약 from=profile이면 pushState를 하지 않거나, 다르게 처리
+                history.pushState({ modal: 'communityView', boardIdx: boardIdx }, 'View', `?openBoard=${boardIdx}`);
+
+                // 뒤로가기 이벤트 리스너 (모달 닫기)
+                window.onpopstate = function (event) {
+                    if (document.querySelector('#viewForm').classList.contains('active')) {
+                        CommunityView.closeView();
+                    }
+                };
 
             },
 
@@ -839,6 +904,15 @@
                 document.querySelector('#board-owner-menu').classList.remove('active');
                 document.querySelector('#view-image').src = '';
                 document.getElementById('dynamic-image-container').innerHTML = '';
+
+                // URL 복구 (만약 파라미터가 있었다면 제거)
+                const url = new URL(window.location);
+                if (url.searchParams.has('openBoard')) {
+                    url.searchParams.delete('openBoard');
+                    url.searchParams.delete('from');
+                    url.searchParams.delete('profileUser');
+                    history.replaceState({}, '', url);
+                }
             },
 
             toggleBoardMenu: () => {
@@ -1172,7 +1246,5 @@
                 CommunityMain.search(); // 검색 함수 실행
             }
         }
-
-
     </script>
 </div>

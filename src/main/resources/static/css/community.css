@@ -22,7 +22,8 @@
 .cat-scroll::-webkit-scrollbar,
 .category-select-area::-webkit-scrollbar,
 .image-attach-row::-webkit-scrollbar,
-.chat-body::-webkit-scrollbar {
+.chat-body::-webkit-scrollbar,
+#viewForm::-webkit-scrollbar {
     display: none;
     /* Chrome, Safari */
 }
@@ -388,13 +389,15 @@
 
 #content-textarea {
     width: 100%;
-    flex: 1;
+    /* flex: 1; */
     border: none;
     outline: none;
     resize: none;
     font-size: 15px;
     line-height: 1.6;
     color: #333;
+    overflow-y: hidden;
+    height: auto;
 }
 
 /* 이미지 첨부 */
@@ -742,7 +745,7 @@
 
 /* 하단 플로팅 입력창 (상세보기용) */
 .input-container-floating {
-    position: absolute;
+    /* position: absolute; */
     bottom: 20px;
     left: 20px;
     right: 20px;
@@ -847,7 +850,25 @@ body.modal-open {
 }
 
 
-#viewForm,
+#viewForm {
+    position: absolute;
+    /* 화면 기준 고정 */
+    top: 0;
+    /* 처음엔 화면 아래쪽(100%)에 숨겨둠 */
+    left: 100%;
+    width: 100%;
+    height: 100%;
+    /* 화면 꽉 차게 */
+    z-index: 10001;
+    /* 다른 모든 요소보다 위에 오도록 (헤더, 네비보다 높게) */
+    background-color: #fff;
+    /* 배경색 필수 (투명하면 뒤가 비침) */
+    transition: left 0.3s ease-in-out;
+    /* 부드럽게 올라오는 애니메이션 */
+    overflow-y: auto;
+    /* 내용이 길면 스크롤 가능하게 */
+}
+
 #writeForm {
     position: absolute;
     /* 화면 기준 고정 */
@@ -857,7 +878,7 @@ body.modal-open {
     width: 100%;
     height: 100%;
     /* 화면 꽉 차게 */
-    z-index: 9998;
+    z-index: 10002;
     /* 다른 모든 요소보다 위에 오도록 (헤더, 네비보다 높게) */
     background-color: #fff;
     /* 배경색 필수 (투명하면 뒤가 비침) */
