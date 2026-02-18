@@ -1,11 +1,20 @@
-<div th:fragment="header" class="page-header transparent">
+<div th:fragment="header" class="page-header transparent"
+     xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
     <div class="header-profile-section">
-        <img id="headerProfile" src="https://i.pravatar.cc/150?img=12" alt="프로필" class="header-profile-img">
+        <img id="headerProfile"
+             th:if="${#authentication != null and #authentication.principal.profileIdx != null}"
+             th:src="@{/img/{id}(id=${#authentication.principal.profileIdx})}"
+             alt="프로필" class="header-profile-img">
+        <img id="headerProfile"
+             th:unless="${#authentication != null and #authentication.principal.profileIdx != null}"
+             src="/images/default-profile.png"
+             alt="프로필" class="header-profile-img">
 
         <div class="header-profile-info">
-            <span class="header-profile-greeting">좋은 아침,</span>
-            <span id="headerNickname" class="header-title header-nickname">전민싱싱</span>
+            <span id="headerGreeting" class="header-profile-greeting"></span>
+            <span id="headerNickname" class="header-title header-nickname"
+                  th:text="${#authentication?.principal?.userNickname + '님'}"></span>
         </div>
     </div>
 
@@ -18,4 +27,22 @@
             <ion-icon name="notifications-outline"></ion-icon>
         </div>
     </div>
+
+    <script>
+        (function() {
+            const hour = new Date().getHours();
+            let greeting;
+            if (hour >= 5 && hour < 12) {
+                greeting = '좋은 아침,';
+            } else if (hour >= 12 && hour < 18) {
+                greeting = '좋은 오후,';
+            } else if (hour >= 18 && hour < 22) {
+                greeting = '좋은 저녁,';
+            } else {
+                greeting = '좋은 밤,';
+            }
+            const el = document.getElementById('headerGreeting');
+            if (el) el.textContent = greeting;
+        })();
+    </script>
 </div>
