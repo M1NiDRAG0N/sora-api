@@ -9,14 +9,12 @@ import com.scit.soragodong.repository.BoardReplyRepository;
 import com.scit.soragodong.repository.BoardRepository;
 import com.scit.soragodong.repository.LikeCountRepository;
 import com.scit.soragodong.repository.UserRepository;
-import com.scit.soragodong.util.DateTimeUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
