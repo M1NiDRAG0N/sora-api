@@ -91,7 +91,6 @@
 .usedmarket-page .modal-write {
     display: flex;
     flex-direction: column;
-    max-height: 90vh;
     overflow: hidden;
 }
 
@@ -112,11 +111,18 @@
 
 .usedmarket-page .modal-write-body {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 5px;
+    scrollbar-width: none; /* Firefox */
+}
+
+.modal-write-body::-webkit-scrollbar
+, .modal-view-body::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
 }
 
 .usedmarket-page .modal-write-footer {
@@ -134,8 +140,8 @@
 }
 
 .usedmarket-page .camera-btn {
-    width: 80px;
-    height: 80px;
+    width: 70px;
+    height: 70px;
     background: rgba(178, 164, 255, 0.15);
     border: 2px dashed #B2A4FF;
     color: #B2A4FF;
@@ -154,14 +160,18 @@
 
 .usedmarket-page .camera-count {
     color: #B2A4FF;
-    font-weight: 600;
+    font-weight: 600;    
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
 }
 
-.usedmarket-page .preview-box {
-    width: 80px;
-    height: 80px;
+.usedmarket-page .preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
-
 .usedmarket-page .btn-remove-img {
     top: 4px;
     right: 4px;
@@ -180,7 +190,6 @@
     font-size: 13px;
     font-weight: 700;
     color: #666;
-    margin-bottom: 6px;
     display: block;
 }
 
@@ -274,7 +283,6 @@
 .usedmarket-page .modal-view {
     display: flex;
     flex-direction: column;
-    max-height: 95vh;
     overflow: hidden;
 }
 

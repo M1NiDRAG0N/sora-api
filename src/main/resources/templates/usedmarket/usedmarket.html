@@ -88,16 +88,16 @@
                     <button type="button" class="modal-close-btn">
                         <ion-icon name="chevron-back"></ion-icon>
                     </button>
-                    <div>상세보기</div>
+                    <div class="modal-write-title">상세보기</div>
                     <div class="detail-option-wrapper">
                         <button type="button" class="detail-option-btn">
                             <ion-icon name="ellipsis-horizontal"></ion-icon>
                         </button>
-                        <div class="custom-dropdown-menu hide" id="ownerMenu">
+                        <div class="custom-dropdown-menu" id="ownerMenu">
                             <button class="menu-item edit-post-btn">게시글 수정</button>
                             <button class="menu-item danger delete-post-btn">게시글 삭제</button>
                         </div>
-                        <div class="custom-dropdown-menu hide" id="guestMenu">
+                        <div class="custom-dropdown-menu" id="guestMenu">
                             <button class="menu-item danger report-post-btn">신고하기</button>
                         </div>
                     </div>
@@ -295,18 +295,18 @@
                     const ownerMenu = document.getElementById('ownerMenu');
                     const guestMenu = document.getElementById('guestMenu');
                     if (this.currentIsOwner) {
-                        ownerMenu.classList.toggle('hide');
-                        guestMenu.classList.add('hide');
+                        ownerMenu.classList.toggle('active');
+                        guestMenu.classList.remove('active');
                     } else {
-                        guestMenu.classList.toggle('hide');
-                        ownerMenu.classList.add('hide');
+                        guestMenu.classList.toggle('active');
+                        ownerMenu.classList.remove('active');
                     }
                 });
 
                 // 드롭다운 외부 클릭 시 닫기
                 document.addEventListener('click', () => {
-                    document.getElementById('ownerMenu').classList.add('hide');
-                    document.getElementById('guestMenu').classList.add('hide');
+                    document.getElementById('ownerMenu').classList.remove('active');
+                    document.getElementById('guestMenu').classList.remove('active');
                 });
 
                 // 검색 기능
