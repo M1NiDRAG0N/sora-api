@@ -681,7 +681,13 @@
 
                 document.querySelector('.page-title2').innerText = '글쓰기';
                 document.querySelector('.btn-done').innerText = '완료';
-                document.querySelector('#writeForm').classList.add('active');
+                
+                const writeForm = document.querySelector('#writeForm');
+                if (typeof window.modalZIndex === 'undefined') window.modalZIndex = 5000;
+                window.modalZIndex++;
+                writeForm.style.zIndex = window.modalZIndex;
+                
+                writeForm.classList.add('active');
             },
 
             openEdit: async () => {
@@ -711,7 +717,12 @@
                     const files = await API.get(`/community/files/${boardIdx}`);
                     CommunityWrite.renderExistingFiles(files);
 
-                    document.querySelector('#writeForm').classList.add('active');
+                    const writeForm = document.querySelector('#writeForm');
+                    if (typeof window.modalZIndex === 'undefined') window.modalZIndex = 5000;
+                    window.modalZIndex++;
+                    writeForm.style.zIndex = window.modalZIndex;
+
+                    writeForm.classList.add('active');
                     CommunityWrite.autoResize(contentInput);
                 } catch (error) {
                     console.error(error);
