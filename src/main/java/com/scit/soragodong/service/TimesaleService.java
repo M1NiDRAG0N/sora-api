@@ -71,7 +71,7 @@ public class TimesaleService {
      * 사용 중인 가게만 조회 (isUse = 1)
      */
     public List<StoreDto> getActiveStores() {
-        List<Store> stores = storeRepository.findByIsUse(1);
+        List<Store> stores = storeRepository.findByIsUse((byte) 1);
         
         return stores.stream()
                 .map(this::convertToDto)
