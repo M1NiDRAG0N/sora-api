@@ -1,38 +1,121 @@
+@charset "UTF-8";
+
 /* ===================================================================
-   [PART 2] 가계부 메인 (Finance Dashboard)
+   [FINANCE PAGE] - 정리된 CSS (중복 제거)
+   
+   구조:
+   - PART 1: 페이지 기본 설정
+   - PART 2: 순자산 섹션 (메인 카드)
+   - PART 3: 대시보드, 달력, 거래 목록
+   - PART 4: 작성 폼
+   - PART 5: 상세 영역
+   - PART 6: 모달 (중앙 팝업 override만)
+   
+   주의: 모달 기본 스타일은 unified-layout.css에서 제공
    =================================================================== */
-/* 콘텐츠 영역 (배경 그라데이션 적용) */
-.detail-content {
+
+/* ===================================================================
+   [PART 1] 페이지 기본 설정
+   =================================================================== */
+.finance-page {
     flex: 1;
     overflow-y: auto;
-    padding: 0 20px;
+    overflow-x: hidden;
+    padding: 0;
     padding-bottom: 100px;
+    -webkit-overflow-scrolling: touch;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* ===================================================================
+   [PART 2] 순자산 섹션 (Net Worth)
+   =================================================================== */
+.finance-page .net-worth-label {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 10px;
+}
+/*    
+   [Finance.css] 가계부 전용 스타일
+   * 공통 스타일(common.css, profile.css 등)과 함께 사용됩니다.
+   =================================================================== */
+
+/* [SECTION 1] 변수 및 레이아웃 보정 */
+:root {
+    /* 가계부 전용 상태 컬러 (공통 변수에 없다면 유지, 있다면 제거 가능) */
+    --danger-red: #ff4757;
+    --success-green: #2ecc71;
+    --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+/* ===================================================================
+   [SECTION 2] 대시보드 (자산 & 차트)
+   =================================================================== */
+.dashboard-card {
+    background-color: var(--white, #ffffff);
+    border-radius: 28px;
+    padding: 24px 20px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 20px;
 }
 
 .net-worth-label {
     font-size: 14px;
-    color: var(--text-sub);
+    color: var(--text-sub, #888);
     margin-bottom: 4px;
     font-weight: 500;
-    margin-top: 20px;
+    letter-spacing: 0px;
+    text-transform: uppercase;
+    opacity: 0.8;
 }
 
-.net-worth-amount {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--text-main);
-    margin-bottom: 6px;
-    letter-spacing: -0.5px;
+.finance-page .net-worth-amount {
+    font-size: 56px;
+    font-weight: 900;
+    color: #1a1a1a;
+    margin-bottom: 12px;
+    letter-spacing: -1.5px;
+    line-height: 1.15;
 }
 
-.net-worth-diff {
-    font-size: 13px;
-    color: var(--text-sub);
-    margin-bottom: 24px;
+.finance-page .net-worth-diff {
+    font-size: 14px;
+    color: #66A3D5;
+    background: #F0F5FA;
+    padding: 12px 16px;
+    border-radius: 10px;
+    display: inline-block;
+    font-weight: 500;
+    border: none;
+    min-height: 20px;
+    transition: all 0.3s ease;
+    margin-top: 12px;
 }
 
-/* 카드 스타일 */
-.dashboard-card {
+.finance-page .net-worth-section {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 40px 24px;
+    text-align: center;
+    color: #1a1a1a;
+    margin: 0 16px 24px 16px;
+    box-shadow: 0 2px 12px rgba(26, 26, 26, 0.08);
+    border: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.finance-page .net-worth-section::before {
+    display: none;
+}
+
+/* ===================================================================
+   [PART 3] 대시보드, 달력, 거래 목록
+   =================================================================== */
+
+/* 대시보드 카드 */
+.finance-page .dashboard-card {
     background-color: var(--white);
     border-radius: 28px;
     padding: 24px 20px;
@@ -40,13 +123,13 @@
     margin-bottom: 20px;
 }
 
-.charts-row {
+.finance-page .charts-row {
     display: flex;
     justify-content: space-between;
     margin-bottom: 24px;
 }
 
-.chart-col {
+.finance-page .chart-col {
     width: 48%;
     position: relative;
     display: flex;
@@ -54,35 +137,61 @@
     align-items: center;
 }
 
-.chart-title {
+.finance-page .chart-title {
     font-size: 12px;
     font-weight: 600;
-    color: var(--text-main);
+    color: var(--text-main, #333);
     margin-bottom: 2px;
 }
 
-.chart-box {
-    width: 120px;
-    height: 120px;
+.finance-page .chart-box {
     position: relative;
+    width: 100%;
+    height: 180px;
+    margin: 10px 0;
 }
 
-.chart-center-text {
+.finance-page .chart-center-text {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -45%);
     text-align: center;
+    width: 100%;
     pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
 }
 
-.chart-center-value {
+.chart-center-label {
+    display: block;
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 2px;
+    font-weight: 500;
+}
+
+.finance-page .chart-center-value {
     font-size: 13px;
+    display: block;
     font-weight: 800;
-    color: var(--text-main);
+    color: var(--text-main, #333);
+    word-break: break-all;
+    line-height: 1.2;
 }
 
-.budget-header {
+/* 예산 섹션 */
+.chart-center-value.expense {
+    color: var(--danger-red);
+}
+
+/* ===================================================================
+   [SECTION 3] 예산 바 (Budget Bar)
+   =================================================================== */
+.finance-page .budget-header {
     font-size: 13px;
     font-weight: 700;
     color: #555;
@@ -90,47 +199,49 @@
     letter-spacing: -0.5px;
 }
 
-.budget-bar-wrap {
+.finance-page .budget-bar-wrap {
     display: flex;
     width: 100%;
     height: 36px;
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
     margin-bottom: 24px;
+    background-color: #f1f2f6;
 }
 
-.bar-segment {
+.finance-page .bar-segment {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     color: white;
+    transition: width 0.5s ease-in-out;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
-.bg-red {
+.finance-page .bg-red {
     background-color: var(--danger-red);
-    width: 68%;
 }
 
-.bg-green {
+.finance-page .bg-green {
     background-color: var(--success-green);
-    width: 32%;
 }
 
-.budget-info-container {
+.finance-page .budget-info-container {
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
-.budget-row {
+.finance-page .budget-row {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
 }
 
-.row-left {
+.finance-page .row-left {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -141,7 +252,7 @@
     flex-shrink: 0;
 }
 
-.dot-bullet {
+.finance-page .dot-bullet {
     width: 4px;
     height: 4px;
     background-color: #666;
@@ -149,13 +260,13 @@
     display: inline-block;
 }
 
-.row-right {
+.finance-page .row-right {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
 }
 
-.amount-text {
+.finance-page .amount-text {
     font-family: 'Noto Sans KR', sans-serif;
     font-size: 17px;
     font-weight: 700;
@@ -164,19 +275,19 @@
     line-height: 1;
 }
 
-.sub-text {
+.finance-page .sub-text {
     font-size: 11px;
     color: #999;
     margin-top: 5px;
     font-weight: 400;
 }
 
-.clickable {
+.finance-page .clickable {
     cursor: pointer;
 }
 
-/* 캘린더 컨테이너 */
-.calendar-sheet {
+/* 달력 섹션 */
+.finance-page .calendar-sheet {
     background-color: var(--white);
     border-radius: 28px;
     padding: 24px 0 20px 0;
@@ -184,31 +295,62 @@
     margin-top: 10px;
 }
 
-.cal-header {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 20px;
+.finance-page .cal-header {
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 60px;
+    margin-bottom: 10px;
 }
 
-.cal-nav-btn {
+.finance-page .cal-nav-btn {
     display: none;
 }
 
-.cal-title {
+.finance-page .cal-title {
     font-size: 16px;
     font-weight: 700;
-    color: var(--text-main);
+    color: var(--text-main, #333);
+    letter-spacing: -0.5px;
+    min-width: 120px;
+    text-align: center;
+    margin: 0 10px;
     cursor: pointer;
+    user-select: none;
     transition: color 0.2s;
 }
 
-.cal-title:active {
+.finance-page .cal-title:active {
     color: var(--primary);
 }
 
-/* [모드 1] 가로 스크롤 */
+/* 스크롤 달력 모드 */
+
+.cal-title:active {
+    color: var(--primary, #B2A4FF);
+}
+
+.cal-nav-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+    color: var(--text-sub, #888);
+    background: transparent;
+    border-radius: 50%;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.cal-nav-btn:active {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-main, #333);
+}
+
+/* 날짜 스크롤러 */
 .date-scroller {
     display: flex;
     overflow-x: auto;
@@ -218,11 +360,11 @@
     scrollbar-width: none;
 }
 
-.date-scroller::-webkit-scrollbar {
+.finance-page .date-scroller::-webkit-scrollbar {
     display: none;
 }
 
-.date-card {
+.finance-page .date-card {
     min-width: 54px;
     display: flex;
     flex-direction: column;
@@ -232,7 +374,7 @@
     position: relative;
 }
 
-.money-tag {
+.finance-page .money-tag {
     font-size: 9px;
     margin-bottom: 2px;
     height: 12px;
@@ -240,18 +382,22 @@
     white-space: nowrap;
 }
 
-/* [수정] 입금 초록색 */
-.money-inc {
+.finance-page .money-inc {
     color: var(--success-green);
 }
 
-.money-exp {
+.finance-page .money-exp {
     color: var(--danger-red);
 }
+.date-card.active .date-number {
+    background-color: #EBE5FF;
+    color: var(--primary-dark, #8F7DF5);
+    font-weight: 800;
+}
 
-.date-number {
+.finance-page .date-number {
     font-size: 16px;
-    color: var(--text-main);
+    color: var(--text-main, #333);
     width: 36px;
     height: 36px;
     line-height: 36px;
@@ -261,38 +407,26 @@
     transition: 0.2s;
 }
 
-.date-card.active .date-number {
+.finance-page .date-card.active .date-number {
     background-color: #EBE5FF;
     color: var(--primary-dark);
     font-weight: 800;
 }
 
-/* [모드 2] 달력 그리드 뷰 */
-.calendar-grid {
+/* 그리드 달력 모드 */
+.finance-page .calendar-grid {
     width: 100%;
     padding: 0 15px;
     animation: fadeIn 0.3s ease-in-out;
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-5px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.grid-header-row {
+.finance-page .grid-header-row {
     display: flex;
     justify-content: space-between;
     margin-bottom: 15px;
 }
 
-.grid-header-cell {
+.finance-page .grid-header-cell {
     width: 14.28%;
     text-align: center;
     font-size: 11px;
@@ -300,12 +434,12 @@
     font-weight: 600;
 }
 
-.grid-dates-container {
+.finance-page .grid-dates-container {
     display: flex;
     flex-wrap: wrap;
 }
 
-.grid-date-cell {
+.finance-page .grid-date-cell {
     width: 14.28%;
     height: 80px;
     display: flex;
@@ -316,204 +450,32 @@
     cursor: pointer;
 }
 
-.grid-date-num {
+.finance-page .grid-date-num {
     font-size: 15px;
     color: #333;
     margin-bottom: 4px;
 }
 
-.grid-money {
+.finance-page .grid-money {
     font-size: 9px;
     margin-bottom: 2px;
     height: 12px;
+    display: block;
     white-space: nowrap;
 }
 
-/* [수정] 입금 초록색 */
-.grid-money.inc {
+.finance-page .grid-money.inc {
     color: var(--success-green);
 }
 
-.grid-money.exp {
+.finance-page .grid-money.exp {
     color: var(--danger-red);
 }
 
-
 /* ===================================================================
-   [PART 3] 상세 리스트 (Details) 스타일
+   [PART 4] 작성 폼
    =================================================================== */
-.summary-header {
-    margin-top: 20px;
-    margin-bottom: 30px;
-    padding: 0 5px;
-}
-
-.summary-label {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-main);
-    margin-bottom: 8px;
-}
-
-.summary-amount {
-    font-size: 32px;
-    font-weight: 900;
-    color: #1A1A1A;
-    letter-spacing: -0.5px;
-}
-
-.list-control-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 15px;
-    padding: 0 5px;
-    border-bottom: 1px solid #F0F0F0;
-    padding-bottom: 15px;
-}
-
-.list-title {
-    font-size: 18px;
-    font-weight: 800;
-    color: var(--text-main);
-}
-
-.list-count {
-    font-size: 12px;
-    color: #999;
-    font-weight: 400;
-    margin-left: 5px;
-}
-
-.btn-register {
-    background-color: var(--primary);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    box-shadow: 0 4px 10px rgba(178, 164, 255, 0.4);
-    cursor: pointer;
-    transition: transform 0.1s;
-}
-
-.btn-register:active {
-    transform: scale(0.96);
-}
-
-.clean-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-}
-
-.clean-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 20px 5px;
-    border-bottom: 1px solid #F5F5F5;
-    background: transparent;
-}
-
-.item-left {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1;
-    padding-right: 10px;
-    min-width: 0;
-}
-
-.item-title {
-    font-size: 15px;
-    font-weight: 700;
-    color: #333;
-    transition: color 0.2s;
-    white-space: normal;
-    word-break: keep-all;
-}
-
-.item-title.clickable-title {
-    cursor: pointer;
-    text-decoration: underline;
-    text-decoration-color: transparent;
-    transition: all 0.2s;
-}
-
-.item-title.clickable-title:hover {
-    color: var(--primary);
-    text-decoration-color: var(--primary);
-}
-
-.item-memo {
-    font-size: 13px;
-    color: #666;
-    font-weight: 400;
-    margin-top: 4px;
-    margin-bottom: 2px;
-    line-height: 1.4;
-    background: #f9f9f9;
-    padding: 8px;
-    border-radius: 8px;
-    white-space: normal;
-    word-break: break-all;
-}
-
-.item-date {
-    font-size: 11px;
-    color: #999;
-    margin-top: 2px;
-}
-
-.item-right {
-    text-align: right;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 2px;
-    flex-shrink: 0;
-}
-
-.item-amount {
-    font-size: 16px;
-    font-weight: 800;
-    white-space: nowrap;
-}
-
-/* [수정] 입금 초록색 */
-.item-amount.inc {
-    color: var(--success-green);
-}
-
-.item-amount.exp {
-    color: var(--danger-red);
-}
-
-.item-arrow {
-    font-size: 18px;
-    color: #CCC;
-    cursor: pointer;
-    padding: 5px;
-    transition: transform 0.2s, color 0.2s;
-}
-
-.item-arrow:hover {
-    color: #666;
-}
-
-.item-arrow.rotated {
-    transform: rotate(180deg);
-}
-
-
-/* ===================================================================
-   [PART 4] 입력/수정 (Write) 화면 스타일
-   =================================================================== */
-.write-card {
+.finance-page .write-card {
     background: var(--white);
     border-radius: 20px;
     padding: 20px;
@@ -523,7 +485,7 @@
     flex-direction: column;
 }
 
-.page-title {
+.finance-page .page-title {
     text-align: center;
     font-size: 20px;
     font-weight: 800;
@@ -531,33 +493,33 @@
     margin-bottom: 25px;
 }
 
-.input-group-container {
+.finance-page .input-group-container {
     display: flex;
     flex-direction: column;
     gap: 15px;
     margin-bottom: 20px;
 }
 
-.input-row-bottom {
+.finance-page .input-row-bottom {
     display: flex;
     align-items: flex-end;
     gap: 8px;
 }
 
-.input-col {
+.finance-page .input-col {
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
 
-.input-label {
+.finance-page .input-label {
     font-size: 12px;
     font-weight: 700;
     color: var(--text-main);
     margin-left: 2px;
 }
 
-.custom-input {
+.finance-page .custom-input {
     height: 45px;
     border: 1px solid #E5E5E5;
     border-radius: 12px;
@@ -570,25 +532,25 @@
     width: 100%;
 }
 
-.custom-input:focus {
+.finance-page .custom-input:focus {
     border-color: var(--primary);
 }
 
-.col-type {
+.finance-page .col-type {
     width: 60px;
     flex-shrink: 0;
 }
 
-.col-amount {
+.finance-page .col-amount {
     flex: 1;
 }
 
-.col-type select {
+.finance-page .col-type select {
     text-align-last: center;
     padding-right: 12px;
 }
 
-select.custom-input {
+.finance-page select.custom-input {
     -webkit-appearance: none;
     background: var(--white);
     background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
@@ -597,7 +559,7 @@ select.custom-input {
     background-size: 12px;
 }
 
-.btn-enter {
+.finance-page .btn-enter {
     width: 45px;
     height: 45px;
     border: 1px solid #E5E5E5;
@@ -612,11 +574,11 @@ select.custom-input {
     flex-shrink: 0;
 }
 
-.btn-enter:active {
+.finance-page .btn-enter:active {
     background: #f5f5f5;
 }
 
-.memo-area {
+.finance-page .memo-area {
     flex: 1;
     width: 100%;
     border: 1px solid #E5E5E5;
@@ -629,7 +591,7 @@ select.custom-input {
     margin-bottom: 15px;
 }
 
-.btn-submit {
+.finance-page .btn-submit {
     align-self: flex-end;
     padding: 12px 30px;
     border: 1px solid #E5E5E5;
@@ -642,13 +604,13 @@ select.custom-input {
     cursor: pointer;
 }
 
-.btn-submit:active {
+.finance-page .btn-submit:active {
     background: var(--primary);
     color: white;
     border-color: var(--primary);
 }
 
-.btn-delete {
+.finance-page .btn-delete {
     align-self: flex-start;
     margin-top: 10px;
     padding: 12px 20px;
@@ -660,4 +622,770 @@ select.custom-input {
     font-weight: 700;
     cursor: pointer;
     display: none;
+}
+
+/* ===================================================================
+   [PART 5] 상세 영역 (Day Detail Section)
+   =================================================================== */
+.finance-page .summary-header {
+    margin-top: 20px;
+    margin-bottom: 30px;
+    padding: 0 5px;
+}
+
+.finance-page .summary-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 8px;
+}
+
+.finance-page .summary-amount {
+    font-size: 32px;
+    font-weight: 900;
+    color: #1A1A1A;
+    letter-spacing: -0.5px;
+}
+
+.finance-page .list-control-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 15px;
+    padding: 0 5px;
+    border-bottom: 1px solid #F0F0F0;
+    padding-bottom: 15px;
+}
+
+.finance-page .list-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.finance-page .list-count {
+    font-size: 12px;
+    color: #999;
+    font-weight: 400;
+    margin-left: 5px;
+}
+
+.finance-page .btn-register {
+    background-color: var(--primary);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 4px 10px rgba(178, 164, 255, 0.4);
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.finance-page .btn-register:active {
+    transform: scale(0.96);
+}
+
+.finance-page .clean-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.finance-page .clean-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 20px 5px;
+    border-bottom: 1px solid #F5F5F5;
+    background: transparent;
+}
+
+.finance-page .item-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    padding-right: 10px;
+    min-width: 0;
+}
+
+.finance-page .item-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #333;
+    transition: color 0.2s;
+    white-space: normal;
+    word-break: keep-all;
+}
+
+.finance-page .item-title.clickable-title {
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    transition: all 0.2s;
+}
+
+.finance-page .item-title.clickable-title:hover {
+    color: var(--primary);
+    text-decoration-color: var(--primary);
+}
+
+.finance-page .item-memo {
+    font-size: 13px;
+    color: #666;
+    font-weight: 400;
+    margin-top: 4px;
+    margin-bottom: 2px;
+    line-height: 1.4;
+    background: #f9f9f9;
+    padding: 8px;
+    border-radius: 8px;
+    white-space: normal;
+    word-break: break-all;
+}
+
+.finance-page .item-date {
+    font-size: 11px;
+    color: #999;
+    margin-top: 2px;
+}
+
+.finance-page .item-right {
+    text-align: right;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.finance-page .item-amount {
+    font-size: 16px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.finance-page .item-amount.inc {
+    color: var(--success-green);
+}
+
+.finance-page .item-amount.exp {
+    color: var(--danger-red);
+}
+
+.finance-page .item-arrow {
+    font-size: 18px;
+    color: #CCC;
+    cursor: pointer;
+    padding: 5px;
+    transition: transform 0.2s, color 0.2s;
+}
+
+.finance-page .item-arrow:hover {
+    color: #666;
+}
+
+.finance-page .item-arrow.rotated {
+    transform: rotate(180deg);
+}
+
+/* 거래 목록 섹션 */
+.finance-page .day-detail-section {
+    background-color: #ffffff;
+    border-radius: 28px;
+    padding: 24px 20px 40px 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    margin-top: 20px;
+    margin-bottom: 20px;
+    display: none;
+    animation: slideUp 0.3s ease-out;
+    position: relative;
+}
+
+.finance-page .dd-header-date {
+    position: relative;
+    animation: slideUp 0.3s ease-out;
+}
+
+.day-detail-section.active {
+    display: block;
+}
+
+.dd-header-date {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 800;
+    color: #333;
+    margin-bottom: 25px;
+    letter-spacing: -0.5px;
+}
+
+.finance-page .dd-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 20px;
+    padding: 0 4px;
+    border-bottom: 1px solid #f5f5f5;
+    padding-bottom: 15px;
+}
+
+.finance-page .dd-label {
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+}
+
+.finance-page .dd-count {
+    font-size: 13px;
+    color: #999;
+    margin-bottom: 2px;
+}
+
+.finance-page .dd-item {
+    margin-bottom: 25px;
+    border-bottom: 1px solid #f9f9f9;
+    padding-bottom: 15px;
+}
+
+.dd-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.finance-page .dd-item-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 0 4px;
+}
+
+.finance-page .dd-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+}
+
+.finance-page .dd-amount {
+    font-size: 17px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.finance-page .dd-amount.plus {
+    color: #2ecc71;
+}
+
+.finance-page .dd-amount.minus {
+    color: #ff4757;
+}
+
+.finance-page .dd-memo-box {
+    background-color: #f9f9f9;
+    border-radius: 12px;
+    padding: 15px;
+    font-size: 13px;
+    color: #555;
+    font-weight: 500;
+    line-height: 1.5;
+    margin-bottom: 6px;
+}
+
+.finance-page .dd-time {
+    font-size: 11px;
+    color: #ccc;
+    margin-left: 8px;
+    text-align: left;
+}
+
+.finance-page .empty-msg {
+    text-align: center;
+    color: #ccc;
+    padding: 40px 0;
+}
+
+.badge-fixed {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    background-color: var(--primary, #B2A4FF);
+    padding: 2px 6px;
+    border-radius: 6px;
+    margin-left: 6px;
+    vertical-align: middle;
+    transform: translateY(-1px);
+}
+
+.btn-edit-small,
+.btn-delete-small {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 14px;
+    margin-left: 8px;
+    cursor: pointer;
+    vertical-align: middle;
+    transition: all 0.2s;
+}
+
+.btn-edit-small {
+    background-color: #f0f0f0;
+    color: #999;
+}
+
+.btn-edit-small:active {
+    background-color: #e0e0e0;
+    transform: scale(0.9);
+}
+
+.btn-delete-small {
+    background-color: #fff0f0;
+    color: #ff7675;
+}
+
+.btn-delete-small:active {
+    background-color: #ffe0e0;
+    transform: scale(0.9);
+}
+
+/* 글쓰기 플로팅 버튼 */
+.fab-edit {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #bbb;
+    cursor: pointer;
+    z-index: 100;
+}
+
+.fab-edit:active {
+    transform: scale(0.95);
+    background-color: #f0f0f0;
+}
+
+/* ===================================================================
+   [SECTION 6] 모달 팝업 (Modal) - 공통 스타일과 별도 운영
+   =================================================================== */
+.modal-overlaies {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(5px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    padding: 20px;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.modal-overlaies.active {
+    display: flex;
+}
+
+.modal-card {
+    background: var(--white, #ffffff);
+    width: 100%;
+    max-width: 320px;
+    border-radius: 30px;
+    padding: 30px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-main, #333);
+    text-align: center;
+    margin-bottom: 5px;
+    line-height: 1.2;
+}
+
+.modal-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-sub, #888);
+    margin-left: 4px;
+}
+
+.modal-input,
+.modal-textarea {
+    width: 100%;
+    height: 48px;
+    background-color: #F8F9FD;
+    border: 1px solid transparent;
+    border-radius: 16px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 500;
+    font-size: 15px;
+    color: var(--text-main, #333);
+    outline: none;
+    transition: all 0.2s;
+    appearance: none;
+    display: block;
+    line-height: 46px;
+    padding: 0 16px;
+}
+
+.modal-input:focus,
+.modal-textarea:focus {
+    background-color: var(--white, #fff);
+    border-color: var(--primary, #B2A4FF);
+    box-shadow: 0 0 0 3px rgba(178, 164, 255, 0.2);
+}
+
+select.modal-input {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 16px;
+    padding-right: 40px;
+    cursor: pointer;
+}
+
+.modal-textarea {
+    height: 100px;
+    padding: 14px 16px;
+    line-height: 1.5;
+    resize: none;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+
+.input-relative {
+    position: relative;
+}
+
+.input-center {
+    width: 100%;
+    text-align: center;
+}
+
+.row-inputs {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.input-group.sm {
+    flex: 0 0 90px;
+}
+
+.input-group.lg {
+    flex: 1;
+}
+
+#inpAmount {
+    text-align: right;
+    font-weight: 700;
+}
+
+/* 체크박스 & 기간 입력 */
+.check-group-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+.check-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 2px;
+    cursor: pointer;
+    margin: 0;
+}
+
+.check-input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-dark, #8F7DF5);
+    cursor: pointer;
+}
+
+.check-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #444;
+    cursor: pointer;
+    user-select: none;
+}
+
+.duration-input-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-input.small-input {
+    width: 60px;
+    height: 36px;
+    line-height: 34px;
+    padding: 0 10px;
+    text-align: center;
+    border-radius: 10px;
+    font-weight: 700;
+}
+
+.duration-text {
+    font-size: 13px;
+    color: #666;
+    font-weight: 500;
+}
+
+/* 모달 버튼 */
+.modal-btn {
+    width: 100%;
+    height: 52px;
+    background-color: var(--primary, #B2A4FF);
+    color: var(--white, #fff);
+    font-weight: 700;
+    font-size: 16px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    margin-top: 15px;
+    box-shadow: 0 5px 15px rgba(178, 164, 255, 0.4);
+    transition: transform 0.1s;
+}
+
+.modal-btn:active {
+    transform: scale(0.98);
+    background-color: var(--primary-dark, #8F7DF5);
+}
+
+.modal-close-btn {
+    width: 100%;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-sub, #888);
+    background-color: transparent;
+    border-radius: 16px;
+    cursor: pointer;
+    margin-top: 5px;
+}
+
+.modal-close-btn:hover {
+    background-color: #f5f5f5;
+    color: var(--text-main, #333);
+}
+
+/* [삭제 모달 전용] 버튼 오버라이드 */
+.modal-btn.btn-secondary {
+    background-color: #f1f2f6;
+    color: #666;
+    margin-top: 0;
+    box-shadow: none;
+}
+
+.modal-btn.btn-danger {
+    background-color: var(--danger-red);
+    color: white;
+    margin-top: 0;
+    box-shadow: 0 5px 15px rgba(255, 75, 75, 0.3);
+}
+
+.modal-btn.btn-danger:active {
+    background-color: #e04040;
+}
+
+/* ===================================================================
+   [SECTION 7] 알림 토스트 (Toast - 우측 상단)
+   =================================================================== */
+.toast-box {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    left: auto;
+    background-color: rgba(51, 51, 51, 0.95);
+    color: #fff;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(30px);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.toast-box.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+}
+
+/* ===================================================================
+   [SECTION 8] 카테고리 컬러 및 애니메이션
+   =================================================================== */
+.cat-salary {
+    background-color: #2ecc71;
+}
+
+.cat-food {
+    background-color: #ff7675;
+}
+
+.cat-transport {
+    background-color: #fdcb6e;
+}
+
+.cat-shopping {
+    background-color: #a29bfe;
+}
+
+.cat-event {
+    background-color: #fab1a0;
+}
+
+.cat-saving {
+    background-color: #74b9ff;
+}
+
+.cat-etc {
+    background-color: #dfe6e9;
+    color: #636e72;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes modalSlideUp {
+    from {
+        transform: translateY(30px) scale(0.95);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+/* 레거시 호환 */
+.clean-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.clean-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px 5px;
+    border-bottom: 1px solid #F5F5F5;
+}
+
+.item-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    padding-right: 10px;
+}
+
+.item-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #333;
+}
+
+.item-memo {
+    font-size: 13px;
+    color: #666;
+    background: #f9f9f9;
+    padding: 8px;
+    border-radius: 8px;
+    margin-top: 4px;
+}
+
+.item-date {
+    font-size: 11px;
+    color: #999;
+    margin-top: 2px;
+}
+
+.item-right {
+    text-align: right;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.item-amount {
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.item-amount.inc {
+    color: var(--success-green);
+}
+
+.item-amount.exp {
+    color: var(--danger-red);
 }
