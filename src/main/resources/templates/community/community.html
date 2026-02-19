@@ -199,15 +199,20 @@
                 const slider = document.querySelector(selector);
                 if (!slider) return;
 
-                let isDown = false;
+                let isDown = false; // 드레그 중인가
                 let startX;
                 let scrollLeft;
 
                 slider.addEventListener('mousedown', (e) => {
                     isDown = true;
                     slider.classList.add('active');
+                    // e.pageX : 페이지 전체 기준 마우스의 X좌표
+                    // slider.offsetLeft : slider 요소의 왼쪽 끝 위치
+                    // 드래그 시작할 때 마우스 X좌표(요소 기준)를 저장
                     startX = e.pageX - slider.offsetLeft;
+                    // 드레그 시작 시점의 스크롤 위치를 저장
                     scrollLeft = slider.scrollLeft;
+
                 });
 
                 const stopDrag = () => {
@@ -219,8 +224,10 @@
                 slider.addEventListener('mouseup', stopDrag);
 
                 slider.addEventListener('mousemove', (e) => {
+                    // 마우스를 누르고 있는 상태가 아니면 return
                     if (!isDown) return;
                     e.preventDefault();
+
                     const x = e.pageX - slider.offsetLeft;
                     const walk = (x - startX) * 1.5;
                     slider.scrollLeft = scrollLeft - walk;
@@ -248,7 +255,7 @@
                 if (scrollBox) {
                     scrollBox.addEventListener('scroll', CommunityMain.pageLoading);
                 }
-                
+
                 // URL 파라미터 체크 (프로필 이동 등)
                 CommunityMain.checkUrlParams();
 
@@ -267,8 +274,8 @@
                 const profileUser = params.get('profileUser');
 
                 if (from === 'profile' && typeof ProfileApp !== 'undefined') {
-                     if (profileUser) ProfileApp.open(profileUser);
-                     else ProfileApp.open();
+                    if (profileUser) ProfileApp.open(profileUser);
+                    else ProfileApp.open();
                 }
             },
 
@@ -344,7 +351,7 @@
                 try {
                     const { currentPage, category, keyword } = CommunityMain.state;
                     const url = `/community/list?page=${currentPage}&category=${encodeURIComponent(category)}&keyword=${encodeURIComponent(keyword)}`;
-                    
+
                     const response = await API.get(url);
 
                     if (!response || response.length === 0) {
@@ -373,7 +380,7 @@
                 const profileImg = dto.profileIdx != null ? `/images/profiles/${dto.profileIdx}.png` : '/images/default-profile.png';
                 const heartIconName = dto.isLiked ? 'heart' : 'heart-outline';
                 const heartColorClass = dto.isLiked ? 'heart-active' : '';
-                
+
                 return `
                     <div class="feed-card" data-boardIdx="${dto.boardIdx}" onclick="CommunityView.openView(this)">
                         <div class="feed-header">
@@ -447,7 +454,7 @@
                 const submitBtn = document.querySelector('.btn-done');
                 submitBtn.innerText = '완료';
                 submitBtn.setAttribute('onclick', 'CommunityWrite.submitPost()');
-                
+
                 document.querySelector('#writeForm').classList.add('active');
             },
 
@@ -504,7 +511,7 @@
                 const textarea = document.querySelector("#content-textarea");
                 textarea.value = '';
                 textarea.style.height = 'auto';
-                
+
                 CommunityWrite.state.selectedFiles = [];
                 CommunityWrite.state.deletedFileIdxs = [];
 
@@ -617,7 +624,7 @@
                     const resultDto = await response.json();
                     Utils.notify('게시글을 등록했습니다!', 'success');
                     CommunityWrite.close();
-                    
+
                     // 리스트 최상단 추가
                     const container = document.getElementById('feedListContainer');
                     container.insertAdjacentHTML('afterbegin', CommunityMain.createFeedCardHTML(resultDto));
@@ -689,7 +696,7 @@
                 const viewForm = document.querySelector('#viewForm');
 
                 // Z-Index 관리
-                if (typeof window.modalZIndex === 'undefined') window.modalZIndex = 20000;
+                if (typeof window.modalZIndex === 'undefined') window.modalZIndex = 5000;
                 window.modalZIndex++;
                 viewForm.style.zIndex = window.modalZIndex;
 
@@ -770,7 +777,7 @@
             closeView: () => {
                 const viewForm = document.querySelector('#viewForm');
                 viewForm.classList.remove('active');
-                
+
                 // 데이터 초기화
                 Object.keys(CommunityView.board_info).forEach(key => CommunityView.board_info[key] = '');
                 document.querySelector('#reply-card').innerHTML = '';
@@ -792,7 +799,7 @@
             toggleBoardMenu: () => {
                 const loginUserIdx = document.querySelector('#loginUserIdxMain').value;
                 const boardUserIdx = CommunityView.board_info.userIdx;
-                
+
                 if (String(loginUserIdx) === String(boardUserIdx)) {
                     document.querySelector('#board-owner-menu').classList.toggle('active');
                 } else {
@@ -808,8 +815,8 @@
 
             /** 신고하기 클릭 */
             reportBoard: () => {
-                 document.querySelector('#board-visitor-menu').classList.remove('active');
-                 Utils.notify("신고 기능은 준비중입니다.", "warning");
+                document.querySelector('#board-visitor-menu').classList.remove('active');
+                Utils.notify("신고 기능은 준비중입니다.", "warning");
             },
 
             /** 삭제 확인 모달 */
@@ -831,7 +838,7 @@
                         Utils.notify('게시글을 삭제했습니다.', 'success');
                         CommunityView.closeDeleteModal();
                         CommunityView.closeView();
-                        
+
                         const deletedCard = document.querySelector(`.feed-card[data-boardIdx="${boardIdx}"]`);
                         if (deletedCard) deletedCard.remove();
                     }
@@ -846,14 +853,14 @@
                 const boardIdx = CommunityView.board_info.boardIdx;
                 try {
                     await API.get(`community/like/${boardIdx}`);
-                    
+
                     const likeCountEl = document.querySelector('#view-like');
                     const heartIcon = document.querySelector('#view-like-icon');
-                    
+
                     heartIcon.setAttribute('name', 'heart');
                     heartIcon.classList.add('heart-active');
                     likeCountEl.innerText = Number(likeCountEl.innerText) + 1;
-                    
+
                     Utils.notify('좋아요를 눌렀습니다.', 'like');
                 } catch (error) {
                     Utils.notify('이미 좋아요를 누른 게시글입니다.', 'warning');
@@ -964,7 +971,7 @@
             sendReply: async () => {
                 const replyContent = document.querySelector('.input-field2').value.trim();
                 const boardIdx = currentBoardIdx; // 전역 변수 활용
-                
+
                 if (!replyContent) {
                     Utils.notify("댓글을 입력하세요.", "error");
                     return;
@@ -974,11 +981,11 @@
                     const response = await API.post(`/community/reply/${boardIdx}`, { replyContent });
                     const container = document.querySelector('#reply-card');
                     container.insertAdjacentHTML('beforeend', CommunityReply.createReplyCardHTML(response));
-                    
+
                     document.querySelector('.input-field2').value = '';
                     const countEl = document.querySelector('#reply-count');
                     countEl.innerText = Number(countEl.innerText) + 1;
-                    
+
                     Utils.notify('댓글을 등록했습니다.', 'success');
                 } catch (error) {
                     console.error(error);
@@ -1000,10 +1007,10 @@
                     const response = await API.delete(`/community/deleteReply/${replyIdx}`);
                     if (response.status == 200) {
                         Utils.notify('댓글을 삭제했습니다.', 'success');
-                        
+
                         const item = document.querySelector(`#reply-item-${replyIdx}`);
                         if (item) item.remove();
-                        
+
                         const countEl = document.querySelector('#reply-count');
                         countEl.innerText = Number(countEl.innerText) - 1;
                     }
@@ -1021,7 +1028,7 @@
                 const item = document.querySelector(`#reply-item-${replyIdx}`);
                 const input = document.querySelector(`#reply-input-${replyIdx}`);
                 const textSpan = document.querySelector(`#reply-text-${replyIdx}`);
-                
+
                 input.value = textSpan.innerText;
                 item.classList.add('editing');
                 input.focus();
@@ -1043,13 +1050,13 @@
 
                 try {
                     await API.put(`/community/reply/update/${replyIdx}`, { replyContent: newContent });
-                    
+
                     document.querySelector(`#reply-text-${replyIdx}`).innerText = newContent;
-                    
+
                     // 다음 수정을 위해 onclick 갱신 (이스케이프 처리)
                     const escapedContent = newContent.replace(/'/g, "\\'");
                     const editBtn = document.querySelector(`#reply-menu-${replyIdx} button:first-child`);
-                    if(editBtn) editBtn.setAttribute("onclick", `CommunityReply.edit(${replyIdx})`); // 단순화 (값은 어차피 DOM에서 읽음)
+                    if (editBtn) editBtn.setAttribute("onclick", `CommunityReply.edit(${replyIdx})`); // 단순화 (값은 어차피 DOM에서 읽음)
 
                     CommunityReply.cancelEdit(replyIdx);
                     Utils.notify("댓글이 수정되었습니다.", "success");
@@ -1069,12 +1076,6 @@
         //  [초기화] 이벤트 리스너 및 전역 함수 매핑
         // ==========================================
         document.addEventListener('DOMContentLoaded', () => {
-            // 시간 포맷팅 적용
-            document.querySelectorAll('.time-ago-target').forEach(el => {
-                const raw = el.innerText.trim();
-                if (raw) el.innerText = Utils.timeAgo(raw);
-            });
-            
             // 모듈 초기화
             CommunityMain.init();
             CommunityWrite.init();
@@ -1087,7 +1088,7 @@
         window.removeExistingFile = CommunityWrite.removeExistingFile;
         window.handleEnter = CommunityReply.handleEnter;
         window.handleSearchEnter = CommunityMain.handleSearchEnter;
-        
+
         // 전역 변수 유지 (일부는 리팩토링 과정에서 제거되었으나, HTML에서 직접 쓰이는지 확인 필요)
         let currentBoardIdx = null; // 댓글 작성 시 필요
     </script>

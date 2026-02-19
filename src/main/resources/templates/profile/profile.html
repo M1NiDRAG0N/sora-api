@@ -85,9 +85,9 @@
             /** 모달 UI 표시 및 애니메이션 */
             showModal: () => {
                 const layer = document.getElementById('profile-layer');
-                
+
                 // Z-Index 관리 (전역 변수 활용)
-                if (typeof window.modalZIndex === 'undefined') window.modalZIndex = 20000;
+                if (typeof window.modalZIndex === 'undefined') window.modalZIndex = 5000;
                 window.modalZIndex++;
                 layer.style.zIndex = window.modalZIndex;
 
@@ -147,13 +147,13 @@
                 try {
                     ProfileApp.state.isLoading = true;
                     const url = userIdx ? `/profile/api/${userIdx}` : '/profile/api/me';
-                    
+
                     const response = await fetch(url);
                     if (!response.ok) throw new Error("Failed to load profile");
 
                     const data = await response.json();
                     ProfileApp.state.data = data;
-                    
+
                     ProfileApp.render(); // 데이터 도착 후 렌더링
 
                 } catch (e) {
@@ -168,7 +168,7 @@
             /** 전체 렌더링 (데이터 기반) */
             render: () => {
                 if (!ProfileApp.state.data) return;
-                
+
                 ProfileApp.renderHeader();
                 ProfileApp.renderStats();
                 ProfileApp.renderList();
@@ -264,7 +264,7 @@
             renderList: () => {
                 const { data, currentTab, subTab } = ProfileApp.state;
                 const container = document.getElementById('profile-dynamic-area');
-                
+
                 let items = [];
                 let title = "";
                 let showSubTabs = false;
@@ -304,7 +304,7 @@
                             : ""; // 이미지 없으면 영역 제거 (왼쪽 정렬)
 
                         const timeStr = (typeof Utils !== 'undefined') ? Utils.timeAgo(item.timeAgo) : item.timeAgo;
-                        
+
                         // 뱃지 텍스트
                         let badgeText = (currentTab === 'comments') ? "댓글" : item.category;
 
