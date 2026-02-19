@@ -1,4 +1,4 @@
-<div th:fragment="div" class="sale-content" id="saleContent">
+<div th:fragment="div" class="timesale-page" id="saleContent">
     <input type="hidden" id="loginUserIdx" th:value="${#authentication.principal.userIdx}">
     <div class="map-wrap">
         <div class="map-box">
@@ -355,12 +355,14 @@
 
                 return `
                     <div class="store-card" onclick="location.href='/timesale/detail?storeIdx=${store.storeIdx}'">
-                        <img src="${imageUrl}" alt="${store.storeName}" class="store-img">
                         <div class="store-info">
                             <h3 class="store-name">${store.storeName}</h3>
                             <div class="store-address">${store.storeAddress}</div>
                             <div class="store-time">${store.storeOpenTime} ~ ${store.storeCloseTime}</div>
                             ${store.eventNote ? `<div class="store-event">${store.eventNote}</div>` : ''}
+                            </div>
+                        <div class="store-thumb">
+                            <img src="${imageUrl}" alt="${store.storeName}" class="store-img">
                         </div>
                     </div>
                 `;
