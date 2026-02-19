@@ -59,5 +59,20 @@ public class Used extends BaseEntity {
     private Integer createdUser;
 
     @Column(name = "IS_USE")
-    private Boolean isUse;
+    @Builder.Default
+    private Boolean isUse = true;
+
+    public void delete() {
+        this.isUse = false;
+    }
+
+    public void update(String usedTitle, String usedContent, Integer usedPrice,
+                       String tradingLoc, Double tradingLat, Double tradingLng) {
+        this.usedTitle = usedTitle;
+        this.usedContent = usedContent;
+        this.usedPrice = usedPrice;
+        this.tradingLoc = tradingLoc;
+        this.tradingLat = tradingLat;
+        this.tradingLng = tradingLng;
+    }
 }

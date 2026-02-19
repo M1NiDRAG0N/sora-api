@@ -9,19 +9,23 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.scit.soragodong.domain.dto.FileRes;
 import com.scit.soragodong.domain.dto.KeywordDto;
 import com.scit.soragodong.domain.dto.UsedDetailRes;
 import com.scit.soragodong.domain.dto.UsedListRes;
 import com.scit.soragodong.domain.dto.UsedRegisterReq;
 import com.scit.soragodong.domain.dto.UsedRegisterRes;
+import com.scit.soragodong.domain.dto.UsedUpdateReq;
 import com.scit.soragodong.domain.enums.FileRefType;
 import com.scit.soragodong.domain.response.ApiResponse;
 import com.scit.soragodong.domain.response.PageResponse;
@@ -121,6 +125,59 @@ public class UsedMarketController {
         Integer currentUserId = userDetails != null ? userDetails.getUserIdx() : null;
         UsedDetailRes result = usedService.getUsedDetail(usedIdx, currentUserId);
         return ApiResponse.success(result);
+    }
+
+    /**
+     * 중고 물품 논리 삭제
+     * DELETE /used-market/{usedIdx}
+     */
+    @DeleteMapping("/{usedIdx}")
+    @ResponseBody
+    public ApiResponse<?> deleteUsedItem(
+            @PathVariable Integer usedIdx,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        log.info("[중고거래] 상품 삭제 요청 - ID: {}, 사용자: {}", usedIdx, userDetails.getUserIdx());
+        usedService.deleteUsedItem(usedIdx, userDetails.getUserIdx());
+        return ApiResponse.success("상품이 삭제되었습니다.", null);
+    }
+
+    /**
+     * 중고 물품 수정
+     * PUT /used-market/{usedIdx}
+     */
+    @PutMapping("/{usedIdx}")
+    @ResponseBody
+    public ApiResponse<?> updateUsedItem(
+            @PathVariable Integer usedIdx,
+            @ModelAttribute UsedUpdateReq req,
+            @RequestParam(required = false) List<MultipartFile> newFiles,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        log.info("[중고거래] 상품 수정 요청 - ID: {}, 사용자: {}", usedIdx, userDetails.getUserIdx());
+        usedService.updateUsedItem(usedIdx, req, userDetails.getUserIdx());
+
+        if (newFiles != null && !newFiles.isEmpty()) {
+            try {
+                fileService.upload(FileRefType.USED, usedIdx, newFiles);
+            } catch (Exception e) {
+                log.warn("[중고거래] 수정 파일 업로드 실패: {}", e.getMessage());
+            }
+        }
+
+        return ApiResponse.success("상품이 수정되었습니다.", null);
+    }
+
+    /**
+     * 수정 시 기존 이미지 파일 목록 조회
+     * GET /used-market/{usedIdx}/files
+     */
+    @GetMapping("/{usedIdx}/files")
+    @ResponseBody
+    public ApiResponse<List<FileRes>> getUsedFiles(
+            @PathVariable Integer usedIdx) {
+
+        return ApiResponse.success(usedService.getUsedFiles(usedIdx));
     }
 
     // ==================== 키워드 관리 ====================

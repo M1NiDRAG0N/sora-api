@@ -37,7 +37,7 @@
         <div class="modal-overlay"></div>
         
         <!-- 글쓰기 모달 -->
-        <div class="modal-container" id="writeModal">
+        <div class="modal-container" id="writeModal" style="z-index: 1001;">
             <div class="modal-content modal-write">
                 <div class="modal-write-header">
                     <button type="button" class="modal-close-btn">
@@ -137,6 +137,21 @@
                     </div>
                 </div>
 
+                <!-- 삭제 확인 모달 -->
+                <div class="modal-overlay" id="deleteConfirmModal">
+                    <div class="used-custom-modal">
+                        <div class="used-modal-title">상품 삭제</div>
+                        <div class="used-modal-desc">
+                            정말 이 상품을 삭제하시겠습니까?<br>
+                            삭제된 상품은 복구할 수 없습니다.
+                        </div>
+                        <div class="used-modal-btn-row">
+                            <button class="used-modal-btn btn-cancel-delete">취소</button>
+                            <button class="used-modal-btn btn-confirm-delete">삭제</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="modal-view-footer">
                     <ion-icon name="heart-outline" class="heart-icon"></ion-icon>
                     <div class="price-info">
@@ -208,7 +223,11 @@
             selectedLng: null,
             selectedAddress: null,
             geocoder: null,
-            selectedFiles: [], // 이미지 파일 저장용
+            selectedFiles: [],    // 등록/수정 시 새 이미지 파일
+            deletedFileIdxs: [],  // 수정 시 삭제할 기존 파일 ID
+            isEditMode: false,
+            editingUsedIdx: null,
+            currentDetailData: null,
 
             // 목록 관련
             currentPage: 1,
@@ -307,6 +326,28 @@
                 document.addEventListener('click', () => {
                     document.getElementById('ownerMenu').classList.remove('active');
                     document.getElementById('guestMenu').classList.remove('active');
+                });
+
+                // 수정 버튼
+                document.querySelector('.edit-post-btn').addEventListener('click', () => {
+                    document.getElementById('ownerMenu').classList.remove('active');
+                    this.openEditMode();
+                });
+
+                // 삭제 버튼
+                document.querySelector('.delete-post-btn').addEventListener('click', () => {
+                    document.getElementById('ownerMenu').classList.remove('active');
+                    this.confirmDelete();
+                });
+
+                // 삭제 확인 모달 버튼
+                document.querySelector('.btn-cancel-delete').addEventListener('click', () => this.closeDeleteModal());
+                document.querySelector('.btn-confirm-delete').addEventListener('click', () => this.deleteUsedItem());
+
+                // 신고 버튼
+                document.querySelector('.report-post-btn').addEventListener('click', () => {
+                    document.getElementById('guestMenu').classList.remove('active');
+                    Utils.notify('신고 기능은 준비 중입니다.', 'warning');
                 });
 
                 // 검색 기능
@@ -469,6 +510,8 @@
 
             openWriteModal: function() {
                 this.resetWriteForm();
+                this.isEditMode = false;
+                document.querySelector('.modal-write-title').innerText = '내 물건 팔기';
                 document.getElementById('writeModal').classList.add('active');
                 this.updateOverlay();
 
@@ -568,14 +611,113 @@
                     heartIcon.style.color = data.isLiked ? '#ff6b6b' : '';
                 }
 
-                // 현재 상품 ID 및 작성자 여부 저장
+                // 현재 상품 데이터 캐싱
                 this.currentUsedIdx = data.usedIdx;
                 this.currentIsOwner = data.isOwner || false;
+                this.currentDetailData = data;
             },
             
             closeViewModal: function() {
                 document.getElementById('viewModal').classList.remove('active');
                 this.updateOverlay();
+            },
+
+            // ==================== 수정 ====================
+
+            openEditMode: async function() {
+                const data = this.currentDetailData;
+                if (!data) return;
+
+                this.resetWriteForm();
+                this.isEditMode = true;
+                this.editingUsedIdx = data.usedIdx;
+
+                // 폼 필드 채우기
+                document.getElementById('productTitle').value = data.usedTitle || '';
+                document.getElementById('productDesc').value = data.usedContent || '';
+                document.getElementById('productPrice').value = data.usedPrice || '';
+                document.getElementById('selectedLocationAddress').value = data.tradingLoc || '';
+                document.getElementById('selectedLocationLat').value = data.tradingLat || '';
+                document.getElementById('selectedLocationLng').value = data.tradingLng || '';
+                document.querySelector('.modal-write-title').innerText = '상품 수정';
+
+                // 기존 이미지 로드
+                try {
+                    const res = await API.get(`/used-market/${data.usedIdx}/files`);
+                    if (res.status === 200 && res.data) {
+                        this.renderExistingFiles(res.data);
+                    }
+                } catch (e) {
+                    console.error('[수정] 기존 파일 로드 실패:', e);
+                }
+
+                document.getElementById('writeModal').classList.add('active');
+                this.updateOverlay();
+
+                // 지도 초기화 및 기존 좌표 마커 표시
+                setTimeout(() => {
+                    this.initWriteMap();
+                    const lat = parseFloat(data.tradingLat);
+                    const lng = parseFloat(data.tradingLng);
+                    if (lat && lng && this.writeMap) {
+                        const location = { lat, lng };
+                        this.writeMap.setCenter(location);
+                        this.writeMap.setZoom(16);
+                        this.updateWriteMarker(location);
+                        this.selectedLat = lat;
+                        this.selectedLng = lng;
+                        this.selectedAddress = data.tradingLoc;
+                    }
+                }, 100);
+            },
+
+            renderExistingFiles: function(files) {
+                const cameraBtn = document.getElementById('cameraBtn');
+                files.forEach(file => {
+                    const html = `
+                        <div class="preview-box existing-file" data-file-idx="${file.fileIdx}">
+                            <img src="${file.fileUrl}" class="preview-img">
+                            <div class="btn-remove-img" onclick="UsedMarketUI.removeExistingFile(this, ${file.fileIdx})">
+                                <ion-icon name="close"></ion-icon>
+                            </div>
+                        </div>`;
+                    cameraBtn.insertAdjacentHTML('afterend', html);
+                });
+                this.updateImageCount();
+            },
+
+            removeExistingFile: function(btn, fileIdx) {
+                btn.closest('.preview-box').remove();
+                this.deletedFileIdxs.push(fileIdx);
+                this.updateImageCount();
+            },
+
+            // ==================== 삭제 ====================
+
+            confirmDelete: function() {
+                document.getElementById('deleteConfirmModal').classList.add('show');
+            },
+
+            closeDeleteModal: function() {
+                document.getElementById('deleteConfirmModal').classList.remove('show');
+            },
+
+            deleteUsedItem: async function() {
+                try {
+                    const response = await API.delete(`/used-market/${this.currentUsedIdx}`);
+                    if (response.status === 200) {
+                        Utils.notify('상품이 삭제되었습니다.', 'success');
+                        this.closeDeleteModal();
+                        this.closeAllModals();
+
+                        // 목록에서 카드 제거
+                        const card = document.querySelector(`.market-item[data-id="${this.currentUsedIdx}"]`);
+                        if (card) card.remove();
+                    }
+                } catch (error) {
+                    console.error('[삭제] 실패:', error);
+                    Utils.notify('삭제 중 오류가 발생했습니다.', 'error');
+                }
             },
 
             // ==================== 키워드 관리 ====================
@@ -864,15 +1006,15 @@
                     return;
                 }
 
-                // 유효한 파일만 필터링 (null 제외)
                 const validFiles = this.selectedFiles.filter(f => f !== null);
-                if (validFiles.length === 0) {
+
+                // 신규 등록 시에만 이미지 필수
+                if (!this.isEditMode && validFiles.length === 0) {
                     Utils.notify('최소 1장 이상의 이미지를 추가해주세요', 'error');
                     return;
                 }
 
                 try {
-                    // FormData 생성
                     const formData = new FormData();
                     formData.append('usedTitle', title);
                     formData.append('usedContent', content);
@@ -881,34 +1023,43 @@
                     if (lat) formData.append('tradingLatitude', lat);
                     if (lng) formData.append('tradingLongitude', lng);
 
-                    // 이미지 파일 추가
-                    validFiles.forEach(file => {
-                        formData.append('files', file);
-                    });
+                    if (this.isEditMode) {
+                        // 수정 모드
+                        validFiles.forEach(file => formData.append('newFiles', file));
+                        this.deletedFileIdxs.forEach(idx => formData.append('deleteFileIdxs', idx));
 
-                    Utils.notify('상품을 등록하고 있습니다...', 'info');
+                        Utils.notify('상품을 수정하고 있습니다...', 'info');
 
-                    // API 호출
-                    const response = await API.postFormData('/used-market/register', formData);
+                        const resp = await fetch(`/used-market/${this.editingUsedIdx}`, { method: 'PUT', body: formData });
+                        const result = await resp.json();
 
-                    if (response.status === 200 && response.data) {
-                        Utils.notify(response.message || '상품이 등록되었습니다', 'success');
-                        console.log('[중고거래] 등록 완료:', response.data);
-
-                        // 알림 발송 확인
-                        if (response.data.notifiedUserCount > 0) {
-                            Utils.notify(`${response.data.notifiedUserCount}명의 사용자에게 알림이 발송되었습니다!`, 'info');
+                        if (resp.ok) {
+                            Utils.notify(result.message || '상품이 수정되었습니다.', 'success');
+                            setTimeout(() => {
+                                this.closeWriteModal();
+                                this.openViewModal(this.editingUsedIdx);
+                            }, 1000);
+                        } else {
+                            Utils.notify(result.message || '수정에 실패했습니다.', 'error');
                         }
+                    } else {
+                        // 신규 등록 모드
+                        validFiles.forEach(file => formData.append('files', file));
 
-                        // 모달 닫기 및 페이지 새로고침
-                        setTimeout(() => {
-                            this.closeWriteModal();
-                            location.reload();
-                        }, 1500);
+                        const response = await API.postFormData('/used-market/register', formData);
+
+                        if (response.status === 200 && response.data) {
+                            Utils.notify(response.message || '상품이 등록되었습니다.', 'success');
+
+                            setTimeout(() => {
+                                this.closeWriteModal();
+                                location.reload();
+                            }, 1500);
+                        }
                     }
 
                 } catch (error) {
-                    console.error('[중고거래] 등록 실패:', error);
+                    console.error('[중고거래] 요청 실패:', error);
                     Utils.notify('오류가 발생했습니다: ' + error.message, 'error');
                 }
             },
@@ -943,8 +1094,8 @@
             },
 
             updateImageCount: function() {
-                const validCount = this.selectedFiles.filter(f => f !== null).length;
-                document.getElementById('imgCount').innerText = `${validCount}/10`;
+                const total = document.querySelectorAll('#imageRow .preview-box').length;
+                document.getElementById('imgCount').innerText = `${total}/10`;
             },
 
             resetWriteForm: function() {
@@ -955,12 +1106,14 @@
                 document.getElementById('selectedLocationLat').value = '';
                 document.getElementById('selectedLocationLng').value = '';
                 this.selectedFiles = [];
+                this.deletedFileIdxs = [];
+                this.editingUsedIdx = null;
                 this.selectedAddress = null;
                 this.selectedLat = null;
                 this.selectedLng = null;
 
                 // 프리뷰 이미지 제거
-                document.querySelectorAll('.preview-box').forEach(el => el.remove());
+                document.querySelectorAll('#imageRow .preview-box').forEach(el => el.remove());
                 this.updateImageCount();
 
                 // 마커 제거
