@@ -49,7 +49,7 @@ public class NotificationController {
      * @param userId 사용자 ID
      */
     @GetMapping(value = "/subscribe/{userId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter subscribeWithPathParam(@PathVariable Integer userId) {
+    public SseEmitter subscribeWithPathParam(@PathVariable(name = "userId") Integer userId) {
         log.info("[SSE] 구독 요청 - 사용자: {}", userId);
         return sseService.subscribe(userId);
     }
@@ -59,7 +59,7 @@ public class NotificationController {
      * GET /notifications/status/{userId}
      */
     @GetMapping("/status/{userId}")
-    public ResponseEntity<?> getConnectionStatus(@PathVariable Integer userId) {
+    public ResponseEntity<?> getConnectionStatus(@PathVariable(name = "userId") Integer userId) {
         boolean isConnected = sseService.isConnected(userId);
         return ResponseEntity.ok()
                 .body(new java.util.HashMap<String, Object>() {{
@@ -74,7 +74,7 @@ public class NotificationController {
      * POST /notifications/disconnect/{userId}
      */
     @GetMapping("/disconnect/{userId}")
-    public ResponseEntity<?> disconnect(@PathVariable Integer userId) {
+    public ResponseEntity<?> disconnect(@PathVariable(name = "userId") Integer userId) {
         sseService.disconnect(userId);
         return ResponseEntity.ok()
                 .body(new java.util.HashMap<String, Object>() {{

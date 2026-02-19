@@ -58,23 +58,23 @@ public class UsedMarketController {
     @PostMapping("/register")
     @ResponseBody
     public ApiResponse<UsedRegisterRes> registerUsedItem(
-            @RequestParam String usedTitle,
-            @RequestParam String usedContent,
-            @RequestParam Integer usedPrice,
-            @RequestParam(required = false) String tradingLoc,
-            @RequestParam(required = false) Double tradingLatitude,
-            @RequestParam(required = false) Double tradingLongitude,
-            @RequestParam(required = false) List<MultipartFile> files,
+            @RequestParam(name = "usedTitle") String usedTitle,
+            @RequestParam(name = "usedContent") String usedContent,
+            @RequestParam(name = "usedPrice") Integer usedPrice,
+            @RequestParam(name = "tradingLoc", required = false) String tradingLoc,
+            @RequestParam(name = "tradingLatitude", required = false) Double tradingLatitude,
+            @RequestParam(name = "tradingLongitude", required = false) Double tradingLongitude,
+            @RequestParam(name = "files", required = false) List<MultipartFile> files,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         log.info("[중고거래] 상품 등록 요청 - 제목: {}, 사용자: {}", usedTitle, userDetails.getUserIdx());
 
-        Integer userId = userDetails.getUserIdx();
+        Integer userIdx = userDetails.getUserIdx();
 
         UsedRegisterReq req = new UsedRegisterReq(
                 usedTitle, usedContent, usedPrice,
                 tradingLoc, tradingLatitude, tradingLongitude,
-                userId
+                userIdx
         );
 
         UsedRegisterRes result = usedService.registerUsedItem(req);
@@ -163,7 +163,7 @@ public class UsedMarketController {
     @DeleteMapping("/keywords/{keywordIdx}")
     @ResponseBody
     public ApiResponse<?> deleteKeyword(
-            @PathVariable Integer keywordIdx,
+            @PathVariable(name = "keywordIdx") Integer keywordIdx,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         log.info("[키워드] 삭제 요청 - 사용자: {}, 키워드ID: {}", userDetails.getUserIdx(), keywordIdx);
