@@ -679,11 +679,11 @@
     right: 20px;
     height: 60px;
     background: white;
-    border-radius: 30px;
+    border-radius: 20px;
     display: flex;
     align-items: center;
     padding: 0 10px 0 20px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     z-index: 30;
 }
 
