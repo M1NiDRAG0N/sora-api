@@ -401,7 +401,7 @@
              * 아이템 HTML 생성
              */
             createItemHtml: function(item) {
-                const thumbnail = item.thumbnailPath || 'https://via.placeholder.com/200?text=No+Image';
+                const thumbnail = item.thumbnailPath || '';
                 const price = item.usedPrice ? item.usedPrice.toLocaleString() + '원' : '가격 미정';
                 const location = item.tradingLoc ? this.extractDong(item.tradingLoc) : '위치 미정';
                 const timeAgo = Utils.timeAgo(item.createdAt);
@@ -410,7 +410,7 @@
 
                 return `
                     <div class="market-item" data-id="${item.usedIdx}">
-                        <img src="${thumbnail}" class="item-thumb" alt="상품" onerror="this.src='https://via.placeholder.com/200?text=No+Image'">
+                        <img src="${thumbnail}" class="item-thumb" alt="상품">
                         <div class="item-info">
                             <div>
                                 <div class="item-title">${this.escapeHtml(item.usedTitle)}</div>
@@ -516,11 +516,11 @@
                     if (data.images && data.images.length > 0) {
                         swiperWrapper.innerHTML = data.images.map(img =>
                             `<div class="swiper-slide">
-                                <img src="${img}" onerror="this.src='https://via.placeholder.com/400?text=No+Image'">\
+                                <img src="${img}" onerror="this.src=''">\
                             </div>`
                         ).join('');
                     } else {
-                        swiperWrapper.innerHTML = '<div class="swiper-slide"><img src="https://via.placeholder.com/400?text=No+Image"></div>';
+                        swiperWrapper.innerHTML = '<div class="swiper-slide"><img src=""></div>';
                     }
                 }
 

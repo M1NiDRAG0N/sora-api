@@ -99,8 +99,8 @@ public class UsedMarketController {
     @GetMapping("/list")
     @ResponseBody
     public ApiResponse<PageResponse<UsedListRes>> getUsedList(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(required = false) String keyword) {
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "keyword", required = false) String keyword) {
 
         log.info("[중고거래] 목록 조회 - 페이지: {}, 키워드: {}", page, keyword);
         PageResponse<UsedListRes> result = usedService.getUsedList(page, keyword);
@@ -114,7 +114,7 @@ public class UsedMarketController {
     @GetMapping("/{usedIdx}")
     @ResponseBody
     public ApiResponse<UsedDetailRes> getUsedDetail(
-            @PathVariable Integer usedIdx,
+            @PathVariable(name = "usedIdx") Integer usedIdx,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         log.info("[중고거래] 상세 조회 - ID: {}", usedIdx);

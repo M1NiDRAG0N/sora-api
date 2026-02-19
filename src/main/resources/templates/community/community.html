@@ -2,243 +2,72 @@
 <div class="page-wrapper community-page" th:fragment="div">
 
     <!-- [1] 헤더 (고정) - 카테고리 + 검색 -->
-    <div class="page-header">
-        <div class="category-bar2" id="categoryBar">
-            <div class="cat-scroll">
-                <div class="cat-chip active" onclick="CommunityMain.selectCategory(this)" data-cate="전체">전체</div>
-                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)" data-cate="소분/나눔">소분/나눔</div>
-                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)" data-cate="꿀팁/정보">꿀팁/정보</div>
-                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)" data-cate="자유/수다">자유/수다</div>
-                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)" data-cate="요리/집밥">요리/집밥</div>
-                <div class="cat-chip" onclick="CommunityMain.selectCategory(this)" data-cate="질문/고민">질문/고민</div>
-            </div>
-            <div class="search-input-box">
-                <input type="text" class="real-search-input" id="searchInput" placeholder="검색어를 입력하세요"
-                    onkeypress="handleSearchEnter(event)">
-            </div>
-            <div class="search-btn" onclick="CommunityMain.toggleSearchMode()">
-                <ion-icon name="search-outline" id="searchIcon"></ion-icon>
-            </div>
+    <div class="category-bar2" id="categoryBar">
+        <div class="cat-scroll">
+            <div class="cat-chip active" onclick="CommunityMain.selectCategory(this)" data-cate="전체">전체</div>
+            <div class="cat-chip" onclick="CommunityMain.selectCategory(this)" data-cate="소분/나눔">소분/나눔</div>
+            <div class="cat-chip" onclick="CommunityMain.selectCategory(this)" data-cate="꿀팁/정보">꿀팁/정보</div>
+            <div class="cat-chip" onclick="CommunityMain.selectCategory(this)" data-cate="자유/수다">자유/수다</div>
+            <div class="cat-chip" onclick="CommunityMain.selectCategory(this)" data-cate="요리/집밥">요리/집밥</div>
+            <div class="cat-chip" onclick="CommunityMain.selectCategory(this)" data-cate="질문/고민">질문/고민</div>
+        </div>
+        <div class="search-input-box">
+            <input type="text" class="real-search-input" id="searchInput" placeholder="검색어를 입력하세요"
+                onkeypress="handleSearchEnter(event)">
+        </div>
+        <div class="search-btn" onclick="CommunityMain.toggleSearchMode()">
+            <ion-icon name="search-outline" id="searchIcon"></ion-icon>
         </div>
     </div>
 
     <!-- [2] 콘텐츠 (스크롤 영역) - 피드 리스트 -->
     <div class="page-content">
-        <div class="content-inner">
-            <div class="feed-list2" id="feedListContainer">
+        <div class="feed-list2" id="feedListContainer">
 
-                <div th:each="board : ${boardDtoList}" class="feed-card" th:data-boardIdx="${board.boardIdx}"
-                    onclick="CommunityView.openView(this)">
+            <div th:each="board : ${boardDtoList}" class="feed-card" th:data-boardIdx="${board.boardIdx}"
+                onclick="CommunityView.openView(this)">
 
-                    <div class="feed-header">
-                        <div class="feed-user-group">
-                            <!-- <img th:src="${board.userImg != null ? board.userImg : '/images/default-profile.png'}"
-                                class="user-img-md"> -->
-                            <div class="user-info-text">
-                                <span class="user-name" th:text="${board.userNickname}">닉네임</span>
-                                <span class="post-time" th:text="${board.timeAgo}">시간</span>
-                            </div>
-                        </div>
-                        <span class="post-tag" th:text="${board.boardCategory}">카테고리</span>
-                    </div>
-
-                    <div class="feed-body">
-                        <div class="feed-text-area">
-                            <div class="feed-title" th:text="${board.boardTitle}">제목</div>
-                            <div class="feed-preview" th:text="${board.boardContent}">내용</div>
-                        </div>
-                        <img th:if="${board.fileGrpIdx != null}" th:src="@{/img/group/{idx}(idx=${board.fileGrpIdx})}"
-                            class="feed-thumb">
-                    </div>
-
-                    <div class="feed-footer">
-                        <div class="action-item">
-                            <ion-icon name="chatbubble-outline"></ion-icon>
-                            <span th:text="${board.replyCount}">0</span>
-                        </div>
-                        <div class="action-item">
-                            <ion-icon name="heart-outline"></ion-icon>
-                            <span th:text="${board.likeCount}">0</span>
-                        </div>
-                        <div class="action-item">
-                            <ion-icon name="eye-outline"></ion-icon>
-                            <span th:text="${board.viewCount}">0</span>
+                <div class="feed-header">
+                    <div class="feed-user-group">
+                        <!-- <img th:src="${board.userImg != null ? board.userImg : '/images/default-profile.png'}"
+                            class="user-img-md"> -->
+                        <div class="user-info-text">
+                            <span class="user-name" th:text="${board.userNickname}">닉네임</span>
+                            <span class="post-time" th:text="${board.timeAgo}">시간</span>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <div id="loading-trigger" style="padding: 20px; text-align: center; color: #888;">
-                <span class="loading-text">Loading...</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- [3] 모달 레이어 (고정) -->
-    <div class="modal-layers">
-        
-        <!-- 글쓰기 모달 -->
-        <div class="modal-container" id="writeForm">
-            <div class="modal-overlay"></div>
-            <div class="modal-content">
-
-                <div class="write-header">
-                    <div class="btn-cancel" onclick="CommunityWrite.close()">취소</div>
-                    <div class="page-title2">글쓰기</div>
-                    <div class="btn-done" onclick="CommunityWrite.submitPost()">완료</div>
+                    <span class="post-tag" th:text="${board.boardCategory}">카테고리</span>
                 </div>
 
-                <input type="hidden" id="loginUserIdx" th:value="${#authentication.principal.userIdx}">
-
-                <div class="category-select-area">
-                    <div class="select-chip selected" onclick="CommunityMain.selectCategoryWrite(this)" data-value="소분/나눔">소분/나눔
+                <div class="feed-body">
+                    <div class="feed-text-area">
+                        <div class="feed-title" th:text="${board.boardTitle}">제목</div>
+                        <div class="feed-preview" th:text="${board.boardContent}">내용</div>
                     </div>
-                    <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="꿀팁/정보">꿀팁/정보</div>
-                    <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="자유/수다">자유/수다</div>
-                    <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="요리/집밥">요리/집밥</div>
-                    <div class="select-chip" onclick="CommunityMain.selectCategoryWrite(this)" data-value="질문/고민">질문/고민</div>
+                    <img th:if="${board.fileGrpIdx != null}" th:src="@{/img/group/{idx}(idx=${board.fileGrpIdx})}"
+                        class="feed-thumb">
                 </div>
 
-                <div class="write-card">
-                    <input type="text" id="title-input" placeholder="제목을 입력하세요.">
-                    <div class="divider"></div>
-                    <textarea id="content-textarea" placeholder="내용을 입력하세요."></textarea>
-
-                    <div class="image-attach-row" id="imageRow">
-                        <div class="camera-btn" onclick="document.getElementById('fileInput').click()">
-                            <ion-icon name="camera" class="camera-icon"></ion-icon>
-                            <span class="camera-count" id="imgCount">0/10</span>
-                        </div>
-                        <input type="file" id="fileInput" style="display: none;" accept="image/*" multiple
-                            onchange="handleFileSelect(this)">
+                <div class="feed-footer">
+                    <div class="action-item">
+                        <ion-icon name="chatbubble-outline"></ion-icon>
+                        <span th:text="${board.replyCount}">0</span>
                     </div>
-                </div>
-
-                <div class="bottom-spacer"></div>
-
-            </div>
-        </div>
-        <div class="feed-list2" id="feedListContainer"></div>
-
-        <!-- 상세보기 모달 -->
-        <div class="modal-container" id="viewForm">
-            <input type="hidden" id="loginUserIdxMain" th:value="${#authentication.principal.userIdx}">
-            <div class="modal-overlay"></div>
-            <div class="modal-content">
-                
-                <div class="view-header">
-                    <button type="button" class="header-btn-icon" onclick="CommunityView.closeView()">
-                        <ion-icon name="chevron-back"></ion-icon>
-                    </button>
-                    <div>상세보기</div>
-
-                    <div class="header-right-group">
-                        <button type="button" class="header-btn-icon" onclick="CommunityView.toggleBoardMenu()">
-                            <ion-icon name="ellipsis-horizontal"></ion-icon>
-                        </button>
-                        <div class="custom-dropdown-menu" id="board-owner-menu">
-                            <button class="menu-item" onclick="CommunityView.editBoard()">게시글 수정</button>
-                            <button class="menu-item danger" onclick="CommunityView.confirmDelete()">게시글 삭제</button>
-                        </div>
-
-                        <div class="custom-dropdown-menu" id="board-visitor-menu">
-                            <button class="menu-item danger" onclick="CommunityView.reportBoard()">신고하기</button>
-                        </div>
+                    <div class="action-item">
+                        <ion-icon name="heart-outline"></ion-icon>
+                        <span th:text="${board.likeCount}">0</span>
                     </div>
-                </div>
-
-                <div class="modal-overlay" id="deleteConfirmModal">
-                    <div class="custom-modal">
-                        <div class="modal-title">게시글 삭제</div>
-                        <div class="modal-desc">
-                            정말 이 게시글을 삭제하시겠습니까?<br>
-                            삭제된 글은 복구할 수 없습니다.
-                        </div>
-                        <div class="modal-btn-row">
-                            <button class="modal-btn btn-close" onclick="CommunityView.closeDeleteModal()">취소</button>
-                            <button class="modal-btn btn-delete2" onclick="
-                                CommunityView.deleteBoard(this)">삭제</button>
-                        </div>
+                    <div class="action-item">
+                        <ion-icon name="eye-outline"></ion-icon>
+                        <span th:text="${board.viewCount}">0</span>
                     </div>
-                </div>
-
-                <div class="content-scroll-area">
-
-                    <article class="post-card-full">
-                        <div class="post-header-row">
-                            <a href="profile.user.html" class="writer-info">
-                                <img src="https://i.pravatar.cc/150?img=68" class="writer-img">
-                                <div class="writer-text">
-                                    <span class="writer-name" id="view-writer"></span>
-                                    <span class="write-time" id="view-time"></span>
-                                </div>
-                            </a>
-                            <span class="category-badge" id="view-category"></span>
-                        </div>
-
-                        <div class="post-text" id="view-content"></div>
-
-                        <img src="" class="post-image" alt="이미지" id="view-image" style="display: none;">
-                        <div id="dynamic-image-container"></div>
-
-                        <div class="post-stats-row">
-                            <div class="stat-item">
-                                <ion-icon name="heart-outline"></ion-icon> <span id="view-like">2</span>
-                            </div>
-                            <div class="stat-item">
-                                <ion-icon name="eye-outline"></ion-icon> <span id="view-view">2</span>
-                            </div>
-                        </div>
-                    </article>
-
-                    <section>
-                        <div class="comment-section-title">댓글 <sapn id="reply-count"></sapn>
-                        </div>
-
-                        <!-- 댓글 목록 태그-->
-                        <div class="comment-list" id="reply-card"></div>
-                    </section>
-
-                </div>
-
-                <div class="input-container-floating">
-                    <input type="text" class="input-field2" placeholder="메시지 입력..." onkeypress="handleEnter(event)">
-
-                    <button type="button" class="btn-mic">
-                        <ion-icon name="mic-outline"></ion-icon>
-                    </button>
-
-                    <button type="button" class="btn-send-circle" onclick="CommunityReply.sendReply()">
-                        <ion-icon name="paper-plane"></ion-icon>
-                    </button>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- 채팅 레이어 -->
-        <div id="chatLayer" class="modal-container">
-            <div class="modal-overlay"></div>
-            <div class="modal-content">
-                <div class="chat-header">
-                    <button type="button" onclick="closeChat()" style="font-size: 28px;">
-                        <ion-icon name="chevron-down"></ion-icon>
-                    </button>
-                    <div class="header-title">소라고동 AI</div>
-                    <div style="width: 28px;"></div>
-                </div>
-
-                <div class="chat-body no-scrollbar" id="chatContainer"></div>
-
-                <div class="chat-input-area">
-                    <input type="text" class="chat-input" placeholder="메시지를 입력하세요...">
-                    <button type="button" class="btn-send">
-                        <ion-icon name="paper-plane"></ion-icon>
-                    </button>
                 </div>
             </div>
         </div>
 
+        <div id="loading-trigger" style="padding: 20px; text-align: center; color: #888;">
+            <span class="loading-text">Loading...</span>
+        </div>
     </div>
 
     <!-- 글쓰기 버튼 -->
@@ -909,7 +738,7 @@
                 const viewForm = document.querySelector('#viewForm');
 
                 // Z-Index 관리
-                if (typeof window.modalZIndex === 'undefined') window.modalZIndex = 5000;
+                if (typeof window.modalZIndex === 'undefined') window.modalZIndex = 100;
                 window.modalZIndex++;
                 viewForm.style.zIndex = window.modalZIndex;
 
