@@ -59,4 +59,9 @@ public class Users extends BaseEntity {
     @Column(name = "IS_USE", nullable = false)
     private Boolean isUse;
 
+    // [추가] 예산(MonthlyBudget) 수정 전용 메서드
+    public void updateMonthlyBudget(Integer amount) {
+        this.monthlyBudget = amount;
+    }
+
 }

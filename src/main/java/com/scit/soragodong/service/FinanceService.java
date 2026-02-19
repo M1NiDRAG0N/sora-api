@@ -2,8 +2,10 @@ package com.scit.soragodong.service;
 
 import com.scit.soragodong.domain.dto.FinanceDto;
 import com.scit.soragodong.domain.entity.Finance;
+import com.scit.soragodong.domain.entity.MonthlyBudget; // [추가됨] 월별 예산 엔티티
 import com.scit.soragodong.domain.entity.Users;
 import com.scit.soragodong.repository.FinanceRepository;
+import com.scit.soragodong.repository.MonthlyBudgetRepository; // [추가됨] 월별 예산 레포지토리
 import com.scit.soragodong.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -23,6 +26,7 @@ public class FinanceService {
 
     private final FinanceRepository financeRepository;
     private final UserRepository userRepository;
+    private final MonthlyBudgetRepository monthlyBudgetRepository; // [추가됨] 월별 예산 DB 연결
 
     /**
      * [저장 및 수정] 가계부 내역 쓰기
@@ -60,7 +64,7 @@ public class FinanceService {
 
                 log.info("가계부 수정 완료: ID={}, 기간={}개월", dto.getFinanceIdx(), dto.getDuration());
             } else {
-                // (2) 신규 저장 모드 (이 부분은 이미 잘 짜여져 있습니다!)
+                // (2) 신규 저장 모드
                 Finance finance = Finance.builder()
                         .user(user)
                         .financeCategory(dto.getCategory())
@@ -82,10 +86,7 @@ public class FinanceService {
     }
 
     /**
-     * [조회] 해당 유저의 모든 내역 가져오기 (최신순 정렬 등은 Repository에서 처리하거나 여기서 정렬)
-     * 
-     * @param userIdx 로그인한 유저 ID
-     * @return DTO 리스트
+     * [조회] 해당 유저의 모든 내역 가져오기
      */
     @Transactional(readOnly = true)
     public List<FinanceDto> findAll(Integer userIdx) {
@@ -93,15 +94,10 @@ public class FinanceService {
         Users user = userRepository.findById(userIdx)
                 .orElseThrow(() -> new IllegalArgumentException("해당 유저가 없습니다."));
 
-        // 2. DB 조회 및 DTO 변환
-        // financeRepository.findAllByUser(user) -> List<Finance>
-        // stream().map(FinanceDto::fromEntity) -> List<FinanceDto>
         return financeRepository.findAllByUser(user).stream()
                 .map(FinanceDto::fromEntity)
                 .collect(Collectors.toList());
     }
-
-    // FinanceService.java 에 추가
 
     /**
      * [삭제] 가계부 내역 삭제
@@ -115,5 +111,49 @@ public class FinanceService {
         financeRepository.delete(finance);
         log.info("가계부 내역 삭제 완료: ID={}", financeIdx);
     }
-    
+
+    // ========================================================
+    // [아래부터 월별 예산 시스템으로 완전히 교체된 부분입니다]
+    // ========================================================
+
+    /**
+     * [추가/수정] 특정 월의 예산 설정/업데이트
+     */
+    public void updateBudget(Integer userIdx, String yearMonth, Integer amount) {
+        Users user = userRepository.findById(userIdx)
+                .orElseThrow(() -> new IllegalArgumentException("해당 유저가 없습니다."));
+
+        // 해당 월의 예산이 DB에 이미 있는지 확인
+        Optional<MonthlyBudget> existing = monthlyBudgetRepository.findByUserAndYearMonth(user, yearMonth);
+
+        if (existing.isPresent()) {
+            // 이미 설정한 적이 있다면 금액만 수정 (Dirty Checking으로 자동 UPDATE 됨)
+            existing.get().updateAmount(amount);
+            log.info("유저 예산 수정 완료: ID={}, 월={}, 예산={}", userIdx, yearMonth, amount);
+        } else {
+            // 처음 설정하는 달이라면 새로 생성해서 DB에 저장 (INSERT)
+            MonthlyBudget newBudget = MonthlyBudget.builder()
+                    .user(user)
+                    .yearMonth(yearMonth)
+                    .budgetAmount(amount)
+                    .build();
+            monthlyBudgetRepository.save(newBudget);
+            log.info("유저 예산 신규 생성 완료: ID={}, 월={}, 예산={}", userIdx, yearMonth, amount);
+        }
+    }
+
+    /**
+     * [조회] 특정 월의 예산 가져오기
+     */
+    @Transactional(readOnly = true)
+    public Integer getBudget(Integer userIdx, String yearMonth) {
+        Users user = userRepository.findById(userIdx)
+                .orElseThrow(() -> new IllegalArgumentException("해당 유저가 없습니다."));
+
+        // DB에서 해당 월의 예산을 찾아서 리턴, 없으면 기본값 0 리턴
+        return monthlyBudgetRepository.findByUserAndYearMonth(user, yearMonth)
+                .map(MonthlyBudget::getBudgetAmount)
+                .orElse(0);
+    }
+
 }
