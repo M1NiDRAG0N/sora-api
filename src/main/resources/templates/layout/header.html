@@ -1,6 +1,11 @@
 <div th:fragment="header" class="page-header transparent"
      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
+    <!-- SSE 클라이언트 초기화용 사용자 ID -->
+    <input type="hidden" id="loginUserIdx"
+           th:if="${#authentication != null}"
+           th:value="${#authentication.principal.userIdx}">
+
     <div class="header-profile-section" onclick="window.openProfile()" style="cursor: pointer;">
         <img id="headerProfile"
              th:if="${#authentication != null and #authentication.principal.profileIdx != null}"

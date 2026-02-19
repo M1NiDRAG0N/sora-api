@@ -51,9 +51,9 @@ public class SseService {
             emitter.complete();
         });
         
-        // 에러 콜백
+        // 에러 콜백 (클라이언트 연결 끊김은 정상 동작)
         emitter.onError(throwable -> {
-            log.error("[SSE] 에러 발생 - 사용자: {}, 오류: {}", userId, throwable.getMessage());
+            log.warn("[SSE] 연결 끊김 - 사용자: {}, 오류: {}", userId, throwable.getMessage());
             emitters.remove(userId);
             emitter.completeWithError(throwable);
         });
