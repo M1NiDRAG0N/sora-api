@@ -1,6 +1,42 @@
 @charset "UTF-8";
 
 /* ===================================================================
+   [FINANCE PAGE] - 정리된 CSS (중복 제거)
+   
+   구조:
+   - PART 1: 페이지 기본 설정
+   - PART 2: 순자산 섹션 (메인 카드)
+   - PART 3: 대시보드, 달력, 거래 목록
+   - PART 4: 작성 폼
+   - PART 5: 상세 영역
+   - PART 6: 모달 (중앙 팝업 override만)
+   
+   주의: 모달 기본 스타일은 unified-layout.css에서 제공
+   =================================================================== */
+
+/* ===================================================================
+   [PART 1] 페이지 기본 설정
+   =================================================================== */
+.finance-page {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0;
+    padding-bottom: 100px;
+    -webkit-overflow-scrolling: touch;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* ===================================================================
+   [PART 2] 순자산 섹션 (Net Worth)
+   =================================================================== */
+.finance-page .net-worth-label {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 10px;
+}
+/*    
    [Finance.css] 가계부 전용 스타일
    * 공통 스타일(common.css, profile.css 등)과 함께 사용됩니다.
    =================================================================== */
@@ -11,31 +47,6 @@
     --danger-red: #ff4757;
     --success-green: #2ecc71;
     --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-}
-
-.detail-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0 20px 100px 20px;
-    /* 하단 네비게이션 및 플로팅 버튼 공간 확보 */
-}
-
-/* [수정] 공통 .bottom-spacer(80px)와 충돌 방지를 위해 전용 클래스 사용 */
-.finance-spacer {
-    height: 100px;
-}
-
-/* 유틸리티 */
-.icon-sm {
-    font-size: 12px;
-}
-
-.clickable {
-    cursor: pointer;
-}
-
-.mt-5 {
-    margin-top: 5px;
 }
 
 /* ===================================================================
@@ -54,31 +65,71 @@
     color: var(--text-sub, #888);
     margin-bottom: 4px;
     font-weight: 500;
-    margin-top: 20px;
+    letter-spacing: 0px;
+    text-transform: uppercase;
+    opacity: 0.8;
 }
 
-.net-worth-amount {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--text-main, #333);
-    margin-bottom: 6px;
-    letter-spacing: -0.5px;
+.finance-page .net-worth-amount {
+    font-size: 56px;
+    font-weight: 900;
+    color: #1a1a1a;
+    margin-bottom: 12px;
+    letter-spacing: -1.5px;
+    line-height: 1.15;
 }
 
-.net-worth-diff {
-    font-size: 13px;
-    color: var(--text-sub, #888);
-    margin-bottom: 24px;
+.finance-page .net-worth-diff {
+    font-size: 14px;
+    color: #66A3D5;
+    background: #F0F5FA;
+    padding: 12px 16px;
+    border-radius: 10px;
+    display: inline-block;
+    font-weight: 500;
+    border: none;
+    min-height: 20px;
+    transition: all 0.3s ease;
+    margin-top: 12px;
 }
 
-/* 차트 레이아웃 */
-.charts-row {
+.finance-page .net-worth-section {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 40px 24px;
+    text-align: center;
+    color: #1a1a1a;
+    margin: 0 16px 24px 16px;
+    box-shadow: 0 2px 12px rgba(26, 26, 26, 0.08);
+    border: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.finance-page .net-worth-section::before {
+    display: none;
+}
+
+/* ===================================================================
+   [PART 3] 대시보드, 달력, 거래 목록
+   =================================================================== */
+
+/* 대시보드 카드 */
+.finance-page .dashboard-card {
+    background-color: var(--white);
+    border-radius: 28px;
+    padding: 24px 20px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 20px;
+}
+
+.finance-page .charts-row {
     display: flex;
     justify-content: space-between;
     margin-bottom: 24px;
 }
 
-.chart-col {
+.finance-page .chart-col {
     width: 48%;
     position: relative;
     display: flex;
@@ -86,23 +137,21 @@
     align-items: center;
 }
 
-.chart-title {
+.finance-page .chart-title {
     font-size: 12px;
     font-weight: 600;
     color: var(--text-main, #333);
     margin-bottom: 2px;
 }
 
-/* [핵심] 차트 박스 (높이 고정) */
-.chart-box {
+.finance-page .chart-box {
     position: relative;
     width: 100%;
     height: 180px;
     margin: 10px 0;
 }
 
-/* [핵심] 차트 중앙 텍스트 (반응형 정렬) */
-.chart-center-text {
+.finance-page .chart-center-text {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -125,15 +174,16 @@
     font-weight: 500;
 }
 
-.chart-center-value {
+.finance-page .chart-center-value {
+    font-size: 13px;
     display: block;
-    font-size: 14px;
     font-weight: 800;
     color: var(--text-main, #333);
     word-break: break-all;
     line-height: 1.2;
 }
 
+/* 예산 섹션 */
 .chart-center-value.expense {
     color: var(--danger-red);
 }
@@ -141,7 +191,7 @@
 /* ===================================================================
    [SECTION 3] 예산 바 (Budget Bar)
    =================================================================== */
-.budget-header {
+.finance-page .budget-header {
     font-size: 13px;
     font-weight: 700;
     color: #555;
@@ -149,7 +199,7 @@
     letter-spacing: -0.5px;
 }
 
-.budget-bar-wrap {
+.finance-page .budget-bar-wrap {
     display: flex;
     width: 100%;
     height: 36px;
@@ -159,7 +209,7 @@
     background-color: #f1f2f6;
 }
 
-.bar-segment {
+.finance-page .bar-segment {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -171,27 +221,27 @@
     overflow: hidden;
 }
 
-.bg-red {
+.finance-page .bg-red {
     background-color: var(--danger-red);
 }
 
-.bg-green {
+.finance-page .bg-green {
     background-color: var(--success-green);
 }
 
-.budget-info-container {
+.finance-page .budget-info-container {
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
-.budget-row {
+.finance-page .budget-row {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
 }
 
-.row-left {
+.finance-page .row-left {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -202,7 +252,7 @@
     flex-shrink: 0;
 }
 
-.dot-bullet {
+.finance-page .dot-bullet {
     width: 4px;
     height: 4px;
     background-color: #666;
@@ -210,13 +260,13 @@
     display: inline-block;
 }
 
-.row-right {
+.finance-page .row-right {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
 }
 
-.amount-text {
+.finance-page .amount-text {
     font-family: 'Noto Sans KR', sans-serif;
     font-size: 17px;
     font-weight: 700;
@@ -225,25 +275,27 @@
     line-height: 1;
 }
 
-.sub-text {
+.finance-page .sub-text {
     font-size: 11px;
     color: #999;
     margin-top: 5px;
     font-weight: 400;
 }
 
-/* ===================================================================
-   [SECTION 4] 캘린더 (Calendar)
-   =================================================================== */
-.calendar-sheet {
-    background-color: var(--white, #ffffff);
+.finance-page .clickable {
+    cursor: pointer;
+}
+
+/* 달력 섹션 */
+.finance-page .calendar-sheet {
+    background-color: var(--white);
     border-radius: 28px;
     padding: 24px 0 20px 0;
     box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.03);
     margin-top: 10px;
 }
 
-.cal-header {
+.finance-page .cal-header {
     position: relative;
     display: flex;
     align-items: center;
@@ -252,8 +304,12 @@
     margin-bottom: 10px;
 }
 
-.cal-title {
-    font-size: 17px;
+.finance-page .cal-nav-btn {
+    display: none;
+}
+
+.finance-page .cal-title {
+    font-size: 16px;
     font-weight: 700;
     color: var(--text-main, #333);
     letter-spacing: -0.5px;
@@ -264,6 +320,12 @@
     user-select: none;
     transition: color 0.2s;
 }
+
+.finance-page .cal-title:active {
+    color: var(--primary);
+}
+
+/* 스크롤 달력 모드 */
 
 .cal-title:active {
     color: var(--primary, #B2A4FF);
@@ -298,11 +360,11 @@
     scrollbar-width: none;
 }
 
-.date-scroller::-webkit-scrollbar {
+.finance-page .date-scroller::-webkit-scrollbar {
     display: none;
 }
 
-.date-card {
+.finance-page .date-card {
     min-width: 54px;
     display: flex;
     flex-direction: column;
@@ -312,13 +374,28 @@
     position: relative;
 }
 
+.finance-page .money-tag {
+    font-size: 9px;
+    margin-bottom: 2px;
+    height: 12px;
+    display: block;
+    white-space: nowrap;
+}
+
+.finance-page .money-inc {
+    color: var(--success-green);
+}
+
+.finance-page .money-exp {
+    color: var(--danger-red);
+}
 .date-card.active .date-number {
     background-color: #EBE5FF;
     color: var(--primary-dark, #8F7DF5);
     font-weight: 800;
 }
 
-.date-number {
+.finance-page .date-number {
     font-size: 16px;
     color: var(--text-main, #333);
     width: 36px;
@@ -330,38 +407,26 @@
     transition: 0.2s;
 }
 
-.date-day-label {
-    font-size: 10px;
-    color: #BBB;
-    font-weight: 600;
-    margin-bottom: 4px;
+.finance-page .date-card.active .date-number {
+    background-color: #EBE5FF;
+    color: var(--primary-dark);
+    font-weight: 800;
 }
 
-.date-money-space {
-    height: auto;
-    min-height: 12px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 1px;
-    margin-top: 2px;
-}
-
-/* 그리드 뷰 */
-.calendar-grid {
+/* 그리드 달력 모드 */
+.finance-page .calendar-grid {
     width: 100%;
     padding: 0 15px;
     animation: fadeIn 0.3s ease-in-out;
 }
 
-.grid-header-row {
+.finance-page .grid-header-row {
     display: flex;
     justify-content: space-between;
     margin-bottom: 15px;
 }
 
-.grid-header-cell {
+.finance-page .grid-header-cell {
     width: 14.28%;
     text-align: center;
     font-size: 11px;
@@ -369,12 +434,12 @@
     font-weight: 600;
 }
 
-.grid-dates-container {
+.finance-page .grid-dates-container {
     display: flex;
     flex-wrap: wrap;
 }
 
-.grid-date-cell {
+.finance-page .grid-date-cell {
     width: 14.28%;
     height: 80px;
     display: flex;
@@ -385,27 +450,13 @@
     cursor: pointer;
 }
 
-.grid-date-num {
+.finance-page .grid-date-num {
     font-size: 15px;
     color: #333;
     margin-bottom: 4px;
 }
 
-.grid-date-num.today {
-    background-color: #EBE5FF;
-    color: var(--primary-dark, #8F7DF5);
-    width: 28px;
-    height: 28px;
-    line-height: 28px;
-    text-align: center;
-    border-radius: 50%;
-    margin: 0 auto 4px auto;
-    font-weight: 800;
-}
-
-/* 금액 태그 공통 */
-.money-tag,
-.grid-money {
+.finance-page .grid-money {
     font-size: 9px;
     margin-bottom: 2px;
     height: 12px;
@@ -413,20 +464,337 @@
     white-space: nowrap;
 }
 
-.money-inc,
-.grid-money.inc {
+.finance-page .grid-money.inc {
     color: var(--success-green);
 }
 
-.money-exp,
-.grid-money.exp {
+.finance-page .grid-money.exp {
     color: var(--danger-red);
 }
 
 /* ===================================================================
-   [SECTION 5] 상세 내역 리스트 (Detail List)
+   [PART 4] 작성 폼
    =================================================================== */
-.day-detail-section {
+.finance-page .write-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.finance-page .page-title {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-bottom: 25px;
+}
+
+.finance-page .input-group-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.finance-page .input-row-bottom {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.finance-page .input-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.finance-page .input-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-left: 2px;
+}
+
+.finance-page .custom-input {
+    height: 45px;
+    border: 1px solid #E5E5E5;
+    border-radius: 12px;
+    padding: 0 12px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-main);
+    outline: none;
+    background: var(--white);
+    width: 100%;
+}
+
+.finance-page .custom-input:focus {
+    border-color: var(--primary);
+}
+
+.finance-page .col-type {
+    width: 60px;
+    flex-shrink: 0;
+}
+
+.finance-page .col-amount {
+    flex: 1;
+}
+
+.finance-page .col-type select {
+    text-align-last: center;
+    padding-right: 12px;
+}
+
+.finance-page select.custom-input {
+    -webkit-appearance: none;
+    background: var(--white);
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px;
+}
+
+.finance-page .btn-enter {
+    width: 45px;
+    height: 45px;
+    border: 1px solid #E5E5E5;
+    border-radius: 12px;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: var(--text-main);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.finance-page .btn-enter:active {
+    background: #f5f5f5;
+}
+
+.finance-page .memo-area {
+    flex: 1;
+    width: 100%;
+    border: 1px solid #E5E5E5;
+    border-radius: 12px;
+    padding: 15px;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: none;
+    outline: none;
+    margin-bottom: 15px;
+}
+
+.finance-page .btn-submit {
+    align-self: flex-end;
+    padding: 12px 30px;
+    border: 1px solid #E5E5E5;
+    border-radius: 12px;
+    background: var(--white);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-main);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+}
+
+.finance-page .btn-submit:active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.finance-page .btn-delete {
+    align-self: flex-start;
+    margin-top: 10px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 12px;
+    background: #FFF0F0;
+    color: #FF4B4B;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: none;
+}
+
+/* ===================================================================
+   [PART 5] 상세 영역 (Day Detail Section)
+   =================================================================== */
+.finance-page .summary-header {
+    margin-top: 20px;
+    margin-bottom: 30px;
+    padding: 0 5px;
+}
+
+.finance-page .summary-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 8px;
+}
+
+.finance-page .summary-amount {
+    font-size: 32px;
+    font-weight: 900;
+    color: #1A1A1A;
+    letter-spacing: -0.5px;
+}
+
+.finance-page .list-control-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 15px;
+    padding: 0 5px;
+    border-bottom: 1px solid #F0F0F0;
+    padding-bottom: 15px;
+}
+
+.finance-page .list-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.finance-page .list-count {
+    font-size: 12px;
+    color: #999;
+    font-weight: 400;
+    margin-left: 5px;
+}
+
+.finance-page .btn-register {
+    background-color: var(--primary);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 4px 10px rgba(178, 164, 255, 0.4);
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.finance-page .btn-register:active {
+    transform: scale(0.96);
+}
+
+.finance-page .clean-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.finance-page .clean-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 20px 5px;
+    border-bottom: 1px solid #F5F5F5;
+    background: transparent;
+}
+
+.finance-page .item-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    padding-right: 10px;
+    min-width: 0;
+}
+
+.finance-page .item-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #333;
+    transition: color 0.2s;
+    white-space: normal;
+    word-break: keep-all;
+}
+
+.finance-page .item-title.clickable-title {
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    transition: all 0.2s;
+}
+
+.finance-page .item-title.clickable-title:hover {
+    color: var(--primary);
+    text-decoration-color: var(--primary);
+}
+
+.finance-page .item-memo {
+    font-size: 13px;
+    color: #666;
+    font-weight: 400;
+    margin-top: 4px;
+    margin-bottom: 2px;
+    line-height: 1.4;
+    background: #f9f9f9;
+    padding: 8px;
+    border-radius: 8px;
+    white-space: normal;
+    word-break: break-all;
+}
+
+.finance-page .item-date {
+    font-size: 11px;
+    color: #999;
+    margin-top: 2px;
+}
+
+.finance-page .item-right {
+    text-align: right;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.finance-page .item-amount {
+    font-size: 16px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.finance-page .item-amount.inc {
+    color: var(--success-green);
+}
+
+.finance-page .item-amount.exp {
+    color: var(--danger-red);
+}
+
+.finance-page .item-arrow {
+    font-size: 18px;
+    color: #CCC;
+    cursor: pointer;
+    padding: 5px;
+    transition: transform 0.2s, color 0.2s;
+}
+
+.finance-page .item-arrow:hover {
+    color: #666;
+}
+
+.finance-page .item-arrow.rotated {
+    transform: rotate(180deg);
+}
+
+/* 거래 목록 섹션 */
+.finance-page .day-detail-section {
     background-color: #ffffff;
     border-radius: 28px;
     padding: 24px 20px 40px 20px;
@@ -434,6 +802,11 @@
     margin-top: 20px;
     margin-bottom: 20px;
     display: none;
+    animation: slideUp 0.3s ease-out;
+    position: relative;
+}
+
+.finance-page .dd-header-date {
     position: relative;
     animation: slideUp 0.3s ease-out;
 }
@@ -451,7 +824,7 @@
     letter-spacing: -0.5px;
 }
 
-.dd-summary-row {
+.finance-page .dd-summary-row {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
@@ -461,20 +834,19 @@
     padding-bottom: 15px;
 }
 
-.dd-label {
+.finance-page .dd-label {
     font-size: 16px;
     font-weight: 700;
     color: #333;
 }
 
-.dd-count {
+.finance-page .dd-count {
     font-size: 13px;
     color: #999;
     margin-bottom: 2px;
 }
 
-/* 리스트 아이템 */
-.dd-item {
+.finance-page .dd-item {
     margin-bottom: 25px;
     border-bottom: 1px solid #f9f9f9;
     padding-bottom: 15px;
@@ -485,7 +857,7 @@
     margin-bottom: 0;
 }
 
-.dd-item-top {
+.finance-page .dd-item-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -493,13 +865,13 @@
     padding: 0 4px;
 }
 
-.dd-title {
+.finance-page .dd-title {
     font-size: 16px;
     font-weight: 700;
     color: #333;
 }
 
-.dd-amount {
+.finance-page .dd-amount {
     font-size: 17px;
     font-weight: 800;
     display: flex;
@@ -507,15 +879,15 @@
     gap: 4px;
 }
 
-.dd-amount.plus {
+.finance-page .dd-amount.plus {
     color: #2ecc71;
 }
 
-.dd-amount.minus {
+.finance-page .dd-amount.minus {
     color: #ff4757;
 }
 
-.dd-memo-box {
+.finance-page .dd-memo-box {
     background-color: #f9f9f9;
     border-radius: 12px;
     padding: 15px;
@@ -526,14 +898,14 @@
     margin-bottom: 6px;
 }
 
-.dd-time {
+.finance-page .dd-time {
     font-size: 11px;
     color: #ccc;
     margin-left: 8px;
     text-align: left;
 }
 
-.empty-msg {
+.finance-page .empty-msg {
     text-align: center;
     color: #ccc;
     padding: 40px 0;
@@ -937,7 +1309,6 @@ select.modal-input {
         opacity: 0;
         transform: translateY(20px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);

@@ -18,7 +18,8 @@ const API = {
             });
             return await API.handleResponse(response);
         } catch (error) {
-            throw new Error(`GET 요청 실패: ${error.message}`);
+            console.error(`GET 요청 실패: ${error.message}`);
+            throw new Error(`${error.message}`);
         }
     },
 
@@ -39,7 +40,8 @@ const API = {
             });
             return await API.handleResponse(response);
         } catch (error) {
-            throw new Error(`POST 요청 실패: ${error.message}`);
+            console.error(`POST 요청 실패: ${error.message}`);
+            throw new Error(`${error.message}`);
         }
     },
 
@@ -60,7 +62,8 @@ const API = {
             });
             return await API.handleResponse(response);
         } catch (error) {
-            throw new Error(`PUT 요청 실패: ${error.message}`);
+            console.error(`PUT 요청 실패: ${error.message}`);
+            throw new Error(`${error.message}`);
         }
     },
 
@@ -79,7 +82,28 @@ const API = {
             });
             return await API.handleResponse(response);
         } catch (error) {
-            throw new Error(`DELETE 요청 실패: ${error.message}`);
+            console.error(`DELETE 요청 실패: ${error.message}`);
+            throw new Error(`${error.message}`);
+        }
+    },
+
+    /**
+     * FormData를 포함한 POST 요청 (파일 업로드용)
+     * @param {string} url - 요청 URL
+     * @param {FormData} formData - FormData 객체
+     * @returns {Promise} 응답 데이터
+     */
+    postFormData: async (url, formData) => {
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData
+                // Content-Type을 설정하지 않음 (브라우저가 자동으로 multipart/form-data 설정)
+            });
+            return await API.handleResponse(response);
+        } catch (error) {
+            console.error(`FormData POST 요청 실패: ${error.message}`);
+            throw new Error(`${error.message}`);
         }
     },
 
