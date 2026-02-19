@@ -6,7 +6,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -39,31 +38,26 @@ public class SecurityConfig {
         public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
                 http
-                                .csrf(csrf -> csrf.disable())
-                                .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers(
-                                                                "/landing", "/auth/**", "/")
-                                                .permitAll()
-                                                .anyRequest().authenticated())
-                                .formLogin(form -> form
-                                                .loginPage("/auth/login")
-                                                .loginProcessingUrl("/auth/login-proc")
-                                                .successHandler(successHandler)
-                                                .failureHandler(failureHandler)
-                                                .usernameParameter("userEmail")
-                                                .passwordParameter("password"))
-                                .logout(logout -> logout
-                                                .logoutUrl("/logout")
-                                                .logoutSuccessUrl("/login"))
-                                .userDetailsService(userDetailsService);
+                    .csrf(csrf -> csrf.disable())
+                    .authorizeHttpRequests(auth -> auth
+                                    .requestMatchers(
+                                                    "/landing", "/auth/**", "/"
+                                                    , "/css/**", "/js/**", "/images/**", "/static/**")
+                                    .permitAll()
+                                    .anyRequest().authenticated())
+                    .formLogin(form -> form
+                                    .loginPage("/auth/login")
+                                    .loginProcessingUrl("/auth/login-proc")
+                                    .successHandler(successHandler)
+                                    .failureHandler(failureHandler)
+                                    .usernameParameter("userEmail")
+                                    .passwordParameter("password"))
+                    .logout(logout -> logout
+                                    .logoutUrl("/logout")
+                                    .logoutSuccessUrl("/login"))
+                    .userDetailsService(userDetailsService);
 
                 return http.build();
-        }
-
-        @Bean
-        public WebSecurityCustomizer webSecurityCustomizer() {
-                return web -> web.ignoring()
-                                .requestMatchers("/css/**", "/js/**", "/images/**", "/static/**");
         }
 
         @Bean
