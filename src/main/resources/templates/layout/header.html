@@ -1,7 +1,7 @@
 <div th:fragment="header" class="page-header transparent"
      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
-    <div class="header-profile-section">
+    <div class="header-profile-section" onclick="window.openProfile()" style="cursor: pointer;">
         <img id="headerProfile"
              th:if="${#authentication != null and #authentication.principal.profileIdx != null}"
              th:src="@{/img/{id}(id=${#authentication.principal.profileIdx})}"
