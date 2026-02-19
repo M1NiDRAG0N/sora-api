@@ -221,15 +221,13 @@ public class CommunityController {
 
     @GetMapping("/community/like/{boardIdx}")
     @ResponseBody
-    public ResponseEntity<ApiResponse<?>> getMethodName(@PathVariable("boardIdx") Integer boardIdx,
+    public ResponseEntity<ApiResponse<?>> toggleLike(@PathVariable("boardIdx") Integer boardIdx,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        log.info("좋아요 boardIdx 확인 {}", boardIdx);
-        log.info("좋아요 userIdx 확인 {}", userDetails.getUserIdx());
-        Integer userIdx = userDetails.getUserIdx();
+        log.info("좋아요 토글 boardIdx: {}, userIdx: {}", boardIdx, userDetails.getUserIdx());
+        
+        boolean isLiked = cs.toggleLike(boardIdx, userDetails.getUserIdx());
 
-        cs.addLike(boardIdx, userIdx);
-
-        return ResponseEntity.ok(ApiResponse.success("좋아요 성공"));
+        return ResponseEntity.ok(ApiResponse.success(isLiked));
     }
 
 }
