@@ -1,6 +1,5 @@
 package com.scit.soragodong.security;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 

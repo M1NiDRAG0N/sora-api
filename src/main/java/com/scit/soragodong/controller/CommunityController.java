@@ -18,8 +18,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.scit.soragodong.domain.dto.BoardDto;
 import com.scit.soragodong.domain.dto.BoardReplyDto;
 import com.scit.soragodong.domain.dto.FileRes;
-import com.scit.soragodong.domain.entity.BoardReply;
-import com.scit.soragodong.domain.enums.FileRefType;
 import com.scit.soragodong.domain.response.ApiResponse;
 import com.scit.soragodong.security.CustomUserDetails;
 import com.scit.soragodong.service.CommunityService;

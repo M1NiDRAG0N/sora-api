@@ -1,13 +1,11 @@
 package com.scit.soragodong.service;
 
 import java.lang.reflect.Field;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
@@ -34,7 +32,6 @@ import com.scit.soragodong.repository.FileGrpRepository;
 import com.scit.soragodong.repository.FileRepository;
 import com.scit.soragodong.repository.LikeCountRepository;
 import com.scit.soragodong.repository.UserRepository;
-import com.scit.soragodong.util.DateTimeUtil;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
