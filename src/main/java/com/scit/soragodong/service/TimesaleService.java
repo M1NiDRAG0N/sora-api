@@ -1,20 +1,19 @@
 package com.scit.soragodong.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Controller;
+
 import com.scit.soragodong.domain.dto.StoreDto;
 import com.scit.soragodong.domain.dto.StoreProductDto;
 import com.scit.soragodong.domain.entity.Store;
 import com.scit.soragodong.domain.entity.StoreProduct;
 import com.scit.soragodong.repository.StoreProductRepository;
 import com.scit.soragodong.repository.StoreRepository;
-import com.scit.soragodong.util.FileUploadUtil;
+
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Controller
 @AllArgsConstructor
@@ -129,84 +128,5 @@ public class TimesaleService {
             product.getProductPictureIdx()
         );
     }
-
-    //상점 등록용
-    public boolean createStore(StoreDto storeDto) {
-        Store store = new Store().builder()
-                .storeName(storeDto.storeName())
-                .storeAddress(storeDto.storeAddress())
-                .storeOpenTime(storeDto.storeOpenTime())
-                .storeCloseTime(storeDto.storeCloseTime())
-                .eventStartTime(storeDto.eventStartTime())
-                .eventEndTime(storeDto.eventEndTime())
-                .eventNote(storeDto.eventNote())
-                .storePictureIdx(storeDto.storePictureIdx())
-                .build();
-        storeRepository.save(store);
-
-        return true;
-    }
-
-    public void updateIsUse(Integer idx, byte b) {
-        Store store = storeRepository.findById(idx)
-                    .orElseThrow(()-> new RuntimeException());
-        store.setIsUse(b);
-        storeRepository.save(store);
-
-    }
-
-    public void updateStoreName(Integer idx, String name) {
-        Store store = storeRepository.findById(idx)
-                .orElseThrow(()-> new RuntimeException());
-        store.setStoreName(name);
-        storeRepository.save(store);
-    }
-
-    public void insertProduct(StoreProductDto productDto) {
-        // 1. 먼저 해당 storeIdx를 가진 Store 엔티티를 찾습니다.
-        Store store = storeRepository.findById(productDto.storeIdx())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 점포입니다."));
-
-        StoreProduct storeProduct = new StoreProduct().builder()
-                .productNum(productDto.productNum())
-                .productName(productDto.productName())
-                .productQuantity(productDto.productQuantity())
-                .productPictureIdx(productDto.productPictureIdx())
-                .price(productDto.price())
-                .eventPrice(productDto.eventPrice())
-                .category(productDto.category())
-                .store(store)
-                .build();
-        storeProductRepository.save(storeProduct);
-    }
-
-    public void updateStore(int idx, StoreDto dto, MultipartFile uploadFile) {
-        Store store = storeRepository.findById(idx)
-                .orElseThrow(() -> new IllegalArgumentException("해당 점포가 없다"));
-        // 2. 값 변경 (Setter나 별도 메서드 사용)
-        store.setStoreName(dto.storeName());
-        store.setStoreAddress(dto.storeAddress());
-        store.setStoreOpenTime(dto.storeOpenTime());
-        store.setStoreCloseTime(dto.storeCloseTime());
-        store.setEventNote(dto.eventNote());
-        store.setEventStartTime(dto.eventStartTime());
-        store.setEventEndTime(dto.eventEndTime());
-
-        // 3. 사진을 새로 올렸을 때만 교체
-        if (uploadFile != null && !uploadFile.isEmpty()) {
-            String savedFileName = null;
-            try {
-                savedFileName = FileUploadUtil.uploadFile(uploadFile);
-            } catch (
-                    IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-	
-	public StoreDto getStoreById(int idx) {
-		Store store = storeRepository.findById(idx)
-				.orElseThrow(() -> new IllegalArgumentException("해당 점포가 없다"));
-		return convertToDto(store);
-	}
+    
 }

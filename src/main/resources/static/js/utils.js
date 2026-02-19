@@ -160,11 +160,12 @@ const Utils = {
 
         // Toast 요소 생성
         const toast = document.createElement('div');
-        
+
         // 타입별 색상 지정
         const colors = {
             success: { bg: '#10b981', icon: '✓' },
             error: { bg: '#ef4444', icon: '✕' },
+            like: { bg: '#ff72e5', icon: '✕' },
             info: { bg: '#3b82f6', icon: 'ℹ' },
             warning: { bg: '#f59e0b', icon: '⚠' }
         };
@@ -189,7 +190,7 @@ const Utils = {
         `;
 
         toast.innerHTML = `<span style="font-weight: bold; font-size: 18px;">${color.icon}</span><span>${message}</span>`;
-        
+
         container.appendChild(toast);
 
         // 애니메이션 정의
@@ -228,5 +229,32 @@ const Utils = {
                 toast.remove();
             }, 300);
         }, duration);
+    },
+
+    /**
+     * N시간 전, N일 전 등 반환 (Java 로직 JS로 포팅)
+     * @param {string|Date} dateString - 날짜 문자열 (ex: '2026-02-11T14:30:00')
+     * @returns {string} 방금 전, N분 전 등
+     */
+    timeAgo: (dateString) => {
+        if (!dateString) return '';
+
+        const date = new Date(dateString);
+        const now = new Date();
+        const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+        if (seconds < 60) return "방금 전";
+
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}분 전`;
+
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}시간 전`;
+
+        const days = Math.floor(hours / 24);
+        if (days < 30) return `${days}일 전`;
+
+        // 30일 넘어가면 기존 Utils.formatDate 재사용해서 'YYYY-MM-DD' 반환
+        return Utils.formatDate(date);
     }
 };

@@ -47,6 +47,45 @@ public class AuthController {
         return ApiResponse.success(Map.of("isDuplicate", isDuplicate));
     }
 
+    @PostMapping("/check-nickname")
+    @ResponseBody
+    public ApiResponse<?> checkNickname(@RequestBody Map<String, String> request) {
+        String nickname = request.get("userNickname");
+        boolean isDuplicate = us.existsByUserNickname(nickname);
+        return ApiResponse.success(Map.of("isDuplicate", isDuplicate));
+    }
+
+    @PostMapping("/send-verification-code")
+    @ResponseBody
+    public ApiResponse<?> sendVerificationCode(@RequestBody Map<String, String> request) {
+        String email = request.get("userEmail");
+
+        if (!ValidationUtil.isValid(email)) {
+            throw new CustomException(ErrorCode.REQUIRED_VALUE_MISSING);
+        }
+
+        if (!ValidationUtil.isValidEmail(email)) {
+            throw new CustomException(ErrorCode.INVALID_INPUT);
+        }
+
+        us.sendVerificationCode(email);
+        return ApiResponse.success("인증 코드가 이메일로 발송되었습니다.");
+    }
+
+    @PostMapping("/verify-email")
+    @ResponseBody
+    public ApiResponse<?> verifyEmail(@RequestBody Map<String, String> request) {
+        String email = request.get("userEmail");
+        String verificationCode = request.get("verificationCode");
+
+        if (!ValidationUtil.isValid(email) || !ValidationUtil.isValid(verificationCode)) {
+            throw new CustomException(ErrorCode.REQUIRED_VALUE_MISSING);
+        }
+
+        us.verifyEmail(email, verificationCode);
+        return ApiResponse.success("이메일이 인증되었습니다. 회원가입을 진행해주세요.");
+    }
+
     @PostMapping("/signup")
     @ResponseBody
     public ApiResponse<?> signup(@RequestBody UserDto userDto) {
@@ -69,9 +108,9 @@ public class AuthController {
             throw new CustomException(ErrorCode.INVALID_INPUT);
         }
 
-        // 회원가입
+        // 회원가입 (이메일 인증 확인)
         us.signup(userDto);
-        return ApiResponse.success("회원가입 완료");
+        return ApiResponse.success("회원가입이 완료되었습니다.");
     }
 
     @GetMapping("/find")
@@ -79,5 +118,57 @@ public class AuthController {
         return "auth/findAccount";
     }
     
+    @PostMapping("/send-password-reset-code")
+    @ResponseBody
+    public ApiResponse<?> sendPasswordResetCode(@RequestBody Map<String, String> request) {
+        String email = request.get("userEmail");
 
+        if (!ValidationUtil.isValid(email)) {
+            throw new CustomException(ErrorCode.REQUIRED_VALUE_MISSING);
+        }
+
+        if (!ValidationUtil.isValidEmail(email)) {
+            throw new CustomException(ErrorCode.INVALID_INPUT);
+        }
+
+        us.sendPasswordResetCode(email);
+        return ApiResponse.success("비밀번호 재설정 코드가 이메일로 발송되었습니다.");
+    }
+    
+    @PostMapping("/verify-password-reset-code")
+    @ResponseBody
+    public ApiResponse<?> verifyPasswordResetCode(@RequestBody Map<String, String> request) {
+        String email = request.get("userEmail");
+        String verificationCode = request.get("verificationCode");
+
+        if (!ValidationUtil.isValid(email) || !ValidationUtil.isValid(verificationCode)) {
+            throw new CustomException(ErrorCode.REQUIRED_VALUE_MISSING);
+        }
+
+        us.verifyPasswordResetCode(email, verificationCode);
+        return ApiResponse.success("인증번호가 확인되었습니다.");
+    }
+    
+    @PostMapping("/reset-password")
+    @ResponseBody
+    public ApiResponse<?> resetPassword(@RequestBody Map<String, String> request) {
+        String email = request.get("userEmail");
+        String newPassword = request.get("newPassword");
+        
+        if (!ValidationUtil.isValid(email) || !ValidationUtil.isValid(newPassword)) {
+            throw new CustomException(ErrorCode.REQUIRED_VALUE_MISSING);
+        }
+        
+        if (!ValidationUtil.isValidEmail(email)) {
+            throw new CustomException(ErrorCode.INVALID_PASSWORD);
+        }
+        
+        if (!ValidationUtil.isValidPassword(newPassword)) {
+            throw new CustomException(ErrorCode.INVALID_PASSWORD);
+        }
+        
+        us.resetPassword(email, newPassword);
+        return ApiResponse.success("비밀번호가 변경되었습니다.");
+    }
+    
 }

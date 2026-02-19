@@ -1,42 +1,62 @@
-<div class="detail-content no-scrollbar">
-    <div class="net-worth-label">순자산</div>
-    <div class="net-worth-amount">1억 582만 3,000원</div>
-    <div class="net-worth-diff">어제보다 20억 줄었어요</div>
-
-    <div class="dashboard-card">
+<!-- 통일된 구조: 가계부 페이지 -->
+<div class="page-wrapper finance-page" th:fragment="div">
+        <div class="dashboard-card">
         <div class="charts-row">
             <div class="chart-col">
                 <div class="chart-title">Last Month</div>
-                <div class="chart-box"><canvas id="chartLast"></canvas>
-                    <div class="chart-center-text"><span class="chart-center-value">Total</span></div>
+                <div class="chart-box">
+                    <canvas id="chartLast"></canvas>
+                    <div id="chartLastBox" class="chart-center-text">
+                        <span class="chart-center-value">0</span>
+                    </div>
                 </div>
             </div>
             <div class="chart-col">
                 <div class="chart-title">This Month</div>
-                <div class="chart-box"><canvas id="chartThis"></canvas>
-                    <div class="chart-center-text"><span class="chart-center-value">Total</span></div>
+                <div class="chart-box">
+                    <canvas id="chartThis"></canvas>
+                    <div id="chartThisBox" class="chart-center-text">
+                        <span class="chart-center-value">0</span>
+                    </div>
                 </div>
             </div>
         </div>
+        <div class="content-inner">
+            <!-- 대시보드 -->
+            <div class="dashboard-card">
+                <div class="charts-row">
+                    <div class="chart-col">
+                        <div class="chart-title">Last Month</div>
+                        <div class="chart-box"><canvas id="chartLast"></canvas>
+                            <div class="chart-center-text"><span class="chart-center-value">Total</span></div>
+                        </div>
+                    </div>
+                    <div class="chart-col">
+                        <div class="chart-title">This Month</div>
+                        <div class="chart-box"><canvas id="chartThis"></canvas>
+                            <div class="chart-center-text"><span class="chart-center-value">Total</span></div>
+                        </div>
+                    </div>
+                </div>
 
         <div class="budget-header">한 달 지출 목표 금액</div>
         <div class="budget-bar-wrap">
-            <div class="bar-segment bg-red">68%</div>
-            <div class="bar-segment bg-green">32%</div>
+            <div class="bar-segment bg-red">Wait</div>
+            <div class="bar-segment bg-green">Wait</div>
         </div>
 
         <div class="budget-info-container">
             <div class="budget-row">
-                <div class="row-left"><span class="dot-bullet"></span> 예산</div>
+                <div class="row-left"><span class="dot-bullet"></span> 한 달 예산</div>
                 <div class="row-right">
-                    <div class="amount-text clickable" onclick="alert('기능 추가 예정입니다.')">2,500,000,000</div>
+                    <div class="amount-text clickable budget-amount">0</div>
                     <div class="sub-text">누르면 (설정 가능)</div>
                 </div>
             </div>
             <div class="budget-row">
-                <div class="row-left"><span class="dot-bullet"></span> 지출</div>
+                <div class="row-left"><span class="dot-bullet"></span> 한 달 지출 </div>
                 <div class="row-right">
-                    <div class="amount-text clickable" onclick="alert('기능 추가 예정입니다.')">1,700,000,000</div>
+                    <div class="amount-text  expense-amount">0</div>
                 </div>
             </div>
         </div>
@@ -44,94 +64,687 @@
 
     <div class="calendar-sheet">
         <div class="cal-header">
-            <span class="cal-title" onclick="toggleCalendarView()">January 2026</span>
+            <button class="cal-nav-btn" id="btnPrevMonth">
+                <ion-icon name="chevron-back-outline"></ion-icon>
+            </button>
+            <span class="cal-title toggle-calendar-view" id="calTitle">Loading...</span>
+            <button class="cal-nav-btn" id="btnNextMonth">
+                <ion-icon name="chevron-forward-outline"></ion-icon>
+            </button>
         </div>
         <div id="calendarContainer" class="date-scroller"></div>
     </div>
-    <div style="height: 100px;"></div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
+    <div id="dayDetailSection" class="day-detail-section">
+        <div class="dd-header-date" id="ddDateTitle"></div>
 
-    Chart.register(ChartDataLabels);
-    const allCategories = ['식비', '통신비', '교통비', '여행비', '생활비', '경조사비', '이자비', '세금'];
-    function getRandomCategories() { return [...allCategories].sort(() => 0.5 - Math.random()).slice(0, 4); }
-    function getRandomData() { return Array.from({ length: 4 }, () => Math.floor(Math.random() * 30) + 10); }
-    const commonOpts = { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: { color: 'white', font: { weight: 'bold', size: 9 }, formatter: (v, c) => v > 15 ? c.chart.data.labels[c.dataIndex] : '' } }, elements: { arc: { borderWidth: 0 } } };
-    new Chart(document.getElementById('chartLast'), { type: 'doughnut', data: { labels: getRandomCategories(), datasets: [{ data: getRandomData(), backgroundColor: ['#EF4444', '#10B981', '#3B82F6', '#8B5CF6'] }] }, options: commonOpts });
-    new Chart(document.getElementById('chartThis'), { type: 'doughnut', data: { labels: getRandomCategories(), datasets: [{ data: getRandomData(), backgroundColor: ['#10B981', '#EF4444', '#3B82F6', '#F59E0B'] }] }, options: commonOpts });
+        <div class="dd-summary-row">
+            <span class="dd-label">잔액보기</span>
+            <span class="dd-count" id="ddCount">0건</span>
+        </div>
 
-    // 달력 로직
-    const calendarContainer = document.getElementById('calendarContainer');
-    const today = new Date();
-    const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-    const dummyData = { 1: { inc: '+ 5,000', exp: '- 6,000' }, 4: { inc: '+ 50', exp: '- 999,950' } };
+        <div id="ddList"></div>
 
-    let isGridView = false; // 현재 뷰 상태
+        <div class="fab-edit open-modal">
+            <ion-icon name="pencil"></ion-icon>
+        </div>
+    </div>
 
-    // 1. 가로 스크롤러
-    function renderScroller() {
-        calendarContainer.innerHTML = '';
-        calendarContainer.className = 'date-scroller';
+    <div class="bottom-spacer"></div>
 
-        for (let i = -10; i <= 10; i++) {
-            const d = new Date(today); d.setDate(today.getDate() + i);
-            const num = d.getDate();
-            const dayStr = dayNames[d.getDay()];
-            const data = dummyData[Math.abs(num) % 8] || { inc: '', exp: '' };
+    <div id="writeModal" class="modal-overlaies">
+        <div class="modal-card">
+            <div class="modal-title">입출금</div>
 
-            const el = document.createElement('div');
-            el.className = `date-card ${i === 0 ? 'active' : ''}`;
-            el.innerHTML = `<div style="font-size: 10px; color: #BBB; font-weight: 600; margin-bottom: 4px;">${dayStr}</div><div class="date-number">${num}</div><span class="money-tag money-inc">${data.inc}</span><span class="money-tag money-exp">${data.exp}</span>`;
-            el.onclick = () => { localStorage.setItem('selectedDate', num); location.href = 'details.html'; };
-            calendarContainer.appendChild(el);
-        }
-
-        const active = document.querySelector('.date-card.active');
-        if (active) calendarContainer.scrollLeft = active.offsetLeft - (calendarContainer.clientWidth / 2) + (active.clientWidth / 2);
-    }
-
-    // 2. 전체 그리드
-    function renderGrid() {
-        calendarContainer.innerHTML = '';
-        calendarContainer.className = 'calendar-grid';
-
-        let html = '<div class="grid-header-row">';
-        const gridDays = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-        gridDays.forEach(day => { html += `<div class="grid-header-cell">${day}</div>`; });
-        html += '</div><div class="grid-dates-container">';
-
-        // 2026년 1월 1일 = 목요일 (인덱스 3)
-        const emptyDays = 3;
-        for (let i = 0; i < emptyDays; i++) { html += `<div class="grid-date-cell"></div>`; }
-
-        for (let i = 1; i <= 31; i++) {
-            const data = dummyData[Math.abs(i) % 8] || { inc: '', exp: '' };
-            html += `
-            <div class="grid-date-cell" onclick="goDetails(${i})">
-                <div class="grid-date-num">${i}</div>
-                <div class="grid-money inc">${data.inc}</div>
-                <div class="grid-money exp">${data.exp}</div>
+            <div class="input-group">
+                <label class="modal-label">카테고리</label>
+                <div class="input-relative">
+                    <select id="inpCategory" class="modal-input">
+                        <option value="월급">월급</option>
+                        <option value="식비">식비</option>
+                        <option value="교통비">교통비</option>
+                        <option value="쇼핑">쇼핑</option>
+                        <option value="경조사">경조사</option>
+                        <option value="저축">저축</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
             </div>
-        `;
-        }
-        html += '</div>';
-        calendarContainer.innerHTML = html;
-    }
 
-    function goDetails(day) {
-        localStorage.setItem('selectedDate', day);
-        location.href = 'details.html';
-    }
+            <div>
+                <div class="row-inputs">
+                    <div class="input-group sm">
+                        <label class="modal-label" for="inpType">입/출</label>
+                        <select id="inpType" class="modal-input input-center">
+                            <option value="plus">입금</option>
+                            <option value="minus">출금</option>
+                        </select>
+                    </div>
+                    <div class="input-group lg">
+                        <label class="modal-label">금액 (원)</label>
+                        <input type="text" id="inpAmount" class="modal-input" placeholder="0" inputmode="numeric">
+                    </div>
+                </div>
 
-    function toggleCalendarView() {
-        isGridView = !isGridView;
-        if (isGridView) renderGrid();
-        else renderScroller();
-    }
+                <div class="check-group-wrapper">
+                    <div class="check-group">
+                        <input type="checkbox" id="inpFixed" class="check-input">
+                        <label for="inpFixed" class="check-label">매월 반복 (고정 지출)</label>
+                    </div>
 
-    renderScroller(); // 초기 실행
-});
-</script>
+                    <div id="durationArea" class="duration-input-box" style="display: none;">
+                        <input type="number" id="inpDuration" class="modal-input small-input" value="12" min="1">
+                        <span class="duration-text">개월 동안</span>
+                    </div>
+                </div>
+                <div class="input-group mt-5">
+                    <textarea id="inpMemo" class="modal-textarea" placeholder="내용을 입력하세요..."></textarea>
+                </div>
 
+                <button type="button" class="modal-btn">입력</button>
+                <div class="modal-close-btn">닫기</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="deleteModal" class="modal-overlaies">
+        <div class="modal-card" style="max-width: 300px; padding: 30px 20px;">
+            <div class="modal-title" style="color: var(--danger-red);">삭제 확인</div>
+            <p style="text-align: center; color: #666; font-size: 14px; margin: 10px 0 20px; line-height: 1.5;">
+                정말 이 내역을 삭제하시겠습니까?<br>삭제 후에는 복구할 수 없습니다.
+            </p>
+
+            <div style="display: flex; gap: 10px; width: 100%;">
+                <button type="button" class="modal-btn btn-secondary"
+                    style="background-color: #f1f2f6; color: #666; margin-top:0; box-shadow:none;"
+                    onclick="finance.closeDeleteModal()">취소</button>
+                <button type="button" class="modal-btn"
+                    style="background-color: var(--danger-red); color: white; margin-top:0;"
+                    onclick="finance.confirmDelete()">삭제</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="budgetModal" class="modal-overlaies">
+        <div class="modal-card">
+            <div class="modal-title">한 달 예산 설정</div>
+            <p class="modal-label" style="text-align:center; margin-bottom:20px;">이번 달 목표 지출 금액을 입력하세요.</p>
+
+            <div class="input-group">
+                <input type="text" id="inpBudget" class="modal-input input-center" placeholder="0" inputmode="numeric">
+            </div>
+
+            <button type="button" class="modal-btn" onclick="finance.saveBudget()">설정 완료</button>
+            <div class="modal-close-btn" onclick="finance.closeBudgetModal()">취소</div>
+        </div>
+    </div>
+
+    <script>
+        const finance = {
+            currentDate: new Date(),
+            selectedDay: null,
+            isGridView: false,
+            editingIndex: null,
+            editingId: null,
+            pendingDeleteId: null,
+            mockDB: {},
+            currentBudget: 0, // [추가된 부분] 예산 데이터를 담을 변수
+
+            chartLast: null,
+            chartThis: null,
+
+            init: () => {
+                finance.initCharts();
+                finance.evtHandler();
+                finance.updateHeader();
+                finance.loadData();
+            },
+
+            showToast: (message) => {
+                const oldToast = document.querySelector('.toast-box');
+                if (oldToast) oldToast.remove();
+
+                const toast = document.createElement('div');
+                toast.className = 'toast-box';
+                toast.innerHTML = message;
+                document.body.appendChild(toast);
+
+                requestAnimationFrame(() => { toast.classList.add('show'); });
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 400);
+                }, 2500);
+            },
+
+            loadData: () => {
+                // ▼▼▼ [여기서부터 덮어쓰시면 됩니다!] ▼▼▼
+                const yearMonth = `${finance.currentDate.getFullYear()}-${String(finance.currentDate.getMonth() + 1).padStart(2, '0')}`;
+
+                fetch(`/finance/list?yearMonth=${yearMonth}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                    // ▲▲▲ [여기까지!] ▲▲▲
+                    .then(response => response.json())
+                    .then(data => { // [수정된 부분] DTO 리스트와 예산을 함께 받을 수 있도록 data로 변경
+                        let list = [];
+                        if (Array.isArray(data)) {
+                            list = data;
+                        } else {
+                            list = data.list || [];
+                            finance.currentBudget = data.budget || 0; // 서버에서 준 예산 저장
+                        }
+
+                        const newDB = {};
+                        const curYear = finance.currentDate.getFullYear();
+                        const curMonth = finance.currentDate.getMonth() + 1;
+
+                        let thisMonthIncome = 0;
+                        let thisMonthExpense = 0;
+                        const thisMonthStats = {};
+                        let thisMonthChartTotal = 0;
+
+                        list.forEach(dto => {
+                            const amt = Number(dto.amount);
+                            const isPlus = (dto.type === 'plus' || dto.type === '+');
+                            const dateObj = new Date(dto.date);
+                            if (isNaN(dateObj)) return;
+
+                            const startY = dateObj.getFullYear();
+                            const startM = dateObj.getMonth() + 1;
+                            const d = dateObj.getDate();
+
+                            const isCurrentMonth = (startY === curYear && startM === curMonth);
+                            let isValidFixed = false;
+
+                            if (dto.isFixed) {
+                                const diffYear = curYear - startY;
+                                const diffMonth = curMonth - startM;
+                                const monthsPassed = (diffYear * 12) + diffMonth;
+                                let maxDuration = (dto.duration > 0) ? dto.duration : 999;
+
+                                if (monthsPassed >= 0 && monthsPassed < maxDuration) {
+                                    isValidFixed = true;
+                                }
+                            }
+
+                            if (isCurrentMonth || isValidFixed) {
+                                if (!newDB[d]) newDB[d] = [];
+                                newDB[d].push({
+                                    financeIdx: dto.financeIdx,
+                                    cat: dto.category,
+                                    amount: amt.toLocaleString(),
+                                    rawAmount: amt,
+                                    type: dto.type,
+                                    memo: dto.memo,
+                                    time: dto.time,
+                                    isFixed: dto.isFixed,
+                                    duration: dto.duration
+                                });
+
+                                if (isPlus) {
+                                    thisMonthIncome += amt;
+                                } else {
+                                    thisMonthExpense += amt;
+                                    if (!thisMonthStats[dto.category]) thisMonthStats[dto.category] = 0;
+                                    thisMonthStats[dto.category] += amt;
+                                    thisMonthChartTotal += amt;
+                                }
+                            }
+                        });
+
+                        finance.mockDB = newDB;
+
+                        const budgetAmtEl = document.querySelector('.budget-amount');
+                        const expenseAmtEl = document.querySelector('.expense-amount');
+                        const barRed = document.querySelector('.bar-segment.bg-red');
+                        const barGreen = document.querySelector('.bar-segment.bg-green');
+
+                        // [수정된 부분] 수입이 아니라 '예산'을 화면에 표시
+                        if (budgetAmtEl) budgetAmtEl.innerText = finance.currentBudget.toLocaleString();
+
+                        if (expenseAmtEl) {
+                            expenseAmtEl.innerText = thisMonthExpense > 0 ? `${thisMonthExpense.toLocaleString()}원` : "0원";
+                            expenseAmtEl.classList.add('text-red');
+                        }
+
+                        // [교체할 코드 - 예산 대비 퍼센트 계산]
+                        // ==========================================
+                        // [막대 그래프 예산 비례 계산 로직 - 최소 1% 보장]
+                        // ==========================================
+                        let usagePercent = 0;
+                        if (finance.currentBudget > 0) {
+                            usagePercent = (thisMonthExpense / finance.currentBudget) * 100;
+                            // [핵심] 지출이 0원보다 큰데 1% 미만일 경우, 강제로 1%로 끌어올림
+                            if (thisMonthExpense > 0 && usagePercent < 1) {
+                                usagePercent = 1;
+                            }
+                        } else if (thisMonthExpense > 0) {
+                            usagePercent = 100;
+                        }
+
+                        if (usagePercent > 100) usagePercent = 100;
+                        const remainPercent = 100 - usagePercent;
+
+                        if (barRed) {
+                            barRed.style.width = `${usagePercent}%`;
+                            // 1% 이상일 때부터 바로 텍스트 표시
+                            barRed.innerText = usagePercent > 0 ? `${Math.round(usagePercent)}%` : '';
+                        }
+                        if (barGreen) {
+                            barGreen.style.width = `${remainPercent}%`;
+                            // 남은 예산도 1% 이상이면 표시
+                            barGreen.innerText = remainPercent > 0 ? `${Math.round(remainPercent)}%` : '';
+                        }
+                        // ==========================================
+
+                        if (finance.isGridView) finance.renderGrid();
+                        else finance.renderScroller();
+
+                        if (finance.selectedDay) finance.showDetails(finance.selectedDay);
+
+                        finance.updateCharts(list, thisMonthStats, thisMonthChartTotal);
+                    })
+                    .catch(error => console.error("에러:", error));
+            },
+
+            // [교체] 팝업창 뜰 때 "2026년 2월 예산 설정" 이라고 월별로 다르게 뜨게 함
+            openBudgetModal: () => {
+                const yearStr = finance.currentDate.getFullYear();
+                const monthStr = finance.currentDate.getMonth() + 1;
+                document.querySelector('#budgetModal .modal-title').innerText = `${yearStr}년 ${monthStr}월 예산 설정`;
+
+                const inpBudget = document.getElementById('inpBudget');
+                if (inpBudget) inpBudget.value = finance.currentBudget ? finance.currentBudget.toLocaleString() : '';
+                document.getElementById('budgetModal').classList.add('active');
+            },
+
+            closeBudgetModal: () => {
+                document.getElementById('budgetModal').classList.remove('active');
+            },
+
+            // [교체할 saveBudget 함수 전체]
+            saveBudget: () => {
+                const inpBudget = document.getElementById('inpBudget');
+                const rawVal = inpBudget.value.replace(/,/g, '');
+                const budgetVal = Number(rawVal);
+
+                if (isNaN(budgetVal) || budgetVal < 0) {
+                    finance.showToast("올바른 금액을 입력해주세요!");
+                    return;
+                }
+
+                // [여기가 추가/수정된 부분입니다]
+                const yearMonth = `${finance.currentDate.getFullYear()}-${String(finance.currentDate.getMonth() + 1).padStart(2, '0')}`;
+
+                fetch('/finance/budget/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount: budgetVal, yearMonth: yearMonth })
+                })
+                    .then(res => {
+                        if (res.ok) {
+                            finance.showToast("예산이 설정되었습니다! 💰");
+                            finance.closeBudgetModal();
+                            finance.loadData();
+                        } else {
+                            finance.showToast("설정에 실패했습니다.");
+                        }
+                    })
+                    .catch(err => finance.showToast("서버 오류가 발생했습니다."));
+            },
+
+            updateCharts: (list, thisStats, thisTotal) => {
+                const curDate = finance.currentDate;
+                const lastDate = new Date(curDate.getFullYear(), curDate.getMonth() - 1, 1);
+                const lastYear = lastDate.getFullYear();
+                const lastMonth = lastDate.getMonth() + 1;
+
+                const lastMonthStats = {};
+                let lastTotal = 0;
+
+                list.forEach(item => {
+                    if (item.type === 'plus' || item.type === '+') return;
+                    const dObj = new Date(item.date);
+                    if (isNaN(dObj)) return;
+                    const startY = dObj.getFullYear();
+                    const startM = dObj.getMonth() + 1;
+
+                    let isLastMonthTarget = (startY === lastYear && startM === lastMonth);
+
+                    if (item.isFixed) {
+                        const diffYear = lastYear - startY;
+                        const diffMonth = lastMonth - startM;
+                        const monthsPassedLast = (diffYear * 12) + diffMonth;
+                        let maxDuration = (item.duration > 0) ? item.duration : 999;
+
+                        if (monthsPassedLast >= 0 && monthsPassedLast < maxDuration) {
+                            isLastMonthTarget = true;
+                        }
+                    }
+
+                    if (isLastMonthTarget) {
+                        const amt = Number(item.amount);
+                        if (!lastMonthStats[item.category]) lastMonthStats[item.category] = 0;
+                        lastMonthStats[item.category] += amt;
+                        lastTotal += amt;
+                    }
+                });
+
+                const applyToChart = (chart, stats, totalVal, centerTextId) => {
+                    if (!chart) return;
+                    const labels = Object.keys(stats);
+                    const realData = Object.values(stats);
+
+                    const displayData = realData.map(val => {
+                        const percent = totalVal > 0 ? (val / totalVal) * 100 : 0;
+                        if (val > 0 && percent < 2) {
+                            return totalVal * 0.02;
+                        }
+                        return val;
+                    });
+
+                    const box = document.getElementById(centerTextId);
+                    const initialLabel = "Total 지출";
+                    const initialValue = totalVal > 0 ? `${totalVal.toLocaleString()}원` : "0원";
+
+                    const renderCenterText = (label, value) => {
+                        box.innerHTML = `
+                            <span class="chart-center-label">${label}</span>
+                            <span class="chart-center-value">${value}</span>
+                        `;
+                    };
+
+                    renderCenterText(initialLabel, initialValue);
+
+                    chart.data.labels = labels.length > 0 ? labels : ['내역 없음'];
+                    chart.data.datasets[0].data = displayData.length > 0 ? displayData : [1];
+
+                    const colorMap = {
+                        '월급': '#2ecc71', '식비': '#ff7675', '교통비': '#fdcb6e',
+                        '쇼핑': '#a29bfe', '경조사': '#fab1a0', '저축': '#74b9ff', '기타': '#dfe6e9'
+                    };
+                    chart.data.datasets[0].backgroundColor = labels.length > 0
+                        ? labels.map(label => colorMap[label] || '#C9CBCF')
+                        : ['#E5E5E5'];
+
+                    chart.options.plugins.tooltip.enabled = false;
+                    chart.options.onHover = (event, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = chart.data.labels[index];
+                            const value = realData[index];
+
+                            if (label !== '내역 없음') {
+                                renderCenterText(label, `${value.toLocaleString()}원`);
+                            }
+                        } else {
+                            renderCenterText(initialLabel, initialValue);
+                        }
+                    };
+                    chart.update();
+                };
+
+                applyToChart(finance.chartLast, lastMonthStats, lastTotal, 'chartLastBox');
+                applyToChart(finance.chartThis, thisStats, thisTotal, 'chartThisBox');
+            },
+
+            initCharts: () => {
+                Chart.register(ChartDataLabels);
+                const getCommonOpts = () => ({
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: { display: false } },
+                    elements: { arc: { borderWidth: 0 } }
+                });
+
+                if (document.getElementById('chartLast')) {
+                    finance.chartLast = new Chart(document.getElementById('chartLast'), {
+                        type: 'doughnut',
+                        data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
+                        options: getCommonOpts()
+                    });
+                }
+                if (document.getElementById('chartThis')) {
+                    finance.chartThis = new Chart(document.getElementById('chartThis'), {
+                        type: 'doughnut',
+                        data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
+                        options: getCommonOpts()
+                    });
+                }
+            },
+
+            evtHandler: () => {
+                // [추가된 부분] 예산 설정 버튼 클릭 이벤트 연결
+                const budgetBtn = document.querySelector('.budget-amount');
+                if (budgetBtn) {
+                    budgetBtn.addEventListener('click', () => finance.openBudgetModal());
+                }
+
+                // [추가된 부분] 예산 입력 시 실시간 콤마 적용
+                const inpBudget = document.getElementById('inpBudget');
+                if (inpBudget) {
+                    inpBudget.addEventListener('input', function () {
+                        let val = this.value.replace(/[^0-9]/g, '');
+                        if (val) this.value = Number(val).toLocaleString();
+                        else this.value = '';
+                    });
+                }
+
+                const chkFixed = document.getElementById('inpFixed');
+                const durationArea = document.getElementById('durationArea');
+                const amtInput = document.getElementById('inpAmount');
+
+                if (chkFixed && durationArea) {
+                    chkFixed.addEventListener('change', function () {
+                        if (this.checked) {
+                            durationArea.style.display = 'flex';
+                            document.getElementById('inpDuration').value = 12;
+                        } else {
+                            durationArea.style.display = 'none';
+                        }
+                    });
+                }
+
+                if (amtInput) {
+                    amtInput.addEventListener('input', function () {
+                        let val = this.value.replace(/[^0-9]/g, '');
+                        if (val) {
+                            this.value = Number(val).toLocaleString();
+                        } else {
+                            this.value = '';
+                        }
+                    });
+                }
+
+                document.querySelector('.toggle-calendar-view').addEventListener('click', () => finance.toggleCalendarView());
+                document.querySelector('.open-modal').addEventListener('click', () => finance.openModal(null));
+                document.querySelector('.modal-btn').addEventListener('click', () => finance.saveData());
+                document.querySelector('.modal-close-btn').addEventListener('click', () => finance.closeModal());
+                document.getElementById('btnPrevMonth').addEventListener('click', () => { finance.changeMonth(-1); finance.loadData(); });
+                document.getElementById('btnNextMonth').addEventListener('click', () => { finance.changeMonth(1); finance.loadData(); });
+            },
+
+            changeMonth: (offset) => { finance.currentDate.setDate(1); finance.currentDate.setMonth(finance.currentDate.getMonth() + offset); finance.updateHeader(); },
+            updateHeader: () => { const options = { year: 'numeric', month: 'long' }; const dateStr = finance.currentDate.toLocaleDateString('en-US', options); document.getElementById('calTitle').innerText = dateStr; },
+            calcDaySummary: (day) => {
+                if (!finance.mockDB[day]) return { inc: 0, exp: 0 };
+                let inc = 0, exp = 0;
+                finance.mockDB[day].forEach(item => {
+                    const val = Number(String(item.amount).replace(/,/g, ''));
+                    if (item.type === 'plus' || item.type === '+') inc += val;
+                    else exp += val;
+                });
+                return { inc, exp };
+            },
+            renderScroller: () => {
+                const container = document.getElementById('calendarContainer');
+                const year = finance.currentDate.getFullYear(), month = finance.currentDate.getMonth();
+                const lastDay = new Date(year, month + 1, 0).getDate();
+                const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+                container.innerHTML = '';
+                container.className = 'date-scroller';
+                for (let i = 1; i <= lastDay; i++) {
+                    const d = new Date(year, month, i), summary = finance.calcDaySummary(i);
+                    let moneyTag = '';
+                    if (summary.inc > 0) moneyTag += `<span class="money-tag money-inc">+${summary.inc.toLocaleString()}</span>`;
+                    if (summary.exp > 0) moneyTag += `<span class="money-tag money-exp">-${summary.exp.toLocaleString()}</span>`;
+                    const el = document.createElement('div');
+                    const isToday = new Date().toDateString() === d.toDateString();
+                    el.className = `date-card ${isToday ? 'active' : ''}`;
+                    el.id = `day-card-${i}`;
+                    el.innerHTML = `<div class="date-day-label">${dayNames[d.getDay()]}</div><div class="date-number">${i}</div><div class="date-money-space">${moneyTag}</div>`;
+                    el.addEventListener('click', () => finance.showDetails(i));
+                    container.appendChild(el);
+                }
+                setTimeout(() => {
+                    let activeEl = container.querySelector('.date-card.active');
+                    if (!activeEl) activeEl = document.getElementById('day-card-1');
+                    if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                }, 100);
+            },
+            renderGrid: () => {
+                const container = document.getElementById('calendarContainer');
+                const year = finance.currentDate.getFullYear(), month = finance.currentDate.getMonth();
+                const firstDay = new Date(year, month, 1).getDay(), lastDay = new Date(year, month + 1, 0).getDate();
+                const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+                const realToday = new Date();
+                container.innerHTML = ''; container.className = 'calendar-grid';
+                let html = '<div class="grid-header-row">' + dayNames.map(d => `<div class="grid-header-cell">${d}</div>`).join('') + '</div><div class="grid-dates-container">';
+                for (let i = 0; i < firstDay; i++) html += `<div class="grid-date-cell empty"></div>`;
+                for (let i = 1; i <= lastDay; i++) {
+                    const summary = finance.calcDaySummary(i);
+                    let moneyHtml = (summary.inc > 0 ? `<div class="grid-money inc">+${summary.inc.toLocaleString()}</div>` : '') + (summary.exp > 0 ? `<div class="grid-money exp">-${summary.exp.toLocaleString()}</div>` : '');
+                    const isToday = (year === realToday.getFullYear() && month === realToday.getMonth() && i === realToday.getDate());
+                    html += `<div class="grid-date-cell" data-day="${i}"><div class="grid-date-num ${isToday ? 'today' : ''}">${i}</div>${moneyHtml}</div>`;
+                }
+                container.innerHTML = html + '</div>';
+                document.querySelectorAll('.grid-date-cell:not(.empty)').forEach(cell => cell.addEventListener('click', () => finance.showDetails(parseInt(cell.getAttribute('data-day')))));
+            },
+            toggleCalendarView: () => { finance.isGridView = !finance.isGridView; if (finance.isGridView) finance.renderGrid(); else finance.renderScroller(); },
+            showDetails: (day) => {
+                finance.selectedDay = day; document.querySelectorAll('.date-card').forEach(e => e.classList.remove('active'));
+                const detailSection = document.getElementById('dayDetailSection'); detailSection.classList.add('active');
+                const dateStr = new Date(finance.currentDate.getFullYear(), finance.currentDate.getMonth(), day).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                document.getElementById('ddDateTitle').innerText = dateStr;
+                const list = finance.mockDB[day] || []; document.getElementById('ddCount').innerText = `${list.length}건`;
+                const listContainer = document.getElementById('ddList'); listContainer.innerHTML = '';
+                if (list.length === 0) listContainer.innerHTML = '<div class="empty-msg">내역이 없습니다.</div>';
+                else list.forEach((item, index) => {
+                    const div = document.createElement('div'); div.className = 'dd-item';
+                    const colorClass = item.type === 'plus' ? 'plus' : 'minus', sign = item.type === 'plus' ? '+' : '-';
+                    div.innerHTML = `<div class="dd-item-top"><span class="dd-title">${item.cat}${item.isFixed ? '<span class="badge-fixed">고정</span>' : ''} <span class="btn-edit-small" onclick="finance.openModal(${index})"><ion-icon name="pencil" class="icon-sm"></ion-icon></span><span class="btn-delete-small" onclick="finance.deleteData(${item.financeIdx})"><ion-icon name="trash-outline" class="icon-sm"></ion-icon></span></span><span class="dd-amount ${colorClass}">${sign} ${item.amount}</span></div><div class="dd-memo-box">${item.memo}</div><div class="dd-time">${item.time}</div>`;
+                    listContainer.appendChild(div);
+                });
+                detailSection.scrollIntoView({ behavior: 'smooth' });
+            },
+            openModal: (editIndex) => {
+                if (!finance.selectedDay) {
+                    finance.showToast("날짜를 먼저 선택해주세요! 📅");
+                    return;
+                }
+                finance.editingIndex = editIndex;
+                const chkFixed = document.getElementById('inpFixed'), durationArea = document.getElementById('durationArea'), inpDuration = document.getElementById('inpDuration');
+                if (editIndex !== null) {
+                    const item = finance.mockDB[finance.selectedDay][editIndex];
+                    finance.editingId = item.financeIdx;
+                    document.getElementById('inpCategory').value = item.cat;
+                    document.getElementById('inpType').value = item.type;
+
+                    document.getElementById('inpAmount').value = Number(String(item.amount).replace(/,/g, '')).toLocaleString();
+
+                    document.getElementById('inpMemo').value = item.memo;
+                    chkFixed.checked = item.isFixed;
+                    durationArea.style.display = item.isFixed ? 'flex' : 'none';
+                    inpDuration.value = item.duration || 12;
+                } else {
+                    finance.editingId = null;
+                    document.getElementById('inpCategory').value = '식비';
+                    document.getElementById('inpAmount').value = '';
+                    document.getElementById('inpMemo').value = '';
+                    chkFixed.checked = false;
+                    durationArea.style.display = 'none';
+                }
+                document.getElementById('writeModal').classList.add('active');
+            },
+            closeModal: () => { document.getElementById('writeModal').classList.remove('active'); },
+
+            saveData: () => {
+                const cat = document.getElementById('inpCategory').value, type = document.getElementById('inpType').value, memo = document.getElementById('inpMemo').value, isFixed = document.getElementById('inpFixed').checked;
+
+                const rawAmtStr = document.getElementById('inpAmount').value.replace(/,/g, '');
+                const rawAmt = Number(rawAmtStr);
+
+                let duration = isFixed ? (parseInt(document.getElementById('inpDuration').value) || 12) : 0;
+
+                if (!rawAmtStr || rawAmt < 0) {
+                    finance.showToast("금액을 정확히 입력해주세요! 💸");
+                    return;
+                }
+                const dateStr = `${finance.currentDate.getFullYear()}-${String(finance.currentDate.getMonth() + 1).padStart(2, '0')}-${String(finance.selectedDay).padStart(2, '0')}`;
+                const now = new Date(), timeStr = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
+
+                fetch('/finance/write', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ financeIdx: finance.editingId, category: cat, amount: rawAmt, type: type, memo: memo, date: dateStr, time: timeStr, isFixed: isFixed, duration: duration })
+                }).then(res => {
+                    if (res.ok) {
+                        finance.showToast('저장되었습니다! 🎉');
+                        finance.closeModal();
+                        finance.loadData();
+                    } else {
+                        res.text().then(msg => finance.showToast('실패: ' + msg));
+                    }
+                }).catch(err => finance.showToast('서버 오류가 발생했습니다.'));
+            },
+
+            // [삭제] 기존의 더미 알림 함수 제거 (팝업으로 대체되었으므로)
+            // showBudgetAlert: () => { finance.showToast('예산 설정 기능은 준비 중입니다 🚧'); },
+            showExpenseAlert: () => { finance.showToast('지출 상세 리포트는 준비 중입니다 📊'); },
+
+            deleteData: (id) => {
+                finance.pendingDeleteId = id;
+                document.getElementById('deleteModal').classList.add('active');
+            },
+
+            closeDeleteModal: () => {
+                finance.pendingDeleteId = null;
+                document.getElementById('deleteModal').classList.remove('active');
+            },
+
+            confirmDelete: () => {
+                if (!finance.pendingDeleteId) return;
+
+                fetch('/finance/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ financeIdx: finance.pendingDeleteId })
+                })
+                    .then(res => {
+                        if (res.ok) {
+                            finance.showToast("삭제되었습니다. 🗑️");
+                            finance.closeDeleteModal();
+                            finance.loadData();
+                        } else {
+                            finance.showToast("삭제 실패!");
+                        }
+                    });
+            }
+        };
+
+        // 오버레이 클릭 시 모달 닫기
+        document.addEventListener('DOMContentLoaded', () => {
+            const overlay = document.querySelector('.modal-overlay');
+            if (overlay) {
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
+                        finance.closeModal();
+                    }
+                });
+            }
+            finance.init();
+        });
+    </script>
 </div>

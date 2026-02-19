@@ -1,0 +1,351 @@
+<div th:fragment="div" id="profile-layer" class="profile-layer">
+
+    <div class="app-container" style="background: transparent; box-shadow: none;">
+        <!-- Header -->
+        <header class="profile-header">
+            <button class="profile-icon-btn" onclick="ProfileApp.close()">
+                <ion-icon name="chevron-back"></ion-icon>
+            </button>
+            <div class="profile-header-title" id="profile-title">내 프로필</div>
+            <div class="profile-icon-btn" id="profile-header-right-icon">
+                <ion-icon name="settings-outline"></ion-icon>
+            </div>
+        </header>
+
+        <div class="profile-scroll-content">
+            <!-- Profile Info -->
+            <div class="profile-info-section">
+                <img src="/images/default-profile.png" class="profile-img" id="profile-user-img">
+                <div class="profile-text-group">
+                    <div class="profile-user-name" id="profile-user-name">Loading...</div>
+                    <div class="profile-user-desc" id="profile-user-desc">...</div>
+                </div>
+            </div>
+
+            <!-- Stats Box -->
+            <div class="profile-stats-box" id="profile-stats-box">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Action Button -->
+            <button class="profile-action-btn edit" id="profile-main-btn" onclick="alert('준비중입니다.')">프로필 수정</button>
+
+            <!-- Manner Score -->
+            <div class="profile-manner-card">
+                <div class="profile-manner-header">
+                    <span>매너 점수</span>
+                    <span class="profile-manner-score" id="profile-manner-val">0°C</span>
+                </div>
+                <div class="profile-progress-bg">
+                    <div class="profile-progress-bar" id="profile-manner-bar" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <!-- Dynamic Content List -->
+            <div id="profile-dynamic-area" class="profile-dynamic-content"></div>
+
+        </div>
+    </div>
+
+    <script>
+        /**
+         * [프로필] 프로필 모달 및 데이터 관리
+         * - 상태 관리, 데이터 로딩, 탭 전환, 렌더링 최적화
+         */
+        const ProfileApp = {
+            // 상태 관리
+            state: {
+                data: null,            // 프로필 데이터
+                currentTab: 'posts',   // 현재 탭 (posts, comments, likes)
+                subTab: 'community',   // 서브 탭 (community, market)
+                isLoading: false
+            },
+
+            /**
+             * 프로필 열기 (진입점)
+             * @param {number|null} targetUserIdx - 대상 유저 ID (null이면 내 프로필)
+             */
+            open: async (targetUserIdx = null) => {
+                // 1. UI 초기화 (이전 데이터 잔상 제거)
+                ProfileApp.resetUI();
+
+                // 2. 모달 즉시 표시 (체감 속도 향상)
+                ProfileApp.showModal();
+
+                // 3. 히스토리 관리
+                if (!history.state || history.state.modal !== 'profile') {
+                    history.pushState({ modal: 'profile', userIdx: targetUserIdx }, 'Profile', '');
+                }
+                ProfileApp.bindHistoryEvent();
+
+                // 4. 데이터 로딩 (비동기 병렬 처리 가능하지만 순차 실행이 안전)
+                await ProfileApp.loadData(targetUserIdx);
+            },
+
+            /** 모달 UI 표시 및 애니메이션 */
+            showModal: () => {
+                const layer = document.getElementById('profile-layer');
+
+                // Z-Index 관리 (전역 변수 활용)
+                if (typeof window.modalZIndex === 'undefined') window.modalZIndex = 5000;
+                window.modalZIndex++;
+                layer.style.zIndex = window.modalZIndex;
+
+                layer.style.display = 'flex';
+                void layer.offsetWidth; // 강제 리플로우 (애니메이션 트리거)
+                layer.classList.add('active');
+            },
+
+            /** 뒤로가기 이벤트 바인딩 */
+            bindHistoryEvent: () => {
+                window.onpopstate = function (event) {
+                    // 상위 모달(ViewForm)이 떠있으면 그것부터 닫힘 (ViewForm 로직에서 처리됨)
+                    const viewForm = document.querySelector('#viewForm');
+                    if (viewForm && viewForm.classList.contains('active')) {
+                        if (typeof CommunityView !== 'undefined') CommunityView.closeView();
+                        return;
+                    }
+                    // 프로필 닫기
+                    if (document.getElementById('profile-layer').classList.contains('active')) {
+                        ProfileApp.close();
+                    }
+                };
+            },
+
+            /** 닫기 */
+            close: () => {
+                const layer = document.getElementById('profile-layer');
+                layer.classList.remove('active');
+                layer.classList.add('closing');
+
+                setTimeout(() => {
+                    layer.style.display = 'none';
+                    layer.classList.remove('closing');
+                    ProfileApp.resetState(); // 상태 초기화
+                }, 300);
+            },
+
+            /** UI 및 상태 초기화 */
+            resetUI: () => {
+                document.getElementById('profile-user-name').innerText = '';
+                document.getElementById('profile-user-desc').innerText = '';
+                document.getElementById('profile-user-img').src = '/images/default-profile.png';
+                document.getElementById('profile-manner-val').innerText = '0°C';
+                document.getElementById('profile-manner-bar').style.width = '0%';
+                document.getElementById('profile-stats-box').innerHTML = '';
+                document.getElementById('profile-dynamic-area').innerHTML = '<div class="profile-empty-state">로딩 중...</div>';
+            },
+
+            resetState: () => {
+                ProfileApp.state.data = null;
+                ProfileApp.state.currentTab = 'posts';
+                ProfileApp.state.subTab = 'community';
+            },
+
+            /** 데이터 로딩 */
+            loadData: async (userIdx) => {
+                try {
+                    ProfileApp.state.isLoading = true;
+                    const url = userIdx ? `/profile/api/${userIdx}` : '/profile/api/me';
+
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error("Failed to load profile");
+
+                    const data = await response.json();
+                    ProfileApp.state.data = data;
+
+                    ProfileApp.render(); // 데이터 도착 후 렌더링
+
+                } catch (e) {
+                    console.error(e);
+                    alert("프로필 정보를 불러올 수 없습니다.");
+                    ProfileApp.close();
+                } finally {
+                    ProfileApp.state.isLoading = false;
+                }
+            },
+
+            /** 전체 렌더링 (데이터 기반) */
+            render: () => {
+                if (!ProfileApp.state.data) return;
+
+                ProfileApp.renderHeader();
+                ProfileApp.renderStats();
+                ProfileApp.renderList();
+            },
+
+            /** 상단 정보 렌더링 (사진, 이름, 매너온도) */
+            renderHeader: () => {
+                const { data } = ProfileApp.state;
+                const isMe = data.myProfile;
+
+                // 기본 정보
+                document.getElementById('profile-title').innerText = isMe ? "내 프로필" : "프로필";
+                document.getElementById('profile-user-name').innerText = data.nickname;
+                document.getElementById('profile-user-desc').innerText = data.description || "소개글이 없습니다.";
+                document.getElementById('profile-user-img').src = data.profileImg || "/images/default-profile.png";
+
+                // 매너 온도
+                const score = data.mannerScore || 36;
+                document.getElementById('profile-manner-val').innerText = score + "°C";
+                document.getElementById('profile-manner-bar').style.width = Math.min(score, 100) + "%";
+
+                // 우측 상단 버튼
+                const rightIcon = document.getElementById('profile-header-right-icon');
+                const mainBtn = document.getElementById('profile-main-btn');
+
+                if (isMe) {
+                    rightIcon.innerHTML = '<ion-icon name="settings-outline"></ion-icon>';
+                    mainBtn.innerText = "프로필 수정";
+                    mainBtn.className = "profile-action-btn edit";
+                    mainBtn.onclick = () => alert("준비중입니다.");
+                } else {
+                    rightIcon.innerHTML = '<ion-icon name="ellipsis-vertical"></ion-icon>';
+                    mainBtn.innerText = "1:1 채팅하기";
+                    mainBtn.className = "profile-action-btn";
+                    mainBtn.onclick = () => alert("준비중입니다.");
+                }
+            },
+
+            /** 통계 탭 렌더링 */
+            renderStats: () => {
+                const { data, currentTab } = ProfileApp.state;
+                const isMe = data.myProfile;
+                const statsBox = document.getElementById('profile-stats-box');
+
+                // 탭 정의
+                let tabs = [
+                    { key: 'posts', label: '작성한 글', value: data.postCount, active: true },
+                    { key: 'comments', label: '작성한 댓글', value: data.commentCount, active: isMe }
+                ];
+
+                // 내 프로필일 때만 '누른 좋아요' 표시
+                if (isMe) {
+                    tabs.push({ key: 'likes', label: '누른 좋아요', value: data.likeCount, active: true });
+                }
+
+                // HTML 생성
+                let html = '';
+                tabs.forEach(t => {
+                    const isActive = (currentTab === t.key) ? 'active' : '';
+                    if (t.active) {
+                        html += `
+                            <div class="profile-stat-item ${isActive}" onclick="ProfileApp.switchTab('${t.key}')">
+                                <div class="profile-stat-label">${t.label}</div>
+                                <div class="profile-stat-value">${t.value}</div>
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div class="profile-stat-item readonly">
+                                <div class="profile-stat-label">${t.label}</div>
+                                <div class="profile-stat-value">${t.value}</div>
+                            </div>
+                        `;
+                    }
+                });
+                statsBox.innerHTML = html;
+            },
+
+            /** 탭 변경 핸들러 */
+            switchTab: (key) => {
+                ProfileApp.state.currentTab = key;
+                ProfileApp.state.subTab = 'community'; // 탭 변경 시 서브탭 리셋
+                ProfileApp.renderStats(); // 탭 활성화 상태 갱신
+                ProfileApp.renderList();  // 리스트 갱신
+            },
+
+            switchSubTab: (key) => {
+                ProfileApp.state.subTab = key;
+                ProfileApp.renderList();
+            },
+
+            /** 리스트 컨텐츠 렌더링 */
+            renderList: () => {
+                const { data, currentTab, subTab } = ProfileApp.state;
+                const container = document.getElementById('profile-dynamic-area');
+
+                let items = [];
+                let title = "";
+                let showSubTabs = false;
+
+                // 데이터 필터링
+                if (currentTab === 'posts') {
+                    title = "작성한 글 목록";
+                    showSubTabs = true;
+                    items = (subTab === 'community') ? (data.posts || []) : [];
+                } else if (currentTab === 'comments') {
+                    title = "내가 쓴 댓글";
+                    items = data.comments || [];
+                } else if (currentTab === 'likes') {
+                    title = "관심 목록";
+                    showSubTabs = true;
+                    items = (subTab === 'community') ? (data.likes || []) : [];
+                }
+
+                // HTML 조립
+                let html = `<div class="profile-section-title">${title}</div>`;
+
+                if (showSubTabs) {
+                    const mkActive = subTab === 'market' ? 'active' : '';
+                    const cmActive = subTab === 'community' ? 'active' : '';
+                    html += `
+                        <div class="profile-sub-tabs">
+                            <button class="profile-sub-tab-btn ${mkActive}" onclick="ProfileApp.switchSubTab('market')">중고거래</button>
+                            <button class="profile-sub-tab-btn ${cmActive}" onclick="ProfileApp.switchSubTab('community')">커뮤니티</button>
+                        </div>
+                    `;
+                }
+
+                if (items.length > 0) {
+                    items.forEach(item => {
+                        const thumb = item.thumbnail
+                            ? `<img src="${item.thumbnail}" class="profile-list-thumb">`
+                            : ""; // 이미지 없으면 영역 제거 (왼쪽 정렬)
+
+                        const timeStr = (typeof Utils !== 'undefined') ? Utils.timeAgo(item.timeAgo) : item.timeAgo;
+
+                        // 뱃지 텍스트
+                        let badgeText = (currentTab === 'comments') ? "댓글" : item.category;
+
+                        html += `
+                            <div class="profile-list-item" onclick="ProfileApp.goToDetail(${item.id})">
+                                ${thumb}
+                                <div class="profile-list-info">
+                                    <div class="profile-list-meta">
+                                        <span class="profile-badge comm">${badgeText}</span> · ${timeStr}
+                                    </div>
+                                    <div class="profile-list-title">${item.title}</div>
+                                    <div class="profile-feed-preview">${item.contentPreview || ''}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    const msg = (subTab === 'market') ? "중고거래 기능은 준비중입니다." : "내역이 없습니다.";
+                    html += `<div class="profile-empty-state">${msg}</div>`;
+                }
+
+                container.innerHTML = html;
+            },
+
+            /** 상세 페이지 이동 */
+            goToDetail: (id) => {
+                // 커뮤니티 페이지 내에서 이동 시 SPA 처럼 동작
+                if (location.pathname.includes('/community') && typeof CommunityView !== 'undefined') {
+                    const fakeEl = document.createElement('div');
+                    fakeEl.setAttribute('data-boardIdx', id);
+                    CommunityView.openView(fakeEl);
+                } else {
+                    // 외부에서 진입 시 이동
+                    const profileUserIdx = ProfileApp.state.data ? ProfileApp.state.data.userIdx : '';
+                    location.href = `/community?openBoard=${id}&from=profile&profileUser=${profileUserIdx}`;
+                }
+            }
+        };
+
+        // 전역 함수 매핑
+        window.ProfileApp = ProfileApp;
+        window.openProfile = ProfileApp.open;
+    </script>
+</div>

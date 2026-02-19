@@ -19,388 +19,194 @@
     <div class="list-status" id="listStatus"></div>
     <div id="sentinel"></div>
     <script>
-        /**
-     * 타임세일 페이지 관리
-     */
-        const TimeSale = {
-            // 현재 활성화된 탭
-            currentTab: 'food',
-
-            // 데이터 캐시
-            cache: {
-                food: null,
-                store: null
-            },
-
-            // 무한 스크롤 설정
-            scroll: {
-                page: 0,
-                itemsPerPage: 10,
-                loading: false,
-                hasMore: true,
-                observer: null
-            },
-
-            /**
-             * 초기화
-             */
-            init: function () {
-                console.log('[TimeSale] 초기화 시작');
-                this.bindEvents();
-                this.setupIntersectionObserver();
-                this.loadData('food'); // 초기 로딩 (음식 탭)
-                console.log('[TimeSale] 초기화 완료');
-            },
-
-            /**
-             * 이벤트 바인딩
-             */
-            bindEvents: function () {
-                // 음식 탭 클릭
-                document.getElementById('tabFood').addEventListener('click', () => {
-                    this.switchTab('food');
-                });
-
-                // 가게 탭 클릭
-                document.getElementById('tabStore').addEventListener('click', () => {
-                    this.switchTab('store');
-                });
-            },
-
-            /**
-             * 탭 전환
-             */
-            switchTab: function (tab) {
-                // 현재 탭과 동일하면 아무것도 하지 않음
-                if (this.currentTab === tab) {
-                    console.log(`[탭] 이미 ${tab} 탭이 활성화되어 있습니다`);
-                    return;
-                }
-
-                console.log(`[탭] ${this.currentTab} → ${tab} 전환`);
-                this.currentTab = tab;
-
-                // 탭 UI 업데이트
-                document.getElementById('tabFood').classList.toggle('active', tab === 'food');
-                document.getElementById('tabStore').classList.toggle('active', tab === 'store');
-
-                // 리스트 초기화
-                this.resetScroll();
-
-                // 데이터 로드 (캐시가 있으면 API 호출 안함)
-                this.loadData(tab);
-            },
-
-            /**
-             * 스크롤 상태 초기화
-             */
-            resetScroll: function () {
-                console.log('[스크롤] 상태 초기화');
-                this.scroll.page = 0;
-                this.scroll.hasMore = true;
-                this.scroll.loading = false;
-                document.getElementById('listWrap').innerHTML = '';
-                document.getElementById('listStatus').innerHTML = '';
-            },
-
-            /**
-             * Intersection Observer 설정 (무한 스크롤)
-             */
-            setupIntersectionObserver: function () {
-                const options = {
-                    root: null,
-                    rootMargin: '200px', // 화면 하단 200px 전에 트리거
-                    threshold: 0
-                };
-
-                this.scroll.observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        // sentinel이 화면에 보이고, 더 로드할 데이터가 있고, 로딩 중이 아닐 때만
-                        if (entry.isIntersecting && this.scroll.hasMore && !this.scroll.loading) {
-                            console.log('[Observer] 무한스크롤 트리거');
-                            this.loadMoreItems();
-                        }
-                    });
-                }, options);
-
-                // Sentinel 요소 관찰 시작
-                const sentinel = document.getElementById('sentinel');
-                if (sentinel) {
-                    this.scroll.observer.observe(sentinel);
-                    console.log('[Observer] Sentinel 관찰 시작');
-                } else {
-                    console.error('[Observer] Sentinel 요소를 찾을 수 없습니다');
-                }
-            },
-
-            /**
-             * 데이터 로드 (캐시 우선)
-             */
-            loadData: async function (tab) {
-                // 캐시된 데이터가 있으면 사용 (API 호출 안함)
-                if (this.cache[tab]) {
-                    console.log(`[${tab}] 캐시된 데이터 사용`);
-                    this.renderItems(tab, this.cache[tab]);
-                    return;
-                }
-
-                // 로딩 상태 표시
-                this.showLoading();
-
-                try {
-                    console.log(`[${tab}] API 호출 시작`);
-                    const endpoint = tab === 'food' ? '/timesale/food/list' : '/timesale/store/list';
-                    const data = await API.get(endpoint);
-
-                    console.log(`[${tab}] API 응답 받음:`, data.length, '개');
-
-                    // 캐시 저장
-                    this.cache[tab] = data;
-
-                    // 렌더링
-                    this.renderItems(tab, data);
-
-                } catch (error) {
-                    console.error('데이터 로드 실패:', error);
-                    Utils.notify('데이터를 불러오는데 실패했습니다.', 'error');
-                    this.showError();
-                }
-            },
-
-            /**
-             * 더 많은 아이템 로드 (무한 스크롤)
-             */
-            loadMoreItems: function () {
-                // 이미 로딩 중이거나 더 이상 데이터가 없으면 중단
-                if (this.scroll.loading || !this.scroll.hasMore) {
-                    return;
-                }
-
-                const data = this.cache[this.currentTab];
-                if (!data) return;
-
-                // 로딩 시작
-                this.scroll.loading = true;
-                console.log(`[무한스크롤] 페이지 ${this.scroll.page + 1} 로딩 시작`);
-
-                // 다음 페이지 계산
-                this.scroll.page++;
-                const start = this.scroll.page * this.scroll.itemsPerPage;
-                const end = start + this.scroll.itemsPerPage;
-                const items = data.slice(start, end);
-
-                if (items.length === 0) {
-                    this.scroll.hasMore = false;
-                    this.scroll.loading = false;
-                    this.showNoMoreData();
-                    console.log('[무한스크롤] 모든 데이터 로드 완료');
-                    return;
-                }
-
-                // 약간의 지연으로 자연스러운 로딩 효과
-                setTimeout(() => {
-                    this.appendItems(this.currentTab, items);
-
-                    // 마지막 페이지 확인
-                    if (end >= data.length) {
-                        this.scroll.hasMore = false;
-                        this.showNoMoreData();
-                        console.log('[무한스크롤] 마지막 페이지 도달');
-                    }
-
-                    this.scroll.loading = false;
-                    console.log(`[무한스크롤] 페이지 ${this.scroll.page} 로딩 완료`);
-                }, 300);
-            },
-
-            /**
-             * 아이템 렌더링
-             */
-            renderItems: function (tab, data) {
-                const listWrap = document.getElementById('listWrap');
-                listWrap.innerHTML = '';
-
-                if (!data || data.length === 0) {
-                    this.showEmpty();
-                    return;
-                }
-
-                // 첫 페이지 아이템만 렌더링
-                const items = data.slice(0, this.scroll.itemsPerPage);
-                this.appendItems(tab, items);
-
-                // 더 많은 데이터가 있는지 확인
-                if (data.length <= this.scroll.itemsPerPage) {
-                    this.scroll.hasMore = false;
-                    this.showNoMoreData();
-                }
-            },
-
-            /**
-             * 아이템 추가 (무한 스크롤용)
-             */
-            appendItems: function (tab, items) {
-                const listWrap = document.getElementById('listWrap');
-                const fragment = document.createDocumentFragment();
-
-                items.forEach(item => {
-                    const element = tab === 'food'
-                        ? this.createFoodCard(item)
-                        : this.createStoreCard(item);
-                    fragment.appendChild(element);
-                });
-
-                listWrap.appendChild(fragment);
-                this.hideLoading();
-            },
-
-            /**
-                   * 음식 카드 생성
-                   */
-            createFoodCard: function (food) {
-                const card = document.createElement('div');
-                card.className = 'food-card';  // 👈 item-card → food-card
-                card.dataset.productNum = food.productNum;
-                card.dataset.storeIdx = food.storeIdx;
-
-                const discountRate = Math.round((1 - food.eventPrice / food.price) * 100);
-                const originalPrice = Utils.formatNumber(food.price);
-                const salePrice = Utils.formatNumber(food.eventPrice);
-
-                card.innerHTML = `
-        <div class="food-thumb">
-            ${food.productPictureIdx
-                        ? `<img src="/upload/${food.productPictureIdx}" alt="이미지 없음">`
-                        : '<div class="no-image">이미지 없음</div>'}
-        </div>
-        <div class="food-lines">
-            <div class="food-store">${food.storeName}</div>
-            <div>${food.productName}</div>
-            <div class="muted">미정 할인 시작</div>
-            <div>${salePrice}원 / 원가 ${originalPrice}원</div>
-            <div>할인율: ${discountRate}%</div>
-        </div>
-    `;
-
-                return card;
-            },
-
-            /**
-             * 가게 카드 생성
-             */
-            createStoreCard: function (store) {
-                const card = document.createElement('div');
-                card.className = 'store-card';  // 👈 item-card → store-card
-                card.dataset.storeIdx = store.storeIdx;
-
-                const openTime = store.openTime || '영업시간 미정';
-                const saleTime = store.eventStartTime && store.eventEndTime
-                    ? `${store.eventStartTime} ~ ${store.eventEndTime}`
-                    : '할인시간 미정';
-
-                card.innerHTML = `
-        <div>
-            <div class="store-name">${store.storeName}</div>
-            <div class="store-times">
-                <div class="muted">${store.category || '기타'}</div>
-                <div>${openTime}</div>
-                <div>${saleTime}</div>
-            </div>
-        </div>
-        <div class="store-thumb">
-            ${store.storePictureIdx
-                        ? `<img src="/upload/${store.storePictureIdx}" alt="이미지 없음">`
-                        : '<div class="no-image">이미지 없음</div>'}
-        </div>
-    `;
-
-                return card;
-            },
-
-            /**
-             * 로딩 표시
-             */
-            showLoading: function () {
-                this.scroll.loading = true;
-                const listStatus = document.getElementById('listStatus');
-                listStatus.innerHTML = `
-            <div class="loading-spinner">
-                <div class="spinner"></div>
-                <p>데이터를 불러오는 중...</p>
-            </div>
-        `;
-            },
-
-            /**
-             * 로딩 숨기기
-             */
-            hideLoading: function () {
-                this.scroll.loading = false;
-                document.getElementById('listStatus').innerHTML = '';
-            },
-
-            /**
-             * 에러 표시
-             */
-            showError: function () {
-                const listWrap = document.getElementById('listWrap');
-                listWrap.innerHTML = `
-            <div class="empty-state">
-                <p class="error-icon">⚠️</p>
-                <p class="error-message">데이터를 불러오는데 실패했습니다.</p>
-                <button onclick="location.reload()" class="retry-btn">다시 시도</button>
-            </div>
-        `;
-                this.hideLoading();
-            },
-
-            /**
-             * 빈 상태 표시
-             */
-            showEmpty: function () {
-                const listWrap = document.getElementById('listWrap');
-                const message = this.currentTab === 'food'
-                    ? '현재 할인 중인 음식이 없습니다.'
-                    : '현재 할인 중인 가게가 없습니다.';
-
-                listWrap.innerHTML = `
-            <div class="empty-state">
-                <p class="empty-icon">🔍</p>
-                <p class="empty-message">${message}</p>
-            </div>
-        `;
-                this.hideLoading();
-            },
-
-            /**
-             * 더 이상 데이터 없음 표시
-             */
-            showNoMoreData: function () {
-                const listStatus = document.getElementById('listStatus');
-                listStatus.innerHTML = `
-            <div class="no-more-data">
-                <p>모든 항목을 불러왔습니다.</p>
-            </div>
-        `;
-            },
-
-            /**
-             * 캐시 새로고침 (페이지 새로고침 시 또는 수동 호출)
-             */
-            refreshData: async function () {
-                this.cache = {
-                    food: null,
-                    store: null
-                };
-                this.resetScroll();
-                await this.loadData(this.currentTab);
-                Utils.notify('데이터를 새로고침했습니다.', 'success');
-            }
-        };
-
-        // DOM 로드 완료 후 초기화
         document.addEventListener('DOMContentLoaded', () => {
-            TimeSale.init();
+            console.log("✅ DOM 로드 완료");
+
+            const $ = (id) => document.getElementById(id);
+
+            // ===== 상태 관리 =====
+            const state = { activeTab: "food", cursor: 0, pageSize: 10, loading: false, ended: false, foodData: [], storeData: [] };
+
+            // ===== 컨트롤러에서 음식 데이터 가져오기 =====
+            async function fetchFoodData() {
+                try {
+                    setStatus("음식 데이터 로딩 중...");
+                    const data = await API.get('/food/list');
+                    state.foodData = data;
+                    console.log('✅ 음식 데이터 로드:', state.foodData.length, '개');
+                    return state.foodData;
+                } catch (error) {
+                    console.error('❌ 음식 데이터 로드 에러:', error);
+                    Utils.notify('음식 데이터 로드에 실패했습니다.', 'error');
+                    state.foodData = [];
+                    return [];
+                }
+            }
+
+            // ===== 컨트롤러에서 가게 데이터 가져오기 =====
+            async function fetchStoreData() {
+                try {
+                    setStatus("가게 데이터 로딩 중...");
+                    const data = await API.get('/store/list');
+                    state.storeData = data;
+                    console.log('✅ 가게 데이터 로드:', state.storeData.length, '개');
+                    return state.storeData;
+                } catch (error) {
+                    console.error('❌ 가게 데이터 로드 에러:', error);
+                    Utils.notify('가게 데이터 로드에 실패했습니다.', 'error');
+                    state.storeData = [];
+                    return [];
+                }
+            }
+
+            // ===== 현재 탭 데이터 가져오기 =====
+            function currentData() { return state.activeTab === "food" ? state.foodData : state.storeData; }
+
+            // ===== 상태 메시지 설정 =====
+            function setStatus(text) { const statusEl = $("listStatus"); if (statusEl) statusEl.textContent = text || ""; }
+
+            // ===== 리스트 초기화 =====
+            function resetList() { const listWrap = $("listWrap"); if (listWrap) listWrap.innerHTML = ""; state.cursor = 0; state.ended = false; setStatus(""); }
+
+            // ===== 아이템 렌더링 =====
+            function renderItems(items) {
+                const wrap = $("listWrap");
+                if (!wrap) return;
+                const frag = document.createDocumentFragment();
+
+                items.forEach((item) => {
+                    if (state.activeTab === "food") {
+                        const el = document.createElement("div");
+                        el.className = "food-card";
+                        el.innerHTML = `
+                    <div class="food-thumb"><img src="${item.imageUrl || item.img || '/images/default-food.jpg'}" alt="${item.foodName || '음식'}" onerror="this.src='/images/default-food.jpg'"/></div>
+                    <div class="food-lines">
+                        <div class="food-store">${item.storeName || item.store || '가게명 없음'}</div>
+                        <div><span class="muted">${item.saleStartTime || item.saleStart || '미정'}</span> 할인 시작</div>
+                        <div><span class="muted">${Utils.formatNumber(item.discountPrice || item.salePrice || 0)}원</span> / 원가 ${Utils.formatNumber(item.originalPrice || item.originPrice || 0)}원</div>
+                        <div class="muted">할인율: ${item.discountRate || item.saleRate || '0%'}</div>
+                    </div>
+                `;
+                        el.onclick = () => {
+                            if (window.openReservationModal) {
+                                window.openReservationModal({
+                                    id: item.foodId || item.id,
+                                    name: item.foodName || item.name || '도시락',
+                                    store: item.storeName || item.store,
+                                    storeName: item.storeName || item.store,
+                                    price: item.discountPrice || item.salePrice,
+                                    salePrice: item.discountPrice || item.salePrice,
+                                    originalPrice: item.originalPrice || item.originPrice,
+                                    originPrice: item.originalPrice || item.originPrice,
+                                    img: item.imageUrl || item.img || '/images/default-food.jpg',
+                                    maxQuantity: item.maxQuantity || item.stock || 10
+                                });
+                            }
+                        };
+                        el.style.cursor = 'pointer';
+                        frag.appendChild(el);
+                    } else {
+                        const el = document.createElement("div");
+                        el.className = "store-card";
+                        el.innerHTML = `
+                    <div>
+                        <div class="store-name">${item.storeName || item.name || '가게명 없음'}</div>
+                        <div class="store-times">
+                            <div>${item.businessHours || item.openTime || item.t1 || '영업시간 미정'}</div>
+                            <div>${item.saleHours || item.saleTime || item.t2 || '할인시간 미정'}</div>
+                        </div>
+                    </div>
+                    <div class="store-thumb"><img src="${item.imageUrl || item.img || '/images/default-store.jpg'}" alt="${item.storeName || '가게'}" onerror="this.src='/images/default-store.jpg'"/></div>
+                `;
+                        el.onclick = () => {
+                            const params = new URLSearchParams();
+                            params.set('type', 'store');
+                            params.set('id', item.storeId || item.id);
+                            params.set('storeName', item.storeName || item.name);
+                            params.set('storeTime', item.businessHours || item.openTime || item.t1);
+                            params.set('storeImg', item.imageUrl || item.img || '/images/default-store.jpg');
+                            window.location.href = `./detail.html?${params.toString()}`;
+                        };
+                        el.style.cursor = 'pointer';
+                        frag.appendChild(el);
+                    }
+                });
+
+                wrap.appendChild(frag);
+            }
+
+            // ===== 더 불러오기 (무한 스크롤) =====
+            async function loadMore() {
+                if (state.loading || state.ended) return;
+                state.loading = true;
+
+                const data = currentData();
+                const start = state.cursor;
+                const end = Math.min(start + state.pageSize, data.length);
+                const chunk = data.slice(start, end);
+
+                console.log(`[loadMore] tab=${state.activeTab}, cursor=${start}/${data.length}`);
+
+                if (chunk.length === 0) {
+                    state.ended = true;
+                    setStatus(data.length === 0 ? "데이터가 없습니다." : "더 이상 불러올 데이터가 없어요.");
+                    state.loading = false;
+                    return;
+                }
+
+                setStatus("불러오는 중...");
+                await Utils.delay(120);
+
+                renderItems(chunk);
+                state.cursor = end;
+
+                if (state.cursor >= data.length) {
+                    state.ended = true;
+                    setStatus("✅ 마지막 데이터까지 모두 불러왔어요.");
+                } else {
+                    setStatus(`✅ ${state.cursor}/${data.length} 로드됨`);
+                }
+
+                state.loading = false;
+            }
+
+            // ===== 탭 전환 =====
+            async function setTab(tab) {
+                if (state.activeTab === tab) return;
+                console.log(`[Tab 전환] ${state.activeTab} → ${tab}`);
+                state.activeTab = tab;
+
+                $("tabFood").classList.toggle("active", tab === "food");
+                $("tabStore").classList.toggle("active", tab === "store");
+
+                resetList();
+
+                if (tab === "food" && state.foodData.length === 0) await fetchFoodData();
+                else if (tab === "store" && state.storeData.length === 0) await fetchStoreData();
+
+                loadMore();
+            }
+
+            // ===== 초기화 =====
+            const foodTab = $("tabFood");
+            const storeTab = $("tabStore");
+
+            if (foodTab) foodTab.onclick = () => setTab("food");
+            if (storeTab) storeTab.onclick = () => setTab("store");
+
+            const sentinel = $("sentinel");
+            if (sentinel) {
+                const observer = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting) {
+                        console.log("🔍 Sentinel 감지 - 추가 로드");
+                        loadMore();
+                    }
+                }, { root: null, rootMargin: "200px", threshold: 0 });
+                observer.observe(sentinel);
+            }
+
+            // 초기 음식 데이터 로드 및 렌더링
+            fetchFoodData().then(() => loadMore());
         });
     </script>
 </div>
