@@ -60,4 +60,8 @@ public class Store {
 
     @Column(name = "STORE_LNG")
     private Double storeLng;
+	
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "OWNER_ID", referencedColumnName = "ADMIN_IDX", unique = true)
+	private Admin owner; // OWNER_ID 칼럼 생성 및 ADMIN_IDX와 연결
 }
