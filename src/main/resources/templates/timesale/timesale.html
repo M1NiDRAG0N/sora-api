@@ -1,107 +1,92 @@
-<!-- 통일된 구조: 타임세일 페이지 -->
-<div class="page-wrapper timesale-page" th:fragment="div">
+<div th:fragment="div" class="sale-content" id="saleContent">
     <input type="hidden" id="loginUserIdx" th:value="${#authentication.principal.userIdx}">
-
-    <div class="page-content">
-        <div class="content-inner">
-            <!-- 지도 영역 -->
-            <div class="map-wrap">
-                <div class="map-box">
-                    <div id="map" style="width: 100%; height: 100%;"></div>
-                    <div class="map-placeholder" id="mapPlaceholder" style="display: none;">
-                        Google Maps API 영역
-                    </div>
-                </div>
+    <div class="map-wrap">
+        <div class="map-box">
+            <div id="map" style="width: 100%; height: 100%;"></div>
+            <div class="map-placeholder" id="mapPlaceholder" style="display: none;">
+                Google Maps API 영역
             </div>
-
-            <!-- 리스트 영역 -->
-             <div class="tab-wrap">
-                <div class="tabs">
-                    <div class="tab-btn active" id="tabFood">음식</div>
-                    <div class="tab-btn" id="tabStore">가게</div>
-                </div>
-            </div>
-            <div class="list-wrap" id="listWrap"></div>
-            <div class="list-status" id="listStatus"></div>
-            
-            <!-- 무한스크롤 감지 -->
-            <div id="sentinel"></div>
         </div>
     </div>
 
-    <!-- [3] 모달 레이어 (고정) -->
-    <div class="modal-layers">
-        <!-- 공용 오버레이 (배경) -->
-        <div class="modal-overlay"></div>
-        
-        <!-- 예약 모달 -->
-        <div class="modal-container" id="reservationModal">
-            <div class="modal-content">
-                <!-- 헤더 -->
-                <div class="modal-header">
-                    <div class="modal-back-btn" id="modalCloseBtn">
-                        <ion-icon name="arrow-back-outline"></ion-icon>
-                    </div>
-                    <h2 class="modal-title">상품 예약</h2>
-                    <div class="modal-spacer"></div>
+    <div class="tab-wrap">
+        <div class="tabs">
+            <div class="tab-btn active" id="tabFood">음식</div>
+            <div class="tab-btn" id="tabStore">가게</div>
+        </div>
+    </div>
+
+    <div class="list-wrap" id="listWrap"></div>
+    <div class="list-status" id="listStatus"></div>
+    <div id="sentinel"></div>
+    <!-- 예약 모달 -->
+    <div class="reservation-modal" id="reservationModal">
+        <div class="modal-overlay" onclick="closeReservationModal()"></div>
+        <div class="modal-content">
+            <!-- 헤더 -->
+            <div class="modal-header">
+                <div class="modal-back-btn" id="modalCloseBtn">
+                    <ion-icon name="arrow-back-outline"></ion-icon>
+                </div>
+                <h2 class="modal-title">상품 예약</h2>
+                <div class="modal-spacer"></div>
+            </div>
+
+            <!-- 스크롤 영역 -->
+            <div class="modal-body">
+                <!-- 가게 정보 -->
+                <div class="modal-store-info">
+                    <ion-icon name="storefront-outline"></ion-icon>
+                    <span id="modalStoreName">로딩 중...</span>
                 </div>
 
-                <!-- 스크롤 영역 -->
-                <div class="modal-body">
-                    <!-- 가게 정보 -->
-                    <div class="modal-store-info">
-                        <ion-icon name="storefront-outline"></ion-icon>
-                        <span id="modalStoreName">로딩 중...</span>
-                    </div>
-
-                    <!-- 상품 정보 -->
-                    <div class="modal-product-card">
-                        <img src="" alt="상품 이미지" class="modal-product-img" id="modalProductImg">
-                        <div class="modal-product-info">
-                            <h3 class="modal-product-name" id="modalProductName">상품명</h3>
-                            <div class="modal-price-wrap">
-                                <span class="modal-price-current" id="modalPrice">0원</span>
-                                <span class="modal-price-original" id="modalOriginalPrice">0원</span>
-                            </div>
-                            <div class="modal-sale-time" id="modalSaleTime">재고 0개 남음</div>
+                <!-- 상품 정보 -->
+                <div class="modal-product-card">
+                    <img src="" alt="상품 이미지" class="modal-product-img" id="modalProductImg">
+                    <div class="modal-product-info">
+                        <h3 class="modal-product-name" id="modalProductName">상품명</h3>
+                        <div class="modal-price-wrap">
+                            <span class="modal-price-current" id="modalPrice">0원</span>
+                            <span class="modal-price-original" id="modalOriginalPrice">0원</span>
                         </div>
-                    </div>
-
-                    <!-- 예약할 수량 -->
-                    <div class="modal-section">
-                        <h4 class="modal-section-title">예약할 수량</h4>
-                        <div class="modal-quantity-control">
-                            <button class="quantity-btn" id="decreaseBtn">
-                                <ion-icon name="remove-outline"></ion-icon>
-                            </button>
-                            <input type="number" class="quantity-input" id="quantityInput" value="1" min="1" max="10"
-                                readonly>
-                            <button class="quantity-btn" id="increaseBtn">
-                                <ion-icon name="add-outline"></ion-icon>
-                            </button>
-                        </div>
-                        <div class="modal-quantity-note">최대 10개 예약 가능</div>
-                    </div>
-
-                    <!-- 이 예약 금액 -->
-                    <div class="modal-section">
-                        <h4 class="modal-section-title">이 예약 금액</h4>
-                        <div class="modal-total-price" id="modalTotalPrice">1,500원</div>
-                    </div>
-
-                    <!-- 안내 문구 -->
-                    <div class="modal-notice">
-                        <p>예약 후 타임세일을 통해 재고가 남아 있지 않는다면</p>
-                        <p>30분 내 찾아가지 않으면 예약이 자동 취소됩니다.</p>
+                        <div class="modal-sale-time" id="modalSaleTime">재고 0개 남음</div>
                     </div>
                 </div>
 
-                <!-- 예약 버튼 -->
-                <div class="modal-footer">
-                    <button class="modal-reserve-btn" id="confirmBtn">
-                        <span id="reserveButtonText">1개 예약하기</span>
-                    </button>
+                <!-- 예약할 수량 -->
+                <div class="modal-section">
+                    <h4 class="modal-section-title">예약할 수량</h4>
+                    <div class="modal-quantity-control">
+                        <button class="quantity-btn" id="decreaseBtn">
+                            <ion-icon name="remove-outline"></ion-icon>
+                        </button>
+                        <input type="number" class="quantity-input" id="quantityInput" value="1" min="1" max="10"
+                            readonly>
+                        <button class="quantity-btn" id="increaseBtn">
+                            <ion-icon name="add-outline"></ion-icon>
+                        </button>
+                    </div>
+                    <div class="modal-quantity-note">최대 10개 예약 가능</div>
                 </div>
+
+                <!-- 이 예약 금액 -->
+                <div class="modal-section">
+                    <h4 class="modal-section-title">이 예약 금액</h4>
+                    <div class="modal-total-price" id="modalTotalPrice">1,500원</div>
+                </div>
+
+                <!-- 안내 문구 -->
+                <div class="modal-notice">
+                    <p>예약 후 타임세일을 통해 재고가 남아 있지 않는다면</p>
+                    <p>30분 내 찾아가지 않으면 예약이 자동 취소됩니다.</p>
+                </div>
+            </div>
+
+            <!-- 예약 버튼 -->
+            <div class="modal-footer">
+                <button class="modal-reserve-btn" id="confirmBtn">
+                    <span id="reserveButtonText">1개 예약하기</span>
+                </button>
             </div>
         </div>
     </div>
@@ -426,22 +411,13 @@
              */
             init: function () {
                 this.modal = document.getElementById('reservationModal');
-                this.overlay = document.querySelector('.modal-overlay');
+                this.overlay = this.modal.querySelector('.modal-overlay');
 
                 // 이벤트 바인딩
                 document.getElementById('modalCloseBtn').addEventListener('click', () => this.close());
                 document.getElementById('decreaseBtn').addEventListener('click', () => this.decreaseQuantity());
                 document.getElementById('increaseBtn').addEventListener('click', () => this.increaseQuantity());
                 document.getElementById('confirmBtn').addEventListener('click', () => this.reserve());
-                
-                // 오버레이 클릭 시 모달 닫기
-                if (this.overlay) {
-                    this.overlay.addEventListener('click', (e) => {
-                        if (e.target === this.overlay) {
-                            this.close();
-                        }
-                    });
-                }
             },
 
             /**
@@ -704,5 +680,152 @@
             TimeSale.init();
             ReservationModal.init();
         });
+    </script>
+
+    <!-- 구글맵 API -->
+    <script>
+        const TimeSaleMap = {
+            map: null,
+            markers: [],
+            userMarker: null,
+            infoWindows: [],
+
+            init: async function () {
+                console.log('[TimeSaleMap] 초기화 시작');
+                try {
+                    const defaultCenter = { lat: 37.5665, lng: 126.9780 };
+                    const { Map } = await google.maps.importLibrary("maps");
+
+                    this.map = new Map(document.getElementById('map'), {
+                        center: defaultCenter,
+                        zoom: 14,
+                        mapId: 'timesale_map',
+                        zoomControl: true,
+                        streetViewControl: false,
+                        mapTypeControl: false,
+                        fullscreenControl: false,
+                    });
+
+                    await Promise.all([
+                        this.loadUserMarker(),
+                        this.loadStoreMarkers()
+                    ]);
+
+                    console.log('[TimeSaleMap] 초기화 완료');
+                } catch (e) {
+                    console.error('[TimeSaleMap] 초기화 실패:', e);
+                }
+            },
+
+            loadUserMarker: async function () {
+                const userIdxEl = document.getElementById('loginUserIdx');
+                if (!userIdxEl || !userIdxEl.value) return;
+
+                try {
+                    const res = await fetch(`/api/map/user/${userIdxEl.value}`);
+                    if (!res.ok) return;
+
+                    const user = await res.json();
+                    if (!user || user.userLat == null || user.userLng == null) return;
+
+                    const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
+
+                    const pin = new PinElement({
+                        background: '#4A90E2',
+                        borderColor: '#2C5F8A',
+                        glyphColor: '#FFFFFF',
+                        glyph: '👤',
+                        scale: 1.2,
+                    });
+
+                    this.userMarker = new AdvancedMarkerElement({
+                        map: this.map,
+                        position: { lat: user.userLat, lng: user.userLng },
+                        content: pin.element,
+                        title: `나 (${user.userNickname})`,
+                    });
+
+                    // 유저 위치로 지도 중심 이동
+                    this.map.setCenter({ lat: user.userLat, lng: user.userLng });
+                    console.log('[TimeSaleMap] 유저 마커 추가:', user.userNickname);
+                } catch (e) {
+                    console.error('[TimeSaleMap] 유저 마커 로드 실패:', e);
+                }
+            },
+
+            loadStoreMarkers: async function () {
+                try {
+                    const res = await fetch('/api/map/stores');
+                    if (!res.ok) throw new Error('가게 목록 API 실패');
+
+                    const stores = await res.json();
+                    const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
+                    const { InfoWindow } = await google.maps.importLibrary("maps");
+
+                    stores.forEach(store => {
+                        if (store.storeLat == null || store.storeLng == null) return;
+
+                        const isEvent = store.eventState && store.eventState.includes('진행');
+                        const pin = new PinElement({
+                            background: isEvent ? '#E74C3C' : '#F39C12',
+                            borderColor: isEvent ? '#922B21' : '#9A6E0A',
+                            glyphColor: '#FFFFFF',
+                            glyph: '🏪',
+                        });
+
+                        const marker = new AdvancedMarkerElement({
+                            map: this.map,
+                            position: { lat: store.storeLat, lng: store.storeLng },
+                            content: pin.element,
+                            title: store.storeName,
+                        });
+
+                        const infoWindow = new InfoWindow({
+                            content: `
+                                <div style="min-width:160px;padding:4px 0;">
+                                    <strong style="font-size:14px;">${store.storeName}</strong><br>
+                                    <span style="font-size:12px;color:#666;">${store.storeAddress}</span>
+                                    ${store.eventNote ? `<br><span style="font-size:12px;color:#E74C3C;">⚡ ${store.eventNote}</span>` : ''}
+                                    <br>
+                                    <a href="/timesale/detail?storeIdx=${store.storeIdx}"
+                                       style="display:inline-block;margin-top:6px;font-size:12px;color:#4A90E2;font-weight:bold;">
+                                       상세 보기 →
+                                    </a>
+                                </div>
+                            `,
+                        });
+
+                        marker.addListener('click', () => {
+                            this.infoWindows.forEach(iw => iw.close());
+                            infoWindow.open({ anchor: marker, map: this.map });
+                        });
+
+                        this.markers.push(marker);
+                        this.infoWindows.push(infoWindow);
+                    });
+
+                    console.log('[TimeSaleMap] 가게 마커 추가 완료:', this.markers.length);
+                } catch (e) {
+                    console.error('[TimeSaleMap] 가게 마커 로드 실패:', e);
+                }
+            }
+        };
+
+        // 구글맵 API 키 서버에서 받아 동적 로드
+        (async function loadGoogleMaps() {
+            try {
+                const keyRes = await fetch('/api/map/key');
+                const apiKey = await keyRes.text();
+                const script = document.createElement('script');
+                script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&loading=async&libraries=maps,marker`;
+                script.async = true;
+                script.defer = true;
+                script.onload = () => TimeSaleMap.init();
+                script.onerror = () => console.error('[GoogleMaps] API 로드 실패');
+                document.head.appendChild(script);
+            } catch (e) {
+                console.error('[GoogleMaps] API 키 조회 실패:', e);
+            }
+        })();
     </script>
 </div>
