@@ -36,6 +36,16 @@
 
 /* --- 2. 커뮤니티 메인 (Community) --- */
 
+/* 커뮤니티 페이지 컨테이너 - flex 레이아웃 설정 */
+.community-page,
+.detail-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
 /* 스크롤 영역 */
 .community-scroll-area {
     flex: 1;
@@ -49,7 +59,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 0px;
+    padding: 10px 20px;
     background: rgba(255, 255, 255, 0);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
@@ -138,7 +148,7 @@
 
 /* 피드 리스트 */
 .feed-list2 {
-    /* padding: 15px 20px; */
+    padding: 15px 20px;
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -264,28 +274,6 @@
     gap: 4px;
 }
 
-/* 글쓰기 버튼 (FAB) */
-.fab-write {
-    position: absolute;
-    bottom: 90px;
-    right: 20px;
-    width: 50px;
-    height: 50px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    border: 1px solid #eee;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 24px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-    z-index: 100;
-}
-
-
 /* --- 3. 글쓰기 페이지 (Write) --- */
 
 .write-header {
@@ -400,70 +388,10 @@
     height: auto;
 }
 
-/* 이미지 첨부 */
-.image-attach-row {
-    display: flex;
-    gap: 10px;
+/* 이미지 첨부 (기본은 common.css, 커뮤니티 전용 오버라이드) */
+.community-page .image-attach-row {
     margin-top: 20px;
-    overflow-x: auto;
     padding-bottom: 5px;
-}
-
-.camera-btn {
-    width: 70px;
-    height: 70px;
-    border: 1px solid #eee;
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    color: #aaa;
-    cursor: pointer;
-    background: #fafafa;
-    flex-shrink: 0;
-}
-
-.camera-icon {
-    font-size: 24px;
-    margin-bottom: 4px;
-}
-
-.camera-count {
-    font-size: 11px;
-}
-
-/* 미리보기 박스 */
-.preview-box {
-    position: relative;
-    width: 70px;
-    height: 70px;
-    flex-shrink: 0;
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid #eee;
-}
-
-.preview-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.btn-remove-img {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    width: 18px;
-    height: 18px;
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 50%;
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 12px;
-    cursor: pointer;
 }
 
 
@@ -849,7 +777,6 @@ body.modal-open {
     overflow: hidden;
 }
 
-
 #viewForm {
     position: absolute;
     /* 화면 기준 고정 */
@@ -888,12 +815,9 @@ body.modal-open {
     /* 내용이 길면 스크롤 가능하게 */
 }
 
-
-
 #viewForm.active,
 #writeForm.active {
     left: 0;
-    /* 화면 맨 위로 이동 */
 }
 
 /* --- 이미지 슬라이더 --- */
@@ -991,78 +915,18 @@ body.modal-open {
 
 
 /* =========================================
-       1. 더보기 버튼 & 드롭다운 메뉴 스타일 
+       1. 더보기 버튼 & 드롭다운 메뉴 스타일
+       (기본은 common.css, 커뮤니티 전용 오버라이드)
        ========================================= */
 .header-right-group {
     position: relative;
-    /* 드롭다운 배치의 기준점 */
     display: flex;
     align-items: center;
 }
 
-/* 드롭다운 메뉴 박스 (공통) */
-.custom-dropdown-menu {
-    display: none;
-    /* 기본 숨김 */
-    position: absolute;
+.community-page .custom-dropdown-menu {
     top: 40px;
-    /* 버튼 아래 위치 */
-    right: 0;
-    /* 오른쪽 정렬 */
     width: 140px;
-    /* 너비 적절히 조정 */
-    background: #ffffff;
-    border-radius: 12px;
-    /* 둥근 모서리 */
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    /* 부드러운 그림자 */
-    padding: 8px 0;
-    z-index: 1000;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    overflow: hidden;
-}
-
-/* 활성화 클래스 */
-.custom-dropdown-menu.active {
-    display: block;
-    animation: fadeIn 0.2s ease-out;
-}
-
-/* 메뉴 아이템 (수정, 삭제, 신고하기 등) */
-.menu-item {
-    display: block;
-    width: 100%;
-    padding: 12px 0;
-    text-align: center;
-    font-size: 15px;
-    font-weight: 500;
-    color: #333;
-    background: none;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.1s;
-}
-
-.menu-item:active {
-    background-color: #f5f5f5;
-}
-
-/* 빨간색 텍스트 (삭제, 신고하기) */
-.menu-item.danger {
-    color: #ff4d4f;
-}
-
-/* 페이드인 애니메이션 */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-5px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 

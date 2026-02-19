@@ -1,4 +1,4 @@
-<div class="detail-content no-scrollbar" th:fragment="div">
+<div class="page-wrapper community-page" th:fragment="div">
 
     <div class="community-scroll-area" id="communityMain">
 
@@ -681,12 +681,12 @@
 
                 document.querySelector('.page-title2').innerText = '글쓰기';
                 document.querySelector('.btn-done').innerText = '완료';
-                
+
                 const writeForm = document.querySelector('#writeForm');
                 if (typeof window.modalZIndex === 'undefined') window.modalZIndex = 5000;
                 window.modalZIndex++;
                 writeForm.style.zIndex = window.modalZIndex;
-                
+
                 writeForm.classList.add('active');
             },
 

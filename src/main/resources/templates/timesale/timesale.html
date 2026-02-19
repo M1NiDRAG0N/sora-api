@@ -1,4 +1,4 @@
-<div th:fragment="div" class="sale-content" id="saleContent">
+<div th:fragment="div" class="timesale-page" id="saleContent">
     <input type="hidden" id="loginUserIdx" th:value="${#authentication.principal.userIdx}">
     <div class="map-wrap">
         <div class="map-box">
@@ -355,12 +355,14 @@
 
                 return `
                     <div class="store-card" onclick="location.href='/timesale/detail?storeIdx=${store.storeIdx}'">
-                        <img src="${imageUrl}" alt="${store.storeName}" class="store-img">
                         <div class="store-info">
                             <h3 class="store-name">${store.storeName}</h3>
                             <div class="store-address">${store.storeAddress}</div>
                             <div class="store-time">${store.storeOpenTime} ~ ${store.storeCloseTime}</div>
                             ${store.eventNote ? `<div class="store-event">${store.eventNote}</div>` : ''}
+                            </div>
+                        <div class="store-thumb">
+                            <img src="${imageUrl}" alt="${store.storeName}" class="store-img">
                         </div>
                     </div>
                 `;
@@ -680,5 +682,152 @@
             TimeSale.init();
             ReservationModal.init();
         });
+    </script>
+
+    <!-- 구글맵 API -->
+    <script>
+        const TimeSaleMap = {
+            map: null,
+            markers: [],
+            userMarker: null,
+            infoWindows: [],
+
+            init: async function () {
+                console.log('[TimeSaleMap] 초기화 시작');
+                try {
+                    const defaultCenter = { lat: 37.5665, lng: 126.9780 };
+                    const { Map } = await google.maps.importLibrary("maps");
+
+                    this.map = new Map(document.getElementById('map'), {
+                        center: defaultCenter,
+                        zoom: 14,
+                        mapId: 'timesale_map',
+                        zoomControl: true,
+                        streetViewControl: false,
+                        mapTypeControl: false,
+                        fullscreenControl: false,
+                    });
+
+                    await Promise.all([
+                        this.loadUserMarker(),
+                        this.loadStoreMarkers()
+                    ]);
+
+                    console.log('[TimeSaleMap] 초기화 완료');
+                } catch (e) {
+                    console.error('[TimeSaleMap] 초기화 실패:', e);
+                }
+            },
+
+            loadUserMarker: async function () {
+                const userIdxEl = document.getElementById('loginUserIdx');
+                if (!userIdxEl || !userIdxEl.value) return;
+
+                try {
+                    const res = await fetch(`/api/map/user/${userIdxEl.value}`);
+                    if (!res.ok) return;
+
+                    const user = await res.json();
+                    if (!user || user.userLat == null || user.userLng == null) return;
+
+                    const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
+
+                    const pin = new PinElement({
+                        background: '#4A90E2',
+                        borderColor: '#2C5F8A',
+                        glyphColor: '#FFFFFF',
+                        glyph: '👤',
+                        scale: 1.2,
+                    });
+
+                    this.userMarker = new AdvancedMarkerElement({
+                        map: this.map,
+                        position: { lat: user.userLat, lng: user.userLng },
+                        content: pin.element,
+                        title: `나 (${user.userNickname})`,
+                    });
+
+                    // 유저 위치로 지도 중심 이동
+                    this.map.setCenter({ lat: user.userLat, lng: user.userLng });
+                    console.log('[TimeSaleMap] 유저 마커 추가:', user.userNickname);
+                } catch (e) {
+                    console.error('[TimeSaleMap] 유저 마커 로드 실패:', e);
+                }
+            },
+
+            loadStoreMarkers: async function () {
+                try {
+                    const res = await fetch('/api/map/stores');
+                    if (!res.ok) throw new Error('가게 목록 API 실패');
+
+                    const stores = await res.json();
+                    const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
+                    const { InfoWindow } = await google.maps.importLibrary("maps");
+
+                    stores.forEach(store => {
+                        if (store.storeLat == null || store.storeLng == null) return;
+
+                        const isEvent = store.eventState && store.eventState.includes('진행');
+                        const pin = new PinElement({
+                            background: isEvent ? '#E74C3C' : '#F39C12',
+                            borderColor: isEvent ? '#922B21' : '#9A6E0A',
+                            glyphColor: '#FFFFFF',
+                            glyph: '🏪',
+                        });
+
+                        const marker = new AdvancedMarkerElement({
+                            map: this.map,
+                            position: { lat: store.storeLat, lng: store.storeLng },
+                            content: pin.element,
+                            title: store.storeName,
+                        });
+
+                        const infoWindow = new InfoWindow({
+                            content: `
+                                <div style="min-width:160px;padding:4px 0;">
+                                    <strong style="font-size:14px;">${store.storeName}</strong><br>
+                                    <span style="font-size:12px;color:#666;">${store.storeAddress}</span>
+                                    ${store.eventNote ? `<br><span style="font-size:12px;color:#E74C3C;">⚡ ${store.eventNote}</span>` : ''}
+                                    <br>
+                                    <a href="/timesale/detail?storeIdx=${store.storeIdx}"
+                                       style="display:inline-block;margin-top:6px;font-size:12px;color:#4A90E2;font-weight:bold;">
+                                       상세 보기 →
+                                    </a>
+                                </div>
+                            `,
+                        });
+
+                        marker.addListener('click', () => {
+                            this.infoWindows.forEach(iw => iw.close());
+                            infoWindow.open({ anchor: marker, map: this.map });
+                        });
+
+                        this.markers.push(marker);
+                        this.infoWindows.push(infoWindow);
+                    });
+
+                    console.log('[TimeSaleMap] 가게 마커 추가 완료:', this.markers.length);
+                } catch (e) {
+                    console.error('[TimeSaleMap] 가게 마커 로드 실패:', e);
+                }
+            }
+        };
+
+        // 구글맵 API 키 서버에서 받아 동적 로드
+        (async function loadGoogleMaps() {
+            try {
+                const keyRes = await fetch('/api/map/key');
+                const apiKey = await keyRes.text();
+                const script = document.createElement('script');
+                script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&loading=async&libraries=maps,marker`;
+                script.async = true;
+                script.defer = true;
+                script.onload = () => TimeSaleMap.init();
+                script.onerror = () => console.error('[GoogleMaps] API 로드 실패');
+                document.head.appendChild(script);
+            } catch (e) {
+                console.error('[GoogleMaps] API 키 조회 실패:', e);
+            }
+        })();
     </script>
 </div>

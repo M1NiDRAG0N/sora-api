@@ -279,7 +279,7 @@
                 if (store.eventStartTime && store.eventEndTime) {
                     const startTime = this.formatTime(store.eventStartTime);
                     const endTime = this.formatTime(store.eventEndTime);
-                    if (timeText) timeText += '\n';
+                    if (timeText) timeText += `<br/>`;
                     timeText += `⚡ 할인: ${startTime} ~ ${endTime}`;
                 }
 
@@ -288,7 +288,7 @@
                     timeText = '시간 정보 없음';
                 }
 
-                storeTime.textContent = timeText;
+                storeTime.innerHTML = timeText;
 
                 console.log('[renderStoreInfo] 렌더링 완료');
             },
