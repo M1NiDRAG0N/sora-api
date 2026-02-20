@@ -2,23 +2,25 @@
     <input type="hidden" id="loginUserIdx" th:value="${#authentication.principal.userIdx}">
     <div class="map-wrap">
         <div class="map-box">
-            <div id="map" style="width: 100%; height: 100%;"></div>
-            <div class="map-placeholder" id="mapPlaceholder" style="display: none;">
-                Google Maps API 영역
+            <div id="map" style="width: 100%; height: 100%; display: none;"></div>
+            <div class="map-placeholder" id="mapPlaceholder" style="display: flex;">
+                지도를 불러오는 중...
             </div>
         </div>
     </div>
 
-    <div class="tab-wrap">
-        <div class="tabs">
-            <div class="tab-btn active" id="tabFood">음식</div>
-            <div class="tab-btn" id="tabStore">가게</div>
+    <div class="sale-content no-scrollbar" id="saleScrollContainer">
+        <div class="tab-wrap">
+            <div class="tabs">
+                <div class="tab-btn active" id="tabFood">음식</div>
+                <div class="tab-btn" id="tabStore">가게</div>
+            </div>
         </div>
-    </div>
 
-    <div class="list-wrap" id="listWrap"></div>
-    <div class="list-status" id="listStatus"></div>
-    <div id="sentinel"></div>
+        <div class="list-wrap" id="listWrap"></div>
+        <div class="list-status" id="listStatus"></div>
+        <div id="sentinel"></div>
+    </div>
     <!-- 예약 모달 -->
     <div class="reservation-modal" id="reservationModal">
         <div class="modal-overlay" onclick="closeReservationModal()"></div>
@@ -97,6 +99,17 @@
          * @param {string} type - 'file' 또는 'group' (기본값: 'file')
          * @returns {string} - FileController를 통한 이미지 URL
          */
+        function formatTime(timeString) {
+            if (!timeString) return '';
+            const parts = timeString.split(':');
+            if (parts.length < 2) return timeString;
+            let hours = parseInt(parts[0]);
+            const minutes = parts[1];
+            const period = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+            return `${String(hours).padStart(2, '0')}:${minutes} ${period}`;
+        }
+
         function getImageUrl(pictureIdx, type = 'file') {
             if (!pictureIdx) {
                 return '/images/no-image.png'; // 기본 이미지
@@ -139,8 +152,7 @@
             init: function () {
                 console.log('[TimeSale] 초기화 시작');
                 this.bindEvents();
-                this.setupIntersectionObserver();
-                this.loadData('food'); // 초기 로딩 (음식 탭)
+                this.loadData('food'); // 초기 로딩 - observer는 첫 렌더 후 설정
                 console.log('[TimeSale] 초기화 완료');
             },
 
@@ -191,6 +203,10 @@
                 this.scroll.page = 0;
                 this.scroll.hasMore = true;
                 this.scroll.loading = false;
+                if (this.scroll.observer) {
+                    this.scroll.observer.disconnect();
+                    this.scroll.observer = null;
+                }
                 document.getElementById('listWrap').innerHTML = '';
                 document.getElementById('listStatus').innerHTML = '';
             },
@@ -199,15 +215,26 @@
              * Intersection Observer 설정 (무한 스크롤)
              */
             setupIntersectionObserver: function () {
+                const sentinel = document.getElementById('sentinel');
+                if (!sentinel) {
+                    console.error('[Observer] Sentinel 요소를 찾을 수 없습니다');
+                    return;
+                }
+
+                const scrollContainer = document.getElementById('saleScrollContainer');
+
                 const options = {
-                    root: null,
-                    rootMargin: '200px', // 화면 하단 200px 전에 트리거
+                    root: scrollContainer || null,
+                    rootMargin: '200px',
                     threshold: 0
                 };
 
+                if (this.scroll.observer) {
+                    this.scroll.observer.disconnect();
+                }
+
                 this.scroll.observer = new IntersectionObserver((entries) => {
                     entries.forEach(entry => {
-                        // sentinel이 화면에 보이고, 더 로드할 데이터가 있고, 로딩 중이 아닐 때만
                         if (entry.isIntersecting && this.scroll.hasMore && !this.scroll.loading) {
                             console.log('[Observer] 무한스크롤 트리거');
                             this.loadMoreItems();
@@ -215,14 +242,8 @@
                     });
                 }, options);
 
-                // Sentinel 요소 관찰 시작
-                const sentinel = document.getElementById('sentinel');
-                if (sentinel) {
-                    this.scroll.observer.observe(sentinel);
-                    console.log('[Observer] Sentinel 관찰 시작');
-                } else {
-                    console.error('[Observer] Sentinel 요소를 찾을 수 없습니다');
-                }
+                this.scroll.observer.observe(sentinel);
+                console.log('[Observer] Sentinel 관찰 시작, root:', scrollContainer);
             },
 
             /**
@@ -233,6 +254,7 @@
                 if (this.cache[tab]) {
                     console.log(`[${tab}] 캐시된 데이터 사용`);
                     this.renderItems(tab, this.cache[tab]);
+                    setTimeout(() => { this.setupIntersectionObserver(); }, 100);
                     return;
                 }
 
@@ -256,6 +278,11 @@
                     // 렌더링
                     this.renderItems(tab, data);
                     this.hideStatus();
+
+                    // 첫 렌더 완료 후 observer 설정 (sentinel이 뷰포트 밖으로 나간 후 등록)
+                    setTimeout(() => {
+                        this.setupIntersectionObserver();
+                    }, 100);
 
                 } catch (error) {
                     console.error(`[${tab}] API 호출 실패:`, error);
@@ -288,14 +315,16 @@
                     return;
                 }
 
-                // HTML 생성
-                const html = itemsToRender.map(item => {
-                    if (tab === 'food') {
-                        return this.createFoodCard(item);
-                    } else {
-                        return this.createStoreCard(item);
-                    }
-                }).join('');
+                // HTML 생성 (음식탭: 재고 0개 제외)
+                const html = itemsToRender
+                    .filter(item => tab !== 'food' || (item.productQuantity > 0))
+                    .map(item => {
+                        if (tab === 'food') {
+                            return this.createFoodCard(item);
+                        } else {
+                            return this.createStoreCard(item);
+                        }
+                    }).join('');
 
                 // DOM에 추가
                 if (this.scroll.page === 0) {
@@ -340,7 +369,7 @@
                                     <span class="food-discount">${discountRate}%</span>
                                 ` : ''}
                             </div>
-                            <div class="food-stock">재고 ${product.productQuantity}개</div>
+                            ${product.productQuantity > 0 ? `<div class="food-stock">재고 ${product.productQuantity}개</div>` : ''}
                         </div>
                     </div>
                 `;
@@ -353,12 +382,19 @@
                 // ✅ FileController를 통해 썸네일 로드 (group 엔드포인트 사용)
                 const imageUrl = getImageUrl(store.storePictureIdx, 'group');
 
+                const openTime = formatTime(store.storeOpenTime);
+                const closeTime = formatTime(store.storeCloseTime);
+                const hasEvent = store.eventStartTime && store.eventEndTime;
+                const eventStart = hasEvent ? formatTime(store.eventStartTime) : '';
+                const eventEnd = hasEvent ? formatTime(store.eventEndTime) : '';
+
                 return `
                     <div class="store-card" onclick="location.href='/timesale/detail?storeIdx=${store.storeIdx}'">
                         <div class="store-info">
                             <h3 class="store-name">${store.storeName}</h3>
                             <div class="store-address">${store.storeAddress}</div>
-                            <div class="store-time">${store.storeOpenTime} ~ ${store.storeCloseTime}</div>
+                            <div class="store-time">${openTime} ~ ${closeTime}</div>
+                            ${hasEvent ? `<div class="store-time" style="color:#ff6b6b;">⚡ 할인 ${eventStart} ~ ${eventEnd}</div>` : ''}
                             ${store.eventNote ? `<div class="store-event">${store.eventNote}</div>` : ''}
                             </div>
                         <div class="store-thumb">
@@ -685,7 +721,7 @@
     </script>
 
     <!-- 구글맵 API -->
-    <script>
+    <script th:inline="javascript">
         const TimeSaleMap = {
             map: null,
             markers: [],
@@ -698,7 +734,13 @@
                     const defaultCenter = { lat: 37.5665, lng: 126.9780 };
                     const { Map } = await google.maps.importLibrary("maps");
 
-                    this.map = new Map(document.getElementById('map'), {
+                    // 맵 로드 성공 시 placeholder 숨기고 map 표시
+                    document.getElementById('map').style.display = 'block';
+                    document.getElementById('mapPlaceholder').style.display = 'none';
+
+                    const mapEl = document.getElementById('map');
+
+                    this.map = new Map(mapEl, {
                         center: defaultCenter,
                         zoom: 14,
                         mapId: 'timesale_map',
@@ -706,12 +748,19 @@
                         streetViewControl: false,
                         mapTypeControl: false,
                         fullscreenControl: false,
+                        gestureHandling: 'greedy',
+                        draggable: true,
                     });
 
-                    await Promise.all([
-                        this.loadUserMarker(),
-                        this.loadStoreMarkers()
-                    ]);
+                    // 지도가 완전히 렌더링된 후 resize 이벤트 강제 트리거 (드래그 영역 확정)
+                    google.maps.event.addListenerOnce(this.map, 'idle', () => {
+                        google.maps.event.trigger(this.map, 'resize');
+                        console.log('[TimeSaleMap] resize 트리거 완료');
+                    });
+
+                    // 유저 마커 먼저 (중심 설정) → 가게 마커
+                    await this.loadUserMarker();
+                    await this.loadStoreMarkers();
 
                     console.log('[TimeSaleMap] 초기화 완료');
                 } catch (e) {
@@ -721,14 +770,38 @@
 
             loadUserMarker: async function () {
                 const userIdxEl = document.getElementById('loginUserIdx');
-                if (!userIdxEl || !userIdxEl.value) return;
+                console.log('[TimeSaleMap] loginUserIdx 값:', userIdxEl ? userIdxEl.value : '없음');
+
+                if (!userIdxEl || !userIdxEl.value) {
+                    console.warn('[TimeSaleMap] userIdx 없음 - 로그인 확인 필요');
+                    return;
+                }
 
                 try {
-                    const res = await fetch(`/api/map/user/${userIdxEl.value}`);
-                    if (!res.ok) return;
+                    const url = `/timesale/map/user/${userIdxEl.value}`;
+                    console.log('[TimeSaleMap] 유저 API 호출:', url);
+
+                    const res = await fetch(url);
+                    console.log('[TimeSaleMap] 유저 API 응답 상태:', res.status);
+
+                    if (!res.ok) {
+                        console.warn('[TimeSaleMap] 유저 API 실패 - status:', res.status);
+                        return;
+                    }
 
                     const user = await res.json();
-                    if (!user || user.userLat == null || user.userLng == null) return;
+                    console.log('[TimeSaleMap] 유저 데이터 전체:', JSON.stringify(user));
+
+                    // Spring JSON 직렬화에 따라 필드명이 다를 수 있으므로 가능한 키 모두 시도
+                    const lat = user.userLat ?? user.user_lat ?? user.lat ?? null;
+                    const lng = user.userLng ?? user.user_lng ?? user.lng ?? null;
+
+                    console.log('[TimeSaleMap] 파싱된 좌표 - lat:', lat, 'lng:', lng);
+
+                    if (lat == null || lng == null) {
+                        console.warn('[TimeSaleMap] 유저 좌표 없음. 실제 필드명:', Object.keys(user));
+                        return;
+                    }
 
                     const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
 
@@ -742,14 +815,15 @@
 
                     this.userMarker = new AdvancedMarkerElement({
                         map: this.map,
-                        position: { lat: user.userLat, lng: user.userLng },
+                        position: { lat: lat, lng: lng },
                         content: pin.element,
                         title: `나 (${user.userNickname})`,
                     });
 
-                    // 유저 위치로 지도 중심 이동
-                    this.map.setCenter({ lat: user.userLat, lng: user.userLng });
-                    console.log('[TimeSaleMap] 유저 마커 추가:', user.userNickname);
+                    // 유저 위치로 중심 이동
+                    this.map.setCenter({ lat: lat, lng: lng });
+                    console.log('[TimeSaleMap] 유저 마커 추가 및 중심 이동 완료:', user.userNickname, lat, lng);
+
                 } catch (e) {
                     console.error('[TimeSaleMap] 유저 마커 로드 실패:', e);
                 }
@@ -757,12 +831,13 @@
 
             loadStoreMarkers: async function () {
                 try {
-                    const res = await fetch('/api/map/stores');
+                    const res = await fetch('/timesale/store/list');
                     if (!res.ok) throw new Error('가게 목록 API 실패');
 
                     const stores = await res.json();
+                    console.log('[TimeSaleMap] 가게 수:', stores.length);
+
                     const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
-                    const { InfoWindow } = await google.maps.importLibrary("maps");
 
                     stores.forEach(store => {
                         if (store.storeLat == null || store.storeLng == null) return;
@@ -782,28 +857,12 @@
                             title: store.storeName,
                         });
 
-                        const infoWindow = new InfoWindow({
-                            content: `
-                                <div style="min-width:160px;padding:4px 0;">
-                                    <strong style="font-size:14px;">${store.storeName}</strong><br>
-                                    <span style="font-size:12px;color:#666;">${store.storeAddress}</span>
-                                    ${store.eventNote ? `<br><span style="font-size:12px;color:#E74C3C;">⚡ ${store.eventNote}</span>` : ''}
-                                    <br>
-                                    <a href="/timesale/detail?storeIdx=${store.storeIdx}"
-                                       style="display:inline-block;margin-top:6px;font-size:12px;color:#4A90E2;font-weight:bold;">
-                                       상세 보기 →
-                                    </a>
-                                </div>
-                            `,
-                        });
-
+                        // 핀 클릭 시 바로 상세 페이지로 이동
                         marker.addListener('click', () => {
-                            this.infoWindows.forEach(iw => iw.close());
-                            infoWindow.open({ anchor: marker, map: this.map });
+                            window.location.href = `/timesale/detail?storeIdx=${store.storeIdx}`;
                         });
 
                         this.markers.push(marker);
-                        this.infoWindows.push(infoWindow);
                     });
 
                     console.log('[TimeSaleMap] 가게 마커 추가 완료:', this.markers.length);
@@ -813,17 +872,31 @@
             }
         };
 
-        // 구글맵 API 키 서버에서 받아 동적 로드
+        // 타임세일 전용 구글맵 로드
         (async function loadGoogleMaps() {
             try {
-                const keyRes = await fetch('/api/map/key');
-                const apiKey = await keyRes.text();
+                const res = await fetch('/timesale/map/key');
+                const apiKey = await res.text();
+
+                if (!apiKey || apiKey === 'default-key' || apiKey.trim() === '') {
+                    console.warn('[GoogleMaps] API 키가 없습니다.');
+                    document.getElementById('map').style.display = 'none';
+                    document.getElementById('mapPlaceholder').style.display = 'flex';
+                    return;
+                }
+
+                // 구글맵 로드 완료 후 호출될 전역 콜백
+                window.initTimeSaleMap = () => TimeSaleMap.init();
+
                 const script = document.createElement('script');
-                script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&loading=async&libraries=maps,marker`;
+                script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=maps,marker&callback=initTimeSaleMap`;
                 script.async = true;
                 script.defer = true;
-                script.onload = () => TimeSaleMap.init();
-                script.onerror = () => console.error('[GoogleMaps] API 로드 실패');
+                script.onerror = () => {
+                    console.error('[GoogleMaps] API 로드 실패');
+                    document.getElementById('map').style.display = 'none';
+                    document.getElementById('mapPlaceholder').style.display = 'flex';
+                };
                 document.head.appendChild(script);
             } catch (e) {
                 console.error('[GoogleMaps] API 키 조회 실패:', e);
