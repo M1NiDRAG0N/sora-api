@@ -3,6 +3,7 @@ package com.scit.soragodong.controller;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,7 +17,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.scit.soragodong.domain.dto.StoreDto;
 import com.scit.soragodong.domain.dto.StoreProductDto;
+import com.scit.soragodong.domain.dto.UserDto;
 import com.scit.soragodong.domain.dto.UserOrderDto;
+import com.scit.soragodong.repository.UserRepository;
 import com.scit.soragodong.service.TimesaleService;
 
 import jakarta.transaction.Transactional;
@@ -31,6 +34,20 @@ import lombok.extern.slf4j.Slf4j;
 public class TimeSaleController {
     
     private final TimesaleService timeSaleService;
+    private final UserRepository userRepository;
+
+    @Value("${spring.google.maps.api-key:default-key}")
+    private String googleMapsApiKey;
+
+    /**
+     * 타임세일 전용 구글맵 API 키 반환
+     */
+    @GetMapping("/map/key")
+    @ResponseBody
+    public ResponseEntity<String> getMapKey() {
+        log.info("구글맵 API 키 요청 - key: {}", googleMapsApiKey);
+        return ResponseEntity.ok(googleMapsApiKey);
+    }
     
     /**
      * 타임세일 메인 페이지
@@ -69,6 +86,33 @@ public class TimeSaleController {
         return ResponseEntity.ok(foodList);
     }
 
+    /**
+     * 지도용 유저 마커 조회
+     * URL: /timesale/map/user/{userIdx}
+     */
+    @GetMapping("/map/user/{userIdx}")
+    @ResponseBody
+    public ResponseEntity<UserDto> getUserMarker(@PathVariable("userIdx") Integer userIdx) {
+        log.info("유저 마커 요청 - userIdx: {}", userIdx);
+        try {
+            com.scit.soragodong.domain.entity.Users user = userRepository.findById(userIdx).orElse(null);
+            if (user == null || user.getUserLat() == null || user.getUserLng() == null) {
+                return ResponseEntity.notFound().build();
+            }
+            UserDto dto = new UserDto(
+                user.getUserIdx(), user.getUserEmail(), null,
+                user.getUserName(), user.getUserNickname(), user.getUserAddress(),
+                user.getUserRole(), user.getUserBadge(), user.getProfileIdx(),
+                user.getMannerScore(), user.getMonthlyBudget(),
+                user.getUserLat(), user.getUserLng(),
+                user.getIsUse(), null, null
+            );
+            return ResponseEntity.ok(dto);
+        } catch (Exception e) {
+            log.error("유저 마커 조회 오류 - userIdx: {}, error: {}", userIdx, e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
     /**
      * 가게 리스트 조회
      */
