@@ -476,14 +476,22 @@
                 if (currentTab === 'posts') {
                     title = "작성한 글 목록";
                     showSubTabs = true;
-                    items = (subTab === 'community') ? (data.posts || []) : [];
+                    // Filter posts by type based on subTab
+                    if (data.posts && Array.isArray(data.posts)) {
+                        items = data.posts.filter(p => p.type === subTab);
+                    }
                 } else if (currentTab === 'comments') {
                     title = "내가 쓴 댓글";
                     items = data.comments || [];
                 } else if (currentTab === 'likes') {
                     title = "관심 목록";
                     showSubTabs = true;
-                    items = (subTab === 'community') ? (data.likes || []) : [];
+                    // Assuming likes also have types, otherwise default to community or show all?
+                    // Original code showed likes only for community subTab.
+                    // Let's filter if type exists, otherwise show all if subTab is community (legacy behavior)
+                    if (data.likes && Array.isArray(data.likes)) {
+                         items = data.likes.filter(p => p.type === subTab);
+                    }
                 }
 
                 container.innerHTML = ProfileRenderer.createListHTML(title, showSubTabs, subTab, items, currentTab);
