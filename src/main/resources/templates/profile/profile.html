@@ -7,8 +7,13 @@
                 <ion-icon name="chevron-back"></ion-icon>
             </button>
             <div class="profile-header-title" id="profile-title">내 프로필</div>
-            <div class="profile-icon-btn" id="profile-header-right-icon">
-                <ion-icon name="settings-outline"></ion-icon>
+            <div style="position: relative;">
+                <button class="profile-icon-btn" id="profile-header-right-icon">
+                    <ion-icon name="ellipsis-horizontal"></ion-icon>
+                </button>
+                <div id="profile-dropdown" class="custom-dropdown-menu">
+                    <button class="menu-item danger" id="btn-logout">로그아웃</button>
+                </div>
             </div>
         </header>
 
@@ -47,6 +52,84 @@
         </div>
     </div>
 
+    <!-- ========================================== -->
+    <!--             [NEW] 프로필수정               -->
+    <!-- ========================================== -->
+    <div id="profileEditModal" class="full-screen-modal">
+        <div class="page-header transparent">
+            <button class="profile-icon-btn btn-back" id="btn-close-edit">
+                <ion-icon name="chevron-back"></ion-icon>
+            </button>
+            <div class="profile-header-title">프로필 수정</div>
+            <div class="header-right" id="btn-save-profile"
+                style="font-weight: 700; color: var(--primary); cursor: pointer;">
+                저장
+            </div>
+        </div>
+        <!-- <header class="profile-header" style="background: transparent; box-shadow: none;">
+            <button class="profile-icon-btn btn-back" id="btn-close-edit">
+                <ion-icon name="chevron-back"></ion-icon>
+            </button>
+            <div class="profile-header-title">프로필 수정</div>
+            <div class="profile-icon-btn" id="btn-save-profile"
+                style="font-weight: 700; color: var(--primary); cursor: pointer; width: auto; padding-right: 20px;">
+                저장
+            </div>
+        </header> -->
+        <div class="form-area bar">
+            <div class="signup-form-section">
+
+                <!-- Profile Image Edit -->
+                <div class="profile-edit-img-wrapper">
+                    <img src="/images/default-profile.png" id="edit-profile-img-preview" class="profile-edit-img">
+                    <div class="camera-badge" id="btn-upload-img">
+                        <ion-icon name="camera"></ion-icon>
+                    </div>
+                    <input type="file" id="edit-file-input" accept="image/*" style="display: none;">
+                </div>
+
+                <!-- Nickname -->
+                <div class="input-group">
+                    <label class="label">닉네임</label>
+                    <input type="text" id="edit-nickname" class="input-field" placeholder="닉네임 입력">
+                </div>
+
+                <!-- Address -->
+                <div class="input-group">
+                    <label class="label">주소</label>
+                    <div style="display:flex; gap: 8px;">
+                        <input type="text" id="edit-address" class="input-field" placeholder="주소 입력" readonly>
+                        <button type="button" class="geocode_btn" id="btn-search-addr">찾기</button>
+                    </div>
+                    <input type="hidden" id="edit-lat">
+                    <input type="hidden" id="edit-lng">
+                </div>
+
+                <div class="divider" style="margin: 20px 0; border-bottom: 1px solid #eee;"></div>
+
+
+                <!-- Current Password (Optional unless changing password) -->
+                <div class="input-group">
+                    <label class="label">현재 비밀번호 (비밀번호 변경 시 필수)</label>
+                    <input type="password" id="edit-current-pw" class="input-field" placeholder="비밀번호 변경 시에만 입력해주세요">
+                </div>
+                <!-- Password Change -->
+                <div class="input-group">
+                    <label class="label">비밀번호 변경 (선택)</label>
+                    <input type="password" id="edit-new-pw" class="input-field"
+                        placeholder="새 비밀번호 (8자리 이상 대문자/소문자/숫자/특수문자)">
+                    <input type="password" id="edit-new-pw-check" class="input-field" placeholder="새 비밀번호 확인"
+                        style="margin-top: 8px;">
+                </div>
+
+                <div class="divider" style="margin: 20px 0; border-bottom: 1px solid #eee;"></div>
+
+
+
+            </div>
+        </div>
+    </div>
+
     <script>
         // ==========================================
         //  1. Event Handler (이벤트 리스너 모음)
@@ -56,10 +139,18 @@
                 const layer = document.getElementById('profile-layer');
                 // 뒤로가기 버튼
                 layer.querySelector('.btn-back').addEventListener('click', ProfileApp.close);
+
                 // 프로필 메인 버튼 (수정/채팅)
                 document.getElementById('profile-main-btn').addEventListener('click', () => {
-                    alert('준비중입니다.');
+                    const isMe = ProfileApp.state.data && ProfileApp.state.data.myProfile;
+                    if (isMe) {
+                        ProfileEdit.open();
+                    } else {
+                        // TODO: Chat logic
+                        Utils.notify("채팅 기능은 준비중입니다.", "warning");
+                    }
                 });
+
                 // 통계 탭 클릭 (Delegation) ///   내가 쓴 글 / 내가 쓴 댓글 / 누른 좋아요
                 document.getElementById('profile-stats-box').addEventListener('click', (e) => {
                     const item = e.target.closest('.profile-stat-item');
@@ -84,6 +175,50 @@
                         if (id) ProfileApp.goToDetail(id);
                     }
                 });
+
+                // --- Dropdown Toggle ---
+                document.getElementById('profile-header-right-icon').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const dropdown = document.getElementById('profile-dropdown');
+                    dropdown.classList.toggle('active');
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    const dropdown = document.getElementById('profile-dropdown');
+                    const iconBtn = document.getElementById('profile-header-right-icon');
+                    if (dropdown && dropdown.classList.contains('active') && !dropdown.contains(e.target) && !iconBtn.contains(e.target)) {
+                        dropdown.classList.remove('active');
+                    }
+                });
+
+                // Logout Logic
+                document.getElementById('btn-logout').addEventListener('click', async () => {
+                    try {
+                        const response = await fetch('/logout', { method: 'POST' });
+                        if (response.ok || response.redirected) {
+                             window.location.href = '/auth/login';
+                        } else {
+                             window.location.href = '/auth/login';
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        window.location.href = '/auth/login';
+                    }
+                });
+
+                // --- Edit Modal Events ---
+                document.getElementById('btn-close-edit').addEventListener('click', ProfileEdit.close);
+                document.getElementById('btn-save-profile').addEventListener('click', ProfileEdit.save);
+
+                // Image Upload
+                document.getElementById('btn-upload-img').addEventListener('click', () => {
+                    document.getElementById('edit-file-input').click();
+                });
+                document.getElementById('edit-file-input').addEventListener('change', ProfileEdit.handleImageSelect);
+
+                // Address Search
+                document.getElementById('btn-search-addr').addEventListener('click', ProfileEdit.searchAddress);
             }
         };
 
@@ -174,14 +309,19 @@
 
             open: async (targetUserIdx = null) => {
                 ProfileApp.resetUI();
+                
+                // 데이터 로딩과 최소 딜레이(800ms)를 병렬로 수행
+                const dataPromise = ProfileApp.loadData(targetUserIdx);
+                const delayPromise = new Promise(resolve => setTimeout(resolve, 800));
+                
+                await Promise.all([dataPromise, delayPromise]);
+
                 ProfileApp.showModal();
 
                 if (!history.state || history.state.modal !== 'profile') {
                     history.pushState({ modal: 'profile', userIdx: targetUserIdx }, 'Profile', '');
                 }
                 ProfileApp.bindHistoryEvent();
-
-                await ProfileApp.loadData(targetUserIdx);
             },
 
             showModal: () => {
@@ -200,6 +340,10 @@
                     const viewForm = document.querySelector('#viewForm');
                     if (viewForm && viewForm.classList.contains('active')) {
                         if (typeof CommunityView !== 'undefined') CommunityView.closeView();
+                        return;
+                    }
+                    if (document.getElementById('profileEditModal').classList.contains('active')) {
+                        ProfileEdit.close();
                         return;
                     }
                     if (document.getElementById('profile-layer').classList.contains('active')) {
@@ -251,7 +395,7 @@
 
                 } catch (e) {
                     console.error(e);
-                    alert("프로필 정보를 불러올 수 없습니다.");
+                    Utils.notify("프로필 정보를 불러올 수 없습니다.", "error");
                     ProfileApp.close();
                 } finally {
                     ProfileApp.state.isLoading = false;
@@ -282,7 +426,7 @@
                 const mainBtn = document.getElementById('profile-main-btn');
 
                 if (isMe) {
-                    rightIcon.innerHTML = '<ion-icon name="settings-outline"></ion-icon>';
+                    rightIcon.innerHTML = '<ion-icon name="ellipsis-horizontal"></ion-icon>';
                     mainBtn.innerText = "프로필 수정";
                     mainBtn.className = "profile-action-btn edit";
                 } else {
@@ -351,6 +495,190 @@
                 } else {
                     const profileUserIdx = ProfileApp.state.data ? ProfileApp.state.data.userIdx : '';
                     location.href = `/community?openBoard=${id}&from=profile&profileUser=${profileUserIdx}`;
+                }
+            }
+        };
+
+        // ==========================================
+        //  4. Profile Edit (수정 로직)
+        // ==========================================
+        const ProfileEdit = {
+            selectedFile: null,
+
+            open: () => {
+                const data = ProfileApp.state.data;
+                if (!data) return;
+
+                // Pre-fill fields
+                document.getElementById('edit-nickname').value = data.nickname;
+                document.getElementById('edit-address').value = data.description; // 주소
+                document.getElementById('edit-profile-img-preview').src = data.profileImg || "/images/default-profile.png";
+
+                // Clear password fields
+                document.getElementById('edit-current-pw').value = '';
+                document.getElementById('edit-new-pw').value = '';
+                document.getElementById('edit-new-pw-check').value = '';
+                ProfileEdit.selectedFile = null;
+
+                const modal = document.getElementById('profileEditModal');
+                if (typeof window.modalZIndex === 'undefined') window.modalZIndex = 5000;
+                window.modalZIndex++;
+                modal.style.zIndex = window.modalZIndex;
+                modal.classList.add('active');
+
+                // Push history state to handle back button
+                history.pushState({ modal: 'profileEdit' }, 'Edit Profile', '');
+            },
+
+            close: () => {
+                const modal = document.getElementById('profileEditModal');
+                modal.classList.remove('active');
+                if (history.state && history.state.modal === 'profileEdit') {
+                    // history.back(); // This might trigger closing the main profile too if not careful
+                    // Just rely on the popstate event handler in ProfileApp
+                }
+            },
+
+            handleImageSelect: (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                if (!file.type.startsWith('image/')) {
+                    Utils.notify('이미지 파일만 업로드 가능합니다.', 'error');
+                    return;
+                }
+
+                ProfileEdit.selectedFile = file;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('edit-profile-img-preview').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            },
+
+            searchAddress: () => {
+                const addrInput = document.getElementById('edit-address');
+                const address = addrInput.value; // 현재 입력된 값 (있다면)
+
+                // Google Geocoding API (signup.js 참고)
+                // 만약 Daum Postcode를 쓰고 싶다면 스크립트 추가 필요. 
+                // 여기선 signup.js에 있던 Google Geocode 로직을 재사용하거나,
+                // 만약 signup.js가 로드되어 있지 않다면 직접 구현해야 함.
+                // profile.html에는 google maps script가 없으므로 동적 로드 혹은 부모 페이지 의존.
+                // common.html에 google maps가 있다고 가정하거나, signup 처럼 동작해야 함.
+
+                // [주의] profile.html은 fragment로 로드되므로, <head>의 script가 실행되지 않을 수 있음.
+                // 메인 페이지(common.html 등)에 google maps script가 있어야 함.
+
+                if (typeof google === 'undefined' || !google.maps || !google.maps.Geocoder) {
+                    Utils.notify('지도 API가 로드되지 않았습니다.', 'error');
+                    return;
+                }
+
+                new google.maps.Geocoder().geocode({ address: address || 'Seoul' }, (results, status) => {
+                    if (status === 'OK') {
+                        // 정확한 검색을 위해선 주소 입력 팝업이 좋지만, 
+                        // 여기선 signup.js 로직(입력된 텍스트로 좌표찾기)을 따름.
+                        // 하지만 "찾기" 버튼이므로 우편번호 찾기 팝업이 더 자연스러움.
+                        // 일단은 텍스트 입력 후 -> 좌표 변환 로직으로 구현.
+                        // (사용자가 직접 주소를 치고 찾기를 누르는 방식)
+
+                        // 사용자가 입력할 수 있게 readonly 제거 필요? 
+                        // -> 요구사항엔 "주소변경"이라고만 되어있음.
+                        // signup.html 에서는 geocode_btn 클릭 시 input value로 검색함.
+
+                        // 여기선 readonly를 풀어서 입력하게 하거나, 별도 팝업 필요.
+                        // 간단하게: prompt로 주소 입력 받고 검색
+
+                        const newAddr = prompt("검색할 주소를 입력하세요:", address);
+                        if (!newAddr) return;
+
+                        new google.maps.Geocoder().geocode({ address: newAddr }, (results, status) => {
+                            if (status === 'OK') {
+                                const lat = results[0].geometry.location.lat();
+                                const lng = results[0].geometry.location.lng();
+
+                                document.getElementById('edit-address').value = results[0].formatted_address;
+                                document.getElementById('edit-lat').value = lat;
+                                document.getElementById('edit-lng').value = lng;
+                            } else {
+                                Utils.notify('주소를 찾을 수 없습니다.', 'error');
+                            }
+                        });
+
+                    } else {
+                        Utils.notify('API 오류: ' + status, 'error');
+                    }
+                });
+            },
+
+            save: async () => {
+                const nickname = document.getElementById('edit-nickname').value.trim();
+                const address = document.getElementById('edit-address').value.trim();
+                const lat = document.getElementById('edit-lat').value;
+                const lng = document.getElementById('edit-lng').value;
+                const currentPw = document.getElementById('edit-current-pw').value;
+                const newPw = document.getElementById('edit-new-pw').value;
+                const newPwCheck = document.getElementById('edit-new-pw-check').value;
+
+                if (newPw && !currentPw) {
+                    Utils.notify('비밀번호 변경을 위해 현재 비밀번호를 입력해주세요.', 'warning');
+                    return;
+                }
+
+                if (newPw && (!Validation.password(newPw))) {
+                    Utils.notify('비밀번호는 8~16자, 대문자/소문자/숫자/특수문자(@,#,$,!,%,*,?,&)를 포함해야 합니다', 'error');
+                    return;
+                }
+
+                if (!nickname) {
+                    Utils.notify('닉네임을 입력해주세요.', 'warning');
+                    return;
+                }
+
+                if (newPw && newPw !== newPwCheck) {
+                    Utils.notify('새 비밀번호가 일치하지 않습니다.', 'warning');
+                    return;
+                }
+
+                const formData = new FormData();
+                const updateData = {
+                    nickname: nickname,
+                    address: address,
+                    lat: lat ? parseFloat(lat) : null,
+                    lng: lng ? parseFloat(lng) : null,
+                    currentPassword: currentPw,
+                    newPassword: newPw || null
+                };
+
+                formData.append('data', new Blob([JSON.stringify(updateData)], { type: 'application/json' }));
+                if (ProfileEdit.selectedFile) {
+                    formData.append('profileImage', ProfileEdit.selectedFile);
+                }
+
+                try {
+                    const response = await fetch('/profile/update', {
+                        method: 'PUT',
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        Utils.notify('프로필이 수정되었습니다.', 'success');
+                        ProfileEdit.close();
+                        ProfileApp.loadData(); // Reload data
+                    } else {
+                        const errorText = await response.text();
+                        // ErrorCode에 따라 메시지 분기 가능
+                        if (errorText.includes("INVALID_PASSWORD")) {
+                            Utils.notify('현재 비밀번호가 일치하지 않습니다.', 'error');
+                        } else {
+                            Utils.notify('수정 실패: ' + errorText, 'error');
+                        }
+                    }
+                } catch (e) {
+                    console.error(e);
+                    Utils.notify('오류가 발생했습니다.', 'error');
                 }
             }
         };

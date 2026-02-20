@@ -64,4 +64,18 @@ public class Users extends BaseEntity {
         this.monthlyBudget = amount;
     }
 
+    public void updateProfile(String nickname, String address, Double lat, Double lng) {
+        if (nickname != null && !nickname.isEmpty()) this.userNickname = nickname;
+        if (address != null && !address.isEmpty()) this.userAddress = address;
+        if (lat != null) this.userLat = lat;
+        if (lng != null) this.userLng = lng;
+    }
+
+    public void updatePassword(String password) {
+        this.password = password;
+    }
+
+    public void updateProfileImage(Integer profileIdx) {
+        this.profileIdx = profileIdx;
+    }
 }
