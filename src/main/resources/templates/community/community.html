@@ -236,8 +236,8 @@
                 document.getElementById('searchInput').addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') CommunityMain.search();
                 });
-                // 무한 스크롤
-                const scrollBox = document.querySelector('.detail-content');
+                // 무한 스크롤 (스크롤 내리면 다음 스크롤 불러오기)
+                const scrollBox = document.querySelector('.community-scroll-area');
                 if (scrollBox) {
                     scrollBox.addEventListener('scroll', CommunityMain.pageLoading);
                 }

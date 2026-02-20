@@ -1,0 +1,347 @@
+<style>
+    :root {
+        --primary: #B2A4FF;
+        --primary-dark: #8F7DF5;
+        --primary-gradient: linear-gradient(135deg, #B2A4FF, #8F7DF5);
+        --text-main: #333333;
+        --text-sub: #767676;
+        --white: #ffffff;
+        --bg-color: #F0F2FF;
+        --border-color: rgba(0, 0, 0, 0.05);
+        --badge-color: #FF6B6B;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Noto Sans KR', sans-serif;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+        display: flex;
+        justify-content: center;
+        background-color: #e0e0e0;
+        min-height: 100vh;
+    }
+
+    .app-container {
+        width: 100%;
+        max-width: 420px;
+        height: 100vh;
+        background-color: var(--bg-color);
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    /* 헤더 */
+    .chat-header {
+        padding: 15px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: transparent;
+        z-index: 10;
+        flex-shrink: 0;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .my-profile-thumb {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--white);
+        box-shadow: 0 2px 8px rgba(178, 164, 255, 0.3);
+    }
+
+    .header-title {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--text-main);
+    }
+
+    .header-icons {
+        display: flex;
+        gap: 18px;
+        font-size: 26px;
+        color: var(--text-main);
+    }
+
+    /* 필터 탭 */
+    .filter-tabs {
+        display: flex;
+        gap: 10px;
+        padding: 5px 20px 15px;
+        overflow-x: auto;
+        border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0;
+    }
+
+    .filter-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .filter-btn {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 700;
+        border: none;
+        background: var(--white);
+        color: var(--text-sub);
+        cursor: pointer;
+        transition: 0.3s;
+        white-space: nowrap;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .filter-btn.active {
+        background: var(--primary-gradient);
+        color: var(--white);
+        box-shadow: 0 4px 10px rgba(178, 164, 255, 0.4);
+    }
+
+    /* 채팅 리스트 영역 */
+    .chat-list-content {
+        flex: 1;
+        overflow-y: auto;
+        padding-bottom: 90px;
+    }
+
+    .chat-item {
+        display: flex;
+        gap: 16px;
+        padding: 18px 20px;
+        cursor: pointer;
+        background: var(--bg-color);
+        transition: 0.2s;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+        position: relative;
+    }
+
+    .chat-item:active {
+        background-color: rgba(178, 164, 255, 0.1);
+    }
+
+    /* ★ 썸네일 영역 CSS 수정 ★ */
+    .chat-thumb-wrap {
+        position: relative;
+        width: 56px;
+        height: 56px;
+        flex-shrink: 0;
+    }
+
+    /* 기본 메인 썸네일 (1:1채팅용 프로필 - 원형) */
+    .chat-thumb {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        background: #eee;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        border-radius: 50%;
+    }
+
+    /* 중고거래(market)일 때의 메인 썸네일 (상품 사진 - 둥근 사각형) */
+    .chat-item.market .chat-thumb {
+        border-radius: 16px;
+    }
+
+    /* 우측 하단 작게 들어가는 뱃지 (중고거래용 프로필 사진 - 원형) */
+    .profile-badge {
+        position: absolute;
+        bottom: -4px;
+        right: -4px;
+        width: 26px;
+        height: 26px;
+        background: var(--white);
+        border-radius: 50%;
+        border: 2px solid var(--white);
+        object-fit: cover;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+    }
+
+    .chat-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        overflow: hidden;
+        gap: 4px;
+    }
+
+    .chat-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .chat-name {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-main);
+    }
+
+    .chat-time {
+        font-size: 12px;
+        color: #999;
+    }
+
+    .chat-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .chat-preview {
+        font-size: 14px;
+        color: var(--text-sub);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: 1;
+        padding-right: 10px;
+    }
+
+    /* 안 읽은 메시지 배지 */
+    .unread-badge {
+        background-color: var(--badge-color);
+        color: var(--white);
+        font-size: 11px;
+        font-weight: 800;
+        min-width: 20px;
+        height: 20px;
+        border-radius: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0 6px;
+        box-shadow: 0 2px 5px rgba(255, 107, 107, 0.3);
+    }
+
+    /* 하단 네비게이션 */
+    .bottom-nav {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 80px;
+        z-index: 50;
+        border-radius: 30px 30px 0 0;
+        background: radial-gradient(circle at 50% 8px, transparent 38px, var(--white) 38.5px);
+        filter: drop-shadow(0 -5px 15px rgba(0, 0, 0, 0.05));
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 25px;
+    }
+
+    .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: #ccc;
+        font-size: 11px;
+        gap: 5px;
+        width: 60px;
+        margin-top: 15px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .nav-item.active {
+        color: var(--primary-dark);
+        font-weight: 700;
+    }
+
+    .nav-item ion-icon {
+        font-size: 26px;
+    }
+
+    .nav-center-btn {
+        position: absolute;
+        left: 50%;
+        top: -28px;
+        transform: translateX(-50%);
+        width: 64px;
+        height: 64px;
+        background: var(--primary-gradient);
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-size: 30px;
+        box-shadow: 0 8px 20px rgba(178, 164, 255, 0.5);
+    }
+</style>
+
+<div class="app-container">
+
+    <div class="filter-tabs">
+        <button class="filter-btn active">전체</button>
+        <button class="filter-btn">중고거래</button>
+        <button class="filter-btn">1:1채팅</button>
+    </div>
+
+    <div class="chat-list-content">
+
+        <div class="chat-item market" onclick="location.href='chat-room.html'">
+            <div class="chat-thumb-wrap">
+                <img src="https://picsum.photos/100/100?random=1" class="chat-thumb">
+                <img src="https://i.pravatar.cc/100?img=59" class="profile-badge">
+            </div>
+            <div class="chat-info">
+                <div class="chat-top">
+                    <span class="chat-name">이용민머리</span>
+                    <span class="chat-time">방금 전</span>
+                </div>
+                <div class="chat-bottom">
+                    <div class="chat-preview">네고 가능한가요? 쿨거래 원합니다.</div>
+                    <div class="unread-badge">2</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-item">
+            <div class="chat-thumb-wrap">
+                <img src="https://i.pravatar.cc/100?img=33" class="chat-thumb">
+            </div>
+            <div class="chat-info">
+                <div class="chat-top">
+                    <span class="chat-name">전민싱싱</span>
+                    <span class="chat-time">30분 전</span>
+                </div>
+                <div class="chat-bottom">
+                    <div class="chat-preview">저번에 말씀하신 모임 이번 주말인가요?</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-item market">
+            <div class="chat-thumb-wrap">
+                <img src="https://picsum.photos/100/100?random=2" class="chat-thumb"
+                    style="filter: grayscale(100%); opacity: 0.7;">
+                <img src="https://i.pravatar.cc/100?img=11" class="profile-badge">
+            </div>
+            <div class="chat-info">
+                <div class="chat-top">
+                    <span class="chat-name">중고왕</span>
+                    <span class="chat-time">어제</span>
+                </div>
+                <div class="chat-bottom">
+                    <div class="chat-preview">거래 완료되었습니다.</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

@@ -17,6 +17,30 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.scit.soragodong.domain.dto.FileRes;
+import com.scit.soragodong.domain.dto.ProfileUpdateDto;
+import com.scit.soragodong.domain.entity.Board;
+import com.scit.soragodong.domain.entity.BoardReply;
+import com.scit.soragodong.domain.entity.LikeCount;
+import com.scit.soragodong.domain.entity.Users;
+import com.scit.soragodong.domain.enums.FileRefType;
+import com.scit.soragodong.exception.CustomException;
+import com.scit.soragodong.exception.ErrorCode;
+import com.scit.soragodong.repository.BoardReplyRepository;
+import com.scit.soragodong.repository.BoardRepository;
+import com.scit.soragodong.repository.LikeCountRepository;
+import com.scit.soragodong.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -26,6 +50,8 @@ public class ProfileService {
     private final BoardRepository boardRepository;
     private final BoardReplyRepository boardReplyRepository;
     private final LikeCountRepository likeCountRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final FileService fileService;
 
     public ProfileDto getProfile(Integer targetUserIdx, Integer loginUserIdx) {
         Users user = userRepository.findById(targetUserIdx)
@@ -58,7 +84,7 @@ public class ProfileService {
                 .userIdx(user.getUserIdx())
                 .nickname(user.getUserNickname())
                 .description(user.getUserAddress()) // 주소로 대체
-                .profileImg(user.getProfileIdx() != null ? "/images/profiles/" + user.getProfileIdx() + ".png" : null)
+                .profileImg(user.getProfileIdx() != null ? "/img/" + user.getProfileIdx() : null)
                 .mannerScore(user.getMannerScore() != null ? user.getMannerScore() : 36) // 기본 36.5도
                 .postCount(myBoards.size())
                 .commentCount(myReplies.size())
@@ -68,6 +94,41 @@ public class ProfileService {
                 .comments(myReplies.stream().map(this::convertToReplyItem).collect(Collectors.toList()))
                 .likes(likedBoards.stream().map(this::convertToItem).collect(Collectors.toList()))
                 .build();
+    }
+
+    @Transactional
+    public void updateProfile(Integer userIdx, ProfileUpdateDto dto, MultipartFile profileImage) {
+        Users user = userRepository.findById(userIdx)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        // 1. 비밀번호 변경 시에만 현재 비밀번호 확인
+        if (dto.newPassword() != null && !dto.newPassword().isEmpty()) {
+            if (dto.currentPassword() == null || !passwordEncoder.matches(dto.currentPassword(), user.getPassword())) {
+                throw new CustomException(ErrorCode.INVALID_PASSWORD); 
+            }
+            user.updatePassword(passwordEncoder.encode(dto.newPassword()));
+        }
+
+        // 2. 기본 정보 수정 (비밀번호 확인 없이 가능)
+        user.updateProfile(dto.nickname(), dto.address(), dto.lat(), dto.lng());
+
+        // 3. 프로필 이미지 수정
+        if (profileImage != null && !profileImage.isEmpty()) {
+            try {
+                // FileRefType.USER_PROFILE 사용 (User 엔티티와 연결된 파일 그룹)
+                // userIdx를 refId로 사용하여 파일 그룹 생성/조회 및 파일 업로드
+                List<FileRes> uploadedFiles = fileService.upload(FileRefType.USER_PROFILE, userIdx, Collections.singletonList(profileImage));
+                
+                if (!uploadedFiles.isEmpty()) {
+                    // 첫 번째 업로드된 파일의 ID를 프로필 이미지 ID로 설정
+                    // 주의: User 엔티티의 profileIdx가 Integer 타입이고, FileRes의 fileIdx도 Integer여야 함
+                    user.updateProfileImage(uploadedFiles.get(0).fileIdx());
+                }
+            } catch (Exception e) {
+                // 파일 업로드 실패 시 로그 출력 등 예외 처리
+                throw new CustomException(ErrorCode.INTERNAL_ERROR);
+            }
+        }
     }
 
     private ProfileDto.ProfileItemDto convertToItem(Board board) {

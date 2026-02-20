@@ -414,3 +414,108 @@
 .profile-scroll-content::-webkit-scrollbar {
     display: none;
 }
+
+
+
+
+
+/* 프로필 수정 */
+/* Scoped Styles for Profile Edit Modal */
+#profileEditModal {
+    background: linear-gradient(180deg, var(--bg-start) 0%, var(--bg-end) 100%);
+    z-index: 6000;
+    /* Higher than profile layer */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+#profileEditModal.active {
+    transform: translateX(0);
+}
+
+#profileEditModal .form-area {
+    overflow-y: auto;
+    flex: 1;
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+}
+
+#profileEditModal .form-area::-webkit-scrollbar {
+    display: none;
+}
+
+#profileEditModal .profile-edit-img-wrapper {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 30px;
+}
+
+#profileEditModal .profile-edit-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #eee;
+}
+
+#profileEditModal .camera-badge {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 32px;
+    height: 32px;
+    background: #333;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    border: 2px solid #fff;
+}
+
+#profileEditModal .input-group {
+    margin-bottom: 20px;
+}
+
+#profileEditModal .label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 8px;
+    display: block;
+}
+
+#profileEditModal .input-field {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    font-size: 14px;
+    outline: none;
+    transition: 0.2s;
+}
+
+#profileEditModal .input-field:focus {
+    border-color: var(--primary);
+}
+
+#profileEditModal .geocode_btn {
+    white-space: nowrap;
+    padding: 0 15px;
+    background: #333;
+    color: #fff;
+    border-radius: 12px;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+}
