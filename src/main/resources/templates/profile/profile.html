@@ -172,7 +172,8 @@
                     const listItem = e.target.closest('.profile-list-item');
                     if (listItem) {
                         const id = listItem.dataset.id;
-                        if (id) ProfileApp.goToDetail(id);
+                        const type = listItem.dataset.type;
+                        if (id) ProfileApp.goToDetail(id, type);
                     }
                 });
 
@@ -197,9 +198,9 @@
                     try {
                         const response = await fetch('/logout', { method: 'POST' });
                         if (response.ok || response.redirected) {
-                             window.location.href = '/auth/login';
+                            window.location.href = '/auth/login';
                         } else {
-                             window.location.href = '/auth/login';
+                            window.location.href = '/auth/login';
                         }
                     } catch (e) {
                         console.error(e);
@@ -268,10 +269,9 @@
                         const timeStr = (typeof Utils !== 'undefined') ? Utils.timeAgo(item.timeAgo) : item.timeAgo;
                         let badgeText = (currentTab === 'comments') ? "댓글" : item.category;
 
-                        // onclick 제거하고 data-id 추가
+                        // onclick 제거하고 data-id와 data-type 추가
                         html += `
-                            <div class="profile-list-item" data-id="${item.id}">
-                                
+                            <div class="profile-list-item" data-id="${item.id}" data-type="${item.type}">
                                 <div class="profile-list-info">
                                     <div class="profile-list-meta">
                                         <span class="profile-badge comm">${badgeText}</span>   ${timeStr}
@@ -309,11 +309,11 @@
 
             open: async (targetUserIdx = null) => {
                 ProfileApp.resetUI();
-                
+
                 // 데이터 로딩과 최소 딜레이(800ms)를 병렬로 수행
                 const dataPromise = ProfileApp.loadData(targetUserIdx);
                 const delayPromise = new Promise(resolve => setTimeout(resolve, 800));
-                
+
                 await Promise.all([dataPromise, delayPromise]);
 
                 ProfileApp.showModal();
@@ -490,19 +490,31 @@
                     // Original code showed likes only for community subTab.
                     // Let's filter if type exists, otherwise show all if subTab is community (legacy behavior)
                     if (data.likes && Array.isArray(data.likes)) {
-                         items = data.likes.filter(p => p.type === subTab);
+                        items = data.likes.filter(p => p.type === subTab);
                     }
                 }
 
                 container.innerHTML = ProfileRenderer.createListHTML(title, showSubTabs, subTab, items, currentTab);
             },
 
-            goToDetail: (id) => {
-                if (location.pathname.includes('/community') && typeof CommunityView !== 'undefined') {
-                    CommunityView.openView(id);
+            goToDetail: (id, type) => {
+                if (type === 'market') {
+                    // 중고거래 목록 페이지로 이동
+                    location.href = `/used-market?openDetail=${id}`;
                 } else {
-                    const profileUserIdx = ProfileApp.state.data ? ProfileApp.state.data.userIdx : '';
-                    location.href = `/community?openBoard=${id}&from=profile&profileUser=${profileUserIdx}`;
+                    // 커뮤니티 (또는 댓글)
+                    if (typeof CommunityView !== 'undefined') {
+                        try {
+                            CommunityView.openView(id);
+                        } catch (e) {
+                            console.error("CommunityView error:", e);
+                            const profileUserIdx = ProfileApp.state.data ? ProfileApp.state.data.userIdx : '';
+                            location.href = `/community?openBoard=${id}&from=profile&profileUser=${profileUserIdx}`;
+                        }
+                    } else {
+                        const profileUserIdx = ProfileApp.state.data ? ProfileApp.state.data.userIdx : '';
+                        location.href = `/community?openBoard=${id}&from=profile&profileUser=${profileUserIdx}`;
+                    }
                 }
             }
         };

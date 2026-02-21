@@ -1,25 +1,20 @@
-<div th:fragment="header" class="page-header transparent"
-     xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<div th:fragment="header" class="page-header transparent" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
     <div class="header-profile-section" onclick="window.openProfile()" style="cursor: pointer;">
-        <img id="headerProfile"
-             th:if="${#authentication != null and #authentication.principal.profileIdx != null}"
-             th:src="@{/img/{id}(id=${#authentication.principal.profileIdx})}"
-             alt="프로필" class="header-profile-img">
-        <img id="headerProfile"
-             th:unless="${#authentication != null and #authentication.principal.profileIdx != null}"
-             src="/images/default-profile.png"
-             alt="프로필" class="header-profile-img">
+        <img id="headerProfile" th:if="${#authentication != null and #authentication.principal.profileIdx != null}"
+            th:src="@{/img/{id}(id=${#authentication.principal.profileIdx})}" alt="프로필" class="header-profile-img">
+        <img id="headerProfile" th:unless="${#authentication != null and #authentication.principal.profileIdx != null}"
+            src="/images/default-profile.png" alt="프로필" class="header-profile-img">
 
         <div class="header-profile-info">
             <span id="headerGreeting" class="header-profile-greeting"></span>
             <span id="headerNickname" class="header-title header-nickname"
-                  th:text="${#authentication?.principal?.userNickname + '님'}"></span>
+                th:text="${#authentication?.principal?.userNickname + '님'}"></span>
         </div>
     </div>
 
     <div class="header-actions">
-        <div onclick="alert('채팅 목록 페이지로 이동')" class="header-icon">
+        <div onclick="location.href='/chatList'" class="header-icon">
             <ion-icon name="chatbubbles-outline"></ion-icon>
         </div>
 
@@ -29,7 +24,7 @@
     </div>
 
     <script>
-        (function() {
+        (function () {
             const hour = new Date().getHours();
             let greeting;
             if (hour >= 5 && hour < 12) {

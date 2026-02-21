@@ -219,7 +219,16 @@
             init: function() {
                 this.geocoder = new google.maps.Geocoder();
                 this.bindEvents();
-                this.loadList(); // 초기 목록 로드
+                this.loadList();
+                
+                // URL 파라미터 체크하여 상세 모달 열기
+                const urlParams = new URLSearchParams(window.location.search);
+                const openDetailId = urlParams.get('openDetail');
+                if (openDetailId) {
+                    this.openViewModal(openDetailId);
+                    // URL 정리 (선택 사항)
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
             },
             
             bindEvents: function() {

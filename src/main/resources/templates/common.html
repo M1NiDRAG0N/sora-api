@@ -23,6 +23,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script defer
+        th:src="@{https://maps.googleapis.com/maps/api/js(key=${googleMapsApiKey},libraries='places,geocoding')}"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/api.js"></script>
     <script src="/js/validation.js"></script>
@@ -40,6 +42,7 @@
         <th:block th:if="${currentUri == '/timesale'}" th:insert="~{timesale/timesale :: div}"></th:block>
         <th:block th:if="${currentUri == '/timesale/detail'}" th:insert="~{timesale/timesaledetail :: div}"></th:block>
         <th:block th:if="${currentUri == '/used-market'}" th:insert="~{usedmarket/usedmarket :: div}"></th:block>
+        <th:block th:if="${currentUri == '/chatList'}" th:insert="~{chat/chatList :: div}"></th:block>
 
         <div th:replace="~{layout/nav :: nav}"></div>
 
