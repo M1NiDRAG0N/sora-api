@@ -73,8 +73,12 @@ public class ProfileService {
         
         posts.addAll(myUsedItems.stream().map(this::convertUsedToItem).collect(Collectors.toList()));
 
-        // 최신순 정렬 (ID 기준 내림차순을 최신순으로 간주하거나, 생성일시 비교 필요)
-        // 여기서는 간단히 리스트 병합 후 별도 정렬은 하지 않음 (프론트엔드에서 탭으로 구분하거나 필요시 정렬 로직 추가)
+        // 최신순 정렬
+        posts.sort((a, b) -> {
+            if (a.createdAt() == null) return 1;
+            if (b.createdAt() == null) return -1;
+            return b.createdAt().compareTo(a.createdAt());
+        });
         
         // 3. 작성한 댓글
         List<BoardReply> myReplies = boardReplyRepository.findByUser_UserIdxAndIsUseTrue(targetUserIdx).stream()
@@ -159,6 +163,7 @@ public class ProfileService {
                 .timeAgo(board.getCreatedAt().toString()) 
                 .type("community")
                 .thumbnail(thumb)
+                .createdAt(board.getCreatedAt())
                 .build();
     }
 
@@ -182,6 +187,7 @@ public class ProfileService {
                 .price(String.valueOf(used.getUsedPrice())) // 가격 추가
                 .type("market") // 프론트엔드 구분을 위한 타입
                 .thumbnail(thumb)
+                .createdAt(used.getCreatedAt())
                 .build();
     }
 
@@ -193,6 +199,7 @@ public class ProfileService {
                 .contentPreview("원글: " + reply.getBoard().getBoardTitle())
                 .timeAgo(reply.getCreatedAt().toString())
                 .type("reply")
+                .createdAt(reply.getCreatedAt())
                 .build();
     }
 }
