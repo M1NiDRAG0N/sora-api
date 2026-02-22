@@ -21,6 +21,7 @@ import com.scit.soragodong.domain.dto.UsedRegisterRes;
 import com.scit.soragodong.domain.entity.FileGrp;
 import com.scit.soragodong.domain.entity.Used;
 import com.scit.soragodong.domain.entity.UsedKeyword;
+import com.scit.soragodong.domain.entity.UsedLike;
 import com.scit.soragodong.domain.entity.Users;
 import com.scit.soragodong.domain.enums.FileRefType;
 import com.scit.soragodong.domain.enums.UsedState;
@@ -52,6 +53,7 @@ public class UsedService {
     private final FileRepository fileRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final ViewCountService viewCountService;
 
     /**
      * 중고 물건 등록
@@ -126,14 +128,22 @@ public class UsedService {
 
     /**
      * 중고 물품 상세 조회
+     *
+     * @param viewerKey 조회자 식별자 (로그인: "u{userId}", 비로그인: "s{sessionId}")
+     *                  Redis Set으로 24시간 내 중복 조회를 방지한다.
      */
     @Transactional
-    public UsedDetailRes getUsedDetail(Integer usedIdx, Integer currentUserId) {
+    public UsedDetailRes getUsedDetail(Integer usedIdx, Integer currentUserId, String viewerKey) {
         Used used = usedRepository.findByUsedIdxAndIsUseTrue(usedIdx)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
 
-        // 조회수 증가
-        usedRepository.incrementViewCount(usedIdx);
+        // 조회수 증가 (중복 방지 - 24시간 내 동일 조회자 재조회 시 생략)
+        // 새 조회일 때만 increment → 엔티티가 stale이므로 직접 +1 보정
+        boolean isNewView = viewCountService.record("USED", usedIdx, viewerKey);
+        if (isNewView) {
+            usedRepository.incrementViewCount(usedIdx);
+        }
+        int viewCount = used.getViewCount() + (isNewView ? 1 : 0);
 
         // 이미지 URL 목록
         List<String> images = getImageUrls(usedIdx);
@@ -150,7 +160,7 @@ public class UsedService {
         boolean isOwner = currentUserId != null &&
                 currentUserId.equals(used.getCreatedUser());
 
-        return UsedDetailRes.from(used, images, likeCount, isLiked, isOwner, seller, 0);
+        return UsedDetailRes.from(used, images, likeCount, isLiked, isOwner, seller, 0, viewCount);
     }
 
     /**
@@ -225,6 +235,35 @@ public class UsedService {
         return fileRepository.findByFileGroupAndIsUseTrueOrderByFileOrder(fileGrp.get()).stream()
                 .map(f -> new FileRes(f.getFileIdx(), f.getOriginalName(), "/img/" + f.getFileIdx(), f.getFileOrder()))
                 .toList();
+    }
+
+    /**
+     * 상품 상태 변경 (판매자 전용)
+     */
+    public void updateState(Integer usedIdx, UsedState state, Integer userIdx) {
+        Used used = usedRepository.findByUsedIdxAndIsUseTrue(usedIdx)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+        if (!used.getCreatedUser().equals(userIdx)) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+        used.updateState(state);
+        log.info("[중고] 상태 변경 - ID: {}, 상태: {}", usedIdx, state);
+    }
+
+    /**
+     * 찜(좋아요) 토글
+     * @return true: 찜 추가, false: 찜 취소
+     */
+    public boolean toggleLike(Integer usedIdx, Integer userIdx) {
+        usedRepository.findByUsedIdxAndIsUseTrue(usedIdx)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+
+        if (usedLikeRepository.existsByUsedIdxAndUserIdx(usedIdx, userIdx)) {
+            usedLikeRepository.deleteByUsedIdxAndUserIdx(usedIdx, userIdx);
+            return false;
+        }
+        usedLikeRepository.save(UsedLike.builder().usedIdx(usedIdx).userIdx(userIdx).build());
+        return true;
     }
 
     // ==================== 키워드 관리 ====================
