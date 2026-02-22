@@ -70,7 +70,129 @@
             </div>
         </div>
 
+        <!-- 신고하기 모달 (Report Modal) -->
+        <div id="reportLayer" class="page-layer" style="background: #fff;">
+            <div class="chat-header" style="border-bottom: 1px solid #eee;">
+                <div class="chat-close-btn" onclick="ReportModal.close()">
+                    <ion-icon name="chevron-down"></ion-icon>
+                </div>
+                <div class="header-title">🚨 신고하기</div>
+                <div class="chat-header-spacer"></div>
+            </div>
+            
+            <div class="report-content" style="padding: 20px; flex: 1; overflow-y: auto;">
+                <div id="report-target-info" style="background: #f8f9fd; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-size: 14px; color: #666;">
+                    <strong>대상:</strong> <span id="report-target-type-text"></span> (ID: <span id="report-target-id-text"></span>)
+                </div>
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 700; font-size: 15px;">신고 사유를 선택해주세요</label>
+                    <div id="report-reason-list" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- JS에서 사유 목록 생성 -->
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label for="report-description" style="display: block; margin-bottom: 10px; font-weight: 700; font-size: 15px;">상세 설명 (선택사항)</label>
+                    <textarea id="report-description" style="width: 100%; height: 120px; padding: 15px; border: 1px solid #eee; border-radius: 12px; resize: none; font-size: 14px;" placeholder="상세한 내용을 입력해주시면 처리에 도움이 됩니다."></textarea>
+                </div>
+
+                <button type="button" class="btn-primary" onclick="ReportModal.submit()" style="margin-top: 10px; background-color: #ff4757; box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);">신고 제출</button>
+                <button type="button" class="btn-cancel" onclick="ReportModal.close()" style="width: 100%; padding: 15px; border: none; background: #eee; border-radius: 30px; margin-top: 10px; font-weight: 700; color: #666; cursor: pointer;">취소</button>
+            </div>
+        </div>
+
     </div>
+
+    <script th:inline="javascript">
+        const ReportModal = {
+            state: {
+                targetType: null,
+                targetId: null,
+                selectedReason: null,
+                reasons: ["스팸/홍보", "부적절한 콘텐츠", "혐오 표현/괴롭힘", "개인정보 노출", "사기 의심", "기타"]
+            },
+
+            open: (type, id, typeText) => {
+                ReportModal.state.targetType = type;
+                ReportModal.state.targetId = id;
+                ReportModal.state.selectedReason = null;
+
+                document.getElementById('report-target-type-text').innerText = typeText || type;
+                document.getElementById('report-target-id-text').innerText = id;
+                document.getElementById('report-description').value = '';
+
+                const reasonList = document.getElementById('report-reason-list');
+                reasonList.innerHTML = '';
+                ReportModal.state.reasons.forEach((reason, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'reason-item';
+                    item.style = 'display: flex; align-items: center; gap: 10px; padding: 15px; border: 1px solid #eee; border-radius: 12px; cursor: pointer; transition: all 0.2s;';
+                    item.innerHTML = `
+                        <input type="radio" name="report-reason" value="${reason}" id="reason-${index}" style="width: 18px; height: 18px; accent-color: #ff4757;">
+                        <label for="reason-${index}" style="flex: 1; cursor: pointer; font-size: 14px;">${reason}</label>
+                    `;
+                    item.onclick = () => {
+                        document.querySelectorAll('.reason-item').forEach(el => {
+                            el.style.borderColor = '#eee';
+                            el.style.backgroundColor = 'transparent';
+                        });
+                        item.style.borderColor = '#ff4757';
+                        item.style.backgroundColor = '#fff1f2';
+                        item.querySelector('input').checked = true;
+                        ReportModal.state.selectedReason = reason;
+                    };
+                    reasonList.appendChild(item);
+                });
+
+                const layer = document.getElementById('reportLayer');
+                layer.classList.add('active');
+                
+                // history state push for back button handling
+                if (!history.state || history.state.modal !== 'report') {
+                    history.pushState({ modal: 'report' }, 'Report', '');
+                }
+            },
+
+            close: () => {
+                const layer = document.getElementById('reportLayer');
+                layer.classList.remove('active');
+            },
+
+            submit: async () => {
+                if (!ReportModal.state.selectedReason) {
+                    Utils.notify("신고 사유를 선택해주세요.", "warning");
+                    return;
+                }
+
+                const data = {
+                    targetType: ReportModal.state.targetType,
+                    targetId: ReportModal.state.targetId,
+                    reason: ReportModal.state.selectedReason,
+                    description: document.getElementById('report-description').value
+                };
+
+                try {
+                    const response = await API.post('/report/submit', data);
+                    Utils.notify("신고가 정상적으로 접수되었습니다.", "success");
+                    ReportModal.close();
+                } catch (error) {
+                    console.error('신고 제출 실패:', error);
+                    Utils.notify(error.response?.data || "신고 중 오류가 발생했습니다.", "error");
+                }
+            }
+        };
+
+        // 전역으로 노출
+        window.openReportModal = ReportModal.open;
+
+        // 뒤로가기 대응
+        window.addEventListener('popstate', (e) => {
+            if (document.getElementById('reportLayer').classList.contains('active')) {
+                ReportModal.close();
+            }
+        });
+    </script>
 </body>
 
 </html>
