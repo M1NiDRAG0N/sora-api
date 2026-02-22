@@ -153,10 +153,29 @@
                 </div>
 
                 <div class="modal-view-footer">
+                    <!-- 구매자 전용: 찜 버튼 -->
                     <ion-icon name="heart-outline" class="heart-icon"></ion-icon>
                     <div class="price-info">
                         <div class="price" id="view-price"></div>
                         <div class="price-sub">가격 제안 불가</div>
+                    </div>
+                    <!-- 판매자 전용: 상태 변경 -->
+                    <div id="status-dropdown" class="status-dropdown" style="display:none;">
+                        <button class="status-dropdown-btn" id="status-dropdown-btn" type="button">
+                            <span id="status-dropdown-label">거래중</span>
+                            <ion-icon name="chevron-down-outline" class="status-dropdown-arrow"></ion-icon>
+                        </button>
+                        <ul class="status-dropdown-menu" id="status-dropdown-menu">
+                            <li data-value="TRADING" class="active">
+                                <span class="status-dot dot-trading"></span>거래중
+                            </li>
+                            <li data-value="RESERVED">
+                                <span class="status-dot dot-reserved"></span>예약중
+                            </li>
+                            <li data-value="SOLD">
+                                <span class="status-dot dot-sold"></span>판매완료
+                            </li>
+                        </ul>
                     </div>
                     <button class="btn-primary chat-btn">채팅하기</button>
                 </div>
@@ -350,6 +369,20 @@
                     Utils.notify('신고 기능은 준비 중입니다.', 'warning');
                 });
 
+                // 찜(좋아요) 토글 - 구매자 전용
+                document.querySelector('.heart-icon').addEventListener('click', () => this.toggleLike());
+
+                // 상태 변경 드롭다운 - 판매자 전용
+                document.getElementById('status-dropdown-btn')?.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.toggleStatusDropdown();
+                });
+                document.getElementById('status-dropdown-menu')?.addEventListener('click', (e) => {
+                    const li = e.target.closest('li[data-value]');
+                    if (li) this.selectStatus(li.dataset.value);
+                });
+                document.addEventListener('click', () => this.closeStatusDropdown());
+
                 // 검색 기능
                 const searchInput = document.getElementById('mainSearchInput');
                 if (searchInput) {
@@ -448,13 +481,15 @@
                 const timeAgo = Utils.timeAgo(item.createdAt);
                 const likeCount = item.likeCount || 0;
                 const chatCount = item.chatCount || 0;
+                const isSold = item.usedState === 'SOLD';
+                const statusBadge = this.getStatusBadge(item.usedState);
 
                 return `
-                    <div class="market-item" data-id="${item.usedIdx}">
+                    <div class="market-item${isSold ? ' is-sold' : ''}" data-id="${item.usedIdx}">
                         <img src="${thumbnail}" class="item-thumb" alt="상품">
                         <div class="item-info">
                             <div>
-                                <div class="item-title">${this.escapeHtml(item.usedTitle)}</div>
+                                <div class="item-title">${statusBadge}${this.escapeHtml(item.usedTitle)}</div>
                                 <div class="item-meta">${location} · ${timeAgo}</div>
                                 <div class="item-price">${price}</div>
                             </div>
@@ -604,11 +639,26 @@
                         : '/images/default-profile.png';
                 }
 
-                // 좋아요 아이콘 상태
+                // Footer - 판매자/구매자 분기
                 const heartIcon = document.querySelector('.modal-view-footer .heart-icon');
-                if (heartIcon) {
-                    heartIcon.setAttribute('name', data.isLiked ? 'heart' : 'heart-outline');
-                    heartIcon.style.color = data.isLiked ? '#ff6b6b' : '';
+                const statusDropdown = document.getElementById('status-dropdown');
+                const chatBtn = document.querySelector('.modal-view-footer .chat-btn');
+
+                if (data.isOwner) {
+                    if (heartIcon) heartIcon.style.display = 'none';
+                    if (chatBtn) chatBtn.style.display = 'none';
+                    if (statusDropdown) {
+                        statusDropdown.style.display = 'block';
+                        this.setStatusDropdownValue(data.usedState);
+                    }
+                } else {
+                    if (heartIcon) {
+                        heartIcon.style.display = '';
+                        heartIcon.setAttribute('name', data.isLiked ? 'heart' : 'heart-outline');
+                        heartIcon.style.color = data.isLiked ? '#ff6b6b' : '';
+                    }
+                    if (statusDropdown) statusDropdown.style.display = 'none';
+                    if (chatBtn) chatBtn.style.display = '';
                 }
 
                 // 현재 상품 데이터 캐싱
@@ -618,8 +668,35 @@
             },
             
             closeViewModal: function() {
+                // 모달 닫을 때 리스트 카드 최신 데이터로 동기화
+                this.updateListCard(this.currentDetailData);
                 document.getElementById('viewModal').classList.remove('active');
                 this.updateOverlay();
+            },
+
+            /**
+             * 상세에서 변경된 값(조회수, 찜수, 상태)을 리스트 카드에 반영
+             */
+            updateListCard: function(data) {
+                if (!data) return;
+                const card = document.querySelector(`.market-item[data-id="${data.usedIdx}"]`);
+                if (!card) return;
+
+                // 판매완료 스타일 동기화
+                card.classList.toggle('is-sold', data.usedState === 'SOLD');
+
+                // 상태 배지 + 제목
+                const titleEl = card.querySelector('.item-title');
+                if (titleEl) {
+                    titleEl.innerHTML = this.getStatusBadge(data.usedState) + this.escapeHtml(data.usedTitle);
+                }
+
+                // 통계 (조회수, 찜수) - chatCount는 카드에 없으므로 인덱스로 접근
+                const statIcons = card.querySelectorAll('.stat-icon');
+                if (statIcons.length >= 3) {
+                    statIcons[0].innerHTML = `<ion-icon name="eye-outline"></ion-icon> ${data.viewCount || 0}`;
+                    statIcons[2].innerHTML = `<ion-icon name="heart-outline"></ion-icon> ${data.likeCount || 0}`;
+                }
             },
 
             // ==================== 수정 ====================
@@ -803,7 +880,159 @@
                 }
             },
             
+            /**
+             * 상태 배지 HTML 반환
+             */
+            getStatusBadge: function(state) {
+                const badges = {
+                    RESERVED: '<span class="used-state-badge badge-reserved">[예약중]</span> ',
+                    SOLD: '<span class="used-state-badge badge-sold">[판매완료]</span> '
+                };
+                return badges[state] || '';
+            },
+
+            /**
+             * 찜(좋아요) 토글 - 구매자 전용
+             */
+            toggleLike: async function() {
+                const data = this.currentDetailData;
+                if (!data || data.isOwner) return;
+                try {
+                    const res = await API.post(`/used-market/${data.usedIdx}/like`);
+                    if (res?.data !== undefined) {
+                        const isLiked = res.data;
+                        const heartIcon = document.querySelector('.modal-view-footer .heart-icon');
+                        if (heartIcon) {
+                            heartIcon.setAttribute('name', isLiked ? 'heart' : 'heart-outline');
+                            heartIcon.style.color = isLiked ? '#ff6b6b' : '';
+                            if (isLiked) this.burstHeart(heartIcon);
+                        }
+                        this.currentDetailData.isLiked = isLiked;
+                        // 찜 카운트 즉시 반영
+                        this.currentDetailData.likeCount = Math.max(0, (data.likeCount || 0) + (isLiked ? 1 : -1));
+                        this.refreshDetailStats();
+                    }
+                } catch (e) {
+                    Utils.notify('오류가 발생했습니다.', 'error');
+                }
+            },
+
+            /**
+             * 상세보기 stats (조회수/채팅/찜) 재렌더링
+             */
+            refreshDetailStats: function() {
+                const data = this.currentDetailData;
+                if (!data) return;
+                const statsEl = document.getElementById('view-stats');
+                if (statsEl) {
+                    statsEl.innerHTML = `
+                        <span class="stat-icon"><ion-icon name="eye-outline"></ion-icon> ${data.viewCount || 0}</span>
+                        <span class="stat-icon"><ion-icon name="chatbubble-outline"></ion-icon> ${data.chatCount || 0}</span>
+                        <span class="stat-icon"><ion-icon name="heart-outline"></ion-icon> ${data.likeCount || 0}</span>
+                    `;
+                }
+            },
+
+            /**
+             * 하트 버스트 파티클 효과
+             */
+            burstHeart: function(el) {
+                const rect = el.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                const colors = ['#ff6b6b', '#ff4757', '#ff8e8e', '#ffd6d6', '#ff3f67', '#ff7f7f'];
+
+                // 하트 pop 애니메이션
+                el.classList.remove('heart-pop');
+                void el.offsetWidth; // reflow
+                el.classList.add('heart-pop');
+                el.addEventListener('animationend', () => el.classList.remove('heart-pop'), { once: true });
+
+                // 링 ripple 효과
+                const ringSize = 36;
+                const ring = document.createElement('div');
+                ring.className = 'heart-ring';
+                ring.style.cssText = `left:${cx}px; top:${cy}px; width:${ringSize}px; height:${ringSize}px;`;
+                document.body.appendChild(ring);
+                ring.addEventListener('animationend', () => ring.remove());
+
+                // 파티클 방사
+                const count = 10;
+                for (let i = 0; i < count; i++) {
+                    const angle = (360 / count) * i + (Math.random() - 0.5) * 25;
+                    const dist = 28 + Math.random() * 22;
+                    const tx = Math.cos(angle * Math.PI / 180) * dist;
+                    const ty = Math.sin(angle * Math.PI / 180) * dist;
+                    const size = 4 + Math.random() * 6;
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    const delay = Math.random() * 0.08;
+
+                    const p = document.createElement('div');
+                    p.className = 'heart-particle';
+                    p.style.cssText = `
+                        left:${cx - size / 2}px;
+                        top:${cy - size / 2}px;
+                        width:${size}px;
+                        height:${size}px;
+                        background:${color};
+                        --tx:${tx}px;
+                        --ty:${ty}px;
+                        animation-delay:${delay}s;
+                    `;
+                    document.body.appendChild(p);
+                    p.addEventListener('animationend', () => p.remove());
+                }
+            },
+
+            /**
+             * 상품 상태 변경 - 판매자 전용
+             */
+            updateStatus: async function(state) {
+                const data = this.currentDetailData;
+                if (!data) return;
+                try {
+                    await API.patch(`/used-market/${data.usedIdx}/status?state=${state}`);
+                    this.currentDetailData.usedState = state;
+                    Utils.notify('상태가 변경되었습니다.', 'success');
+                } catch (e) {
+                    Utils.notify('상태 변경에 실패했습니다.', 'error');
+                    this.setStatusDropdownValue(this.currentDetailData.usedState);
+                }
+            },
+
+            /** 상태 드롭다운 열기/닫기 */
+            toggleStatusDropdown: function() {
+                const dropdown = document.getElementById('status-dropdown');
+                dropdown?.classList.toggle('open');
+            },
+
+            closeStatusDropdown: function() {
+                document.getElementById('status-dropdown')?.classList.remove('open');
+            },
+
+            /** 드롭다운 값 설정 (라벨 + active 클래스) */
+            setStatusDropdownValue: function(state) {
+                const labels = { TRADING: '거래중', RESERVED: '예약중', SOLD: '판매완료' };
+                const label = document.getElementById('status-dropdown-label');
+                if (label) label.textContent = labels[state] ?? state;
+                document.querySelectorAll('#status-dropdown-menu li').forEach(li => {
+                    li.classList.toggle('active', li.dataset.value === state);
+                });
+            },
+
+            /** 드롭다운 항목 선택 → 상태 변경 API 호출 */
+            selectStatus: function(state) {
+                this.closeStatusDropdown();
+                this.setStatusDropdownValue(state);
+                this.updateStatus(state);
+            },
+
             closeAllModals: function() {
+                // 상세 모달이 열려 있었으면 리스트 카드 동기화
+                if (document.getElementById('viewModal')?.classList.contains('active')) {
+                    this.updateListCard(this.currentDetailData);
+                }
+
                 document.querySelectorAll('.modal-container').forEach(modal => {
                     modal.classList.remove('active');
                 });
@@ -1007,9 +1236,10 @@
                 }
 
                 const validFiles = this.selectedFiles.filter(f => f !== null);
+                const remainingExistingFiles = document.querySelectorAll('#imageRow .preview-box.existing-file').length;
 
-                // 신규 등록 시에만 이미지 필수
-                if (!this.isEditMode && validFiles.length === 0) {
+                // 신규/수정 공통 - 최종 이미지가 1장 이상이어야 함
+                if (validFiles.length === 0 && remainingExistingFiles === 0) {
                     Utils.notify('최소 1장 이상의 이미지를 추가해주세요', 'error');
                     return;
                 }
@@ -1094,8 +1324,11 @@
             },
 
             updateImageCount: function() {
-                const total = document.querySelectorAll('#imageRow .preview-box').length;
-                document.getElementById('imgCount').innerText = `${total}/10`;
+                // 새 파일: 배열에서 null 제외하여 카운트 (DOM 제거 타이밍 이슈 방지)
+                const newCount = this.selectedFiles.filter(f => f !== null).length;
+                // 기존 파일(수정 모드): DOM 기준
+                const existingCount = document.querySelectorAll('#imageRow .preview-box.existing-file').length;
+                document.getElementById('imgCount').innerText = `${newCount + existingCount}/10`;
             },
 
             resetWriteForm: function() {

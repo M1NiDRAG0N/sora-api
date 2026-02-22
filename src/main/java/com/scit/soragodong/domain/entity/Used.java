@@ -66,6 +66,10 @@ public class Used extends BaseEntity {
         this.isUse = false;
     }
 
+    public void updateState(UsedState state) {
+        this.usedState = state;
+    }
+
     public void update(String usedTitle, String usedContent, Integer usedPrice,
                        String tradingLoc, Double tradingLat, Double tradingLng) {
         this.usedTitle = usedTitle;

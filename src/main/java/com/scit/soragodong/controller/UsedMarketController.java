@@ -10,6 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -27,6 +28,7 @@ import com.scit.soragodong.domain.dto.UsedRegisterReq;
 import com.scit.soragodong.domain.dto.UsedRegisterRes;
 import com.scit.soragodong.domain.dto.UsedUpdateReq;
 import com.scit.soragodong.domain.enums.FileRefType;
+import com.scit.soragodong.domain.enums.UsedState;
 import com.scit.soragodong.domain.response.ApiResponse;
 import com.scit.soragodong.domain.response.PageResponse;
 import com.scit.soragodong.security.CustomUserDetails;
@@ -122,8 +124,10 @@ public class UsedMarketController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         log.info("[중고거래] 상세 조회 - ID: {}", usedIdx);
-        Integer currentUserId = userDetails != null ? userDetails.getUserIdx() : null;
-        UsedDetailRes result = usedService.getUsedDetail(usedIdx, currentUserId);
+        Integer currentUserId = userDetails.getUserIdx();
+        String viewerKey = "u" + currentUserId;
+
+        UsedDetailRes result = usedService.getUsedDetail(usedIdx, currentUserId, viewerKey);
         return ApiResponse.success(result);
     }
 
@@ -178,6 +182,35 @@ public class UsedMarketController {
             @PathVariable Integer usedIdx) {
 
         return ApiResponse.success(usedService.getUsedFiles(usedIdx));
+    }
+
+    /**
+     * 상품 상태 변경 (판매자 전용)
+     * PATCH /used-market/{usedIdx}/status?state=SOLD
+     */
+    @PatchMapping("/{usedIdx}/status")
+    @ResponseBody
+    public ApiResponse<?> updateStatus(
+            @PathVariable Integer usedIdx,
+            @RequestParam UsedState state,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        usedService.updateState(usedIdx, state, userDetails.getUserIdx());
+        return ApiResponse.success("상태가 변경되었습니다.", null);
+    }
+
+    /**
+     * 찜(좋아요) 토글
+     * POST /used-market/{usedIdx}/like
+     */
+    @PostMapping("/{usedIdx}/like")
+    @ResponseBody
+    public ApiResponse<Boolean> toggleLike(
+            @PathVariable Integer usedIdx,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        boolean isLiked = usedService.toggleLike(usedIdx, userDetails.getUserIdx());
+        return ApiResponse.success(isLiked);
     }
 
     // ==================== 키워드 관리 ====================
