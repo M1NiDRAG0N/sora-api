@@ -375,7 +375,14 @@
                 // 신고 버튼
                 document.querySelector('.report-post-btn').addEventListener('click', () => {
                     document.getElementById('guestMenu').classList.remove('active');
-                    Utils.notify('신고 기능은 준비 중입니다.', 'warning');
+                    const usedIdx = this.currentUsedIdx;
+                    if (!usedIdx) return;
+                    
+                    if (typeof window.openReportModal === 'function') {
+                        window.openReportModal('USED_ITEM', usedIdx, '중고거래 게시글');
+                    } else {
+                        Utils.notify("신고 기능을 불러올 수 없습니다.", "error");
+                    }
                 });
 
                 // 찜(좋아요) 토글 - 구매자 전용
