@@ -1,0 +1,938 @@
+/* ===================================================================
+   usedmarket.css - 중고거래 페이지 커스텀 스타일
+   unified-layout.css와 함께 사용됩니다.
+   =================================================================== */
+
+@charset "UTF-8";
+
+/* ========================================
+   상품 카드
+   ======================================== */
+
+.usedmarket-page .market-item {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 14px;
+    align-items: stretch;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.usedmarket-page .market-item:active {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.usedmarket-page .item-thumb {
+    width: 110px;
+    height: 110px;
+    border-radius: 12px;
+    object-fit: cover;
+    background: linear-gradient(135deg, #f5f5f5 0%, #eee 100%);
+    flex-shrink: 0;
+}
+
+.usedmarket-page .item-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    padding: 4px 0;
+}
+
+.usedmarket-page .item-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    color: #222;
+}
+
+.usedmarket-page .item-meta {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+.usedmarket-page .item-price {
+    font-size: 16px;
+    font-weight: 800;
+    margin-top: auto;
+}
+
+.usedmarket-page .item-stats {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    color: #999;
+    margin-top: 6px;
+}
+
+.usedmarket-page .stat-icon {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+/* ========================================
+   모달 - 글쓰기 (write-modal)
+   ======================================== */
+
+.usedmarket-page .modal-write {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.usedmarket-page .modal-write-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
+}
+
+.usedmarket-page .modal-write-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+}
+
+.usedmarket-page .modal-write-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    scrollbar-width: none; /* Firefox */
+}
+
+.modal-write-body::-webkit-scrollbar
+, .modal-view-body::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+}
+ 
+.usedmarket-page .modal-write-footer {
+    display: flex;
+    gap: 10px;
+    padding: 16px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
+}
+
+/* 이미지 첨부 오버라이드 (기본은 common.css) */
+.usedmarket-page .image-attach-row {
+    gap: 8px;
+    padding: 4px 0;
+}
+
+.usedmarket-page .camera-btn {
+    width: 70px;
+    height: 70px;
+    background: rgba(178, 164, 255, 0.15);
+    border: 2px dashed #B2A4FF;
+    color: #B2A4FF;
+    gap: 4px;
+    transition: all 0.2s;
+}
+
+.usedmarket-page .camera-btn:active {
+    background: rgba(178, 164, 255, 0.25);
+}
+
+.usedmarket-page .camera-icon {
+    font-size: 28px;
+    color: #B2A4FF;
+}
+
+.usedmarket-page .camera-count {
+    color: #B2A4FF;
+    font-weight: 600;    
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.usedmarket-page .preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.usedmarket-page .btn-remove-img {
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
+    background: rgba(0, 0, 0, 0.6);
+    transition: all 0.2s;
+}
+
+.usedmarket-page .btn-remove-img:active {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.usedmarket-page .input-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #666;
+    display: block;
+}
+
+.usedmarket-page .input-box-styled {
+    width: 100%;
+    height: 44px;
+    border: 1px solid #E5E5E5;
+    border-radius: 12px;
+    padding: 0 12px;
+    font-size: 14px;
+    color: #333;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.usedmarket-page .input-box-styled:focus {
+    border-color: #B2A4FF;
+    box-shadow: 0 0 0 3px rgba(178, 164, 255, 0.1);
+}
+
+.usedmarket-page .textarea-box-styled {
+    width: 100%;
+    height: 120px;
+    border: 1px solid #E5E5E5;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 14px;
+    color: #333;
+    font-family: 'Noto Sans KR', sans-serif;
+    resize: none;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.usedmarket-page .textarea-box-styled:focus {
+    border-color: #B2A4FF;
+    box-shadow: 0 0 0 3px rgba(178, 164, 255, 0.1);
+}
+
+.usedmarket-page .location-select-box {
+    width: 100%;
+    height: 44px;
+    border: 1px solid #E5E5E5;
+    border-radius: 12px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--white);
+}
+
+.usedmarket-page .location-select-box:active {
+    border-color: #B2A4FF;
+}
+
+.usedmarket-page .loc-placeholder {
+    font-size: 14px;
+    color: #999;
+}
+
+.usedmarket-page .btn-submit-full {
+    width: 100%;
+    height: 52px;
+    background: linear-gradient(135deg, #B2A4FF 0%, #8F7DF5 100%);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(178, 164, 255, 0.3);
+}
+
+.usedmarket-page .btn-submit-full:active {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(178, 164, 255, 0.4);
+}
+
+.usedmarket-page .btn-submit-full:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ========================================
+   모달 - 상세보기 (view-modal)
+   ======================================== */
+
+.usedmarket-page .modal-view {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.usedmarket-page .modal-view-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
+}
+
+.usedmarket-page .modal-view-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+.usedmarket-page .modal-view-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 16px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    background: var(--white);
+    flex-shrink: 0;
+}
+
+/* 제품 슬라이더 */
+.usedmarket-page .product-swiper {
+    width: 100%;
+    height: 280px;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.usedmarket-page .swiper-slide {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.usedmarket-page .swiper-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: black;
+}
+
+.usedmarket-page .swiper-pagination-bullet {
+    background: white;
+    opacity: 0.7;
+}
+
+.usedmarket-page .swiper-pagination-bullet-active {
+    background: white;
+    opacity: 1;
+}
+
+/* 판매자 정보 */
+.usedmarket-page .seller-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    background: #f9f9f9;
+    border-radius: 14px;
+    margin-bottom: 16px;
+}
+
+.usedmarket-page .profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.usedmarket-page .profile-img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.usedmarket-page .seller-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #333;
+}
+
+.usedmarket-page .seller-location {
+    font-size: 12px;
+    color: #999;
+}
+
+.usedmarket-page .temp-badge {
+    font-size: 13px;
+    font-weight: 600;
+    color: #B2A4FF;
+    background: rgba(178, 164, 255, 0.1);
+    padding: 6px 10px;
+    border-radius: 8px;
+}
+
+/* 상품 상세 정보 */
+.usedmarket-page .content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.usedmarket-page .title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #222;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.usedmarket-page .meta {
+    font-size: 12px;
+    color: #999;
+}
+
+.usedmarket-page .desc {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.6;
+    word-break: break-word;
+}
+
+.usedmarket-page .detail-stats {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    font-size: 14px;
+    color: #999;
+    padding: 12px 0;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+}
+
+/* 지도 영역 */
+.usedmarket-page .map-area {
+    margin-top: 16px;
+    padding: 16px;
+    background: #f9f9f9;
+    border-radius: 14px;
+}
+
+.usedmarket-page .map-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.usedmarket-page .map-loc-name {
+    color: #B2A4FF;
+    font-weight: 800;
+}
+
+.usedmarket-page #detailMap {
+    width: 100%;
+    height: 200px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #f0f0ff 0%, #e8e8ff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+}
+
+/* 하단 가격/채팅 영역 */
+.usedmarket-page .heart-icon {
+    font-size: 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #ddd;
+}
+
+.usedmarket-page .heart-icon:active {
+    transform: scale(1.2);
+    color: #ff6b6b;
+}
+
+.usedmarket-page .price-info {
+    flex: 1;
+}
+
+.usedmarket-page .price {
+    font-size: 20px;
+    font-weight: 900;
+    color: #222;
+}
+
+.usedmarket-page .price-sub {
+    font-size: 11px;
+    color: #999;
+}
+
+.usedmarket-page .chat-btn {
+    width: 200px;
+    margin: 0;
+}
+
+.usedmarket-page .chat-btn:active {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(178, 164, 255, 0.4);
+}
+
+/* ========================================
+   상태/로딩
+   ======================================== */
+
+.usedmarket-page .status-container {
+    padding: 20px;
+    text-align: center;
+    color: #999;
+    font-size: 13px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.usedmarket-page .status-container.hide {
+    display: none;
+}
+/* ========================================
+   FAB 버튼 (부동 메뉴)
+   ======================================== */
+
+.usedmarket-page .fab-container {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    z-index: 100;
+    gap: 12px;
+}
+
+.usedmarket-page .fab-main {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 4px 12px rgba(178, 164, 255, 0.3);
+    transition: all 0.2s;
+}
+
+.usedmarket-page .fab-main:active {
+    transform: scale(0.92);
+}
+
+.usedmarket-page .fab-menu {
+    position: absolute;
+    bottom: 155px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.usedmarket-page .fab-menu.hide {
+    display: none;
+}
+
+.usedmarket-page .fab-item {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: var(--white);
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    transition: all 0.2s;
+}
+
+.usedmarket-page .fab-item:active {
+    transform: scale(0.92);
+    background: var(--primary);
+    color: white;
+}
+
+/* ========================================
+   키워드 모달
+   ======================================== */
+
+.usedmarket-page .modal-keyword .keyword-desc {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 16px;
+}
+
+.usedmarket-page .modal-keyword .keyword-input-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.usedmarket-page .modal-keyword .keyword-input-row .btn-primary {
+    padding: 10px 16px;
+}
+
+.usedmarket-page .modal-keyword .keyword-count-label {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 12px;
+}
+
+.usedmarket-page .keyword-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.usedmarket-page .keyword-list .keyword-empty {
+    color: #aaa;
+    font-size: 14px;
+}
+
+.usedmarket-page .keyword-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: rgba(178, 164, 255, 0.12);
+    border-radius: 20px;
+    font-size: 13px;
+    color: #555;
+}
+
+.usedmarket-page .keyword-tag ion-icon {
+    cursor: pointer;
+    color: #999;
+    font-size: 16px;
+    transition: color 0.2s;
+}
+
+.usedmarket-page .keyword-tag ion-icon:active {
+    color: #ff6b6b;
+}
+
+/* ========================================
+   상세보기 옵션 드롭다운
+   ======================================== */
+
+.usedmarket-page .detail-option-wrapper {
+    position: relative;
+}
+
+.usedmarket-page .detail-option-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+    color: #333;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+}
+
+/* 드롭다운 오버라이드 (기본은 common.css) */
+.usedmarket-page .custom-dropdown-menu {
+    top: 100%;
+    border-radius: 10px;
+    padding: 0;
+}
+
+.usedmarket-page .custom-dropdown-menu .menu-item {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 14px;
+}
+
+/* ========================================
+   삭제 확인 모달 (커뮤니티 CSS와 충돌 방지용 used- 프리픽스)
+   ======================================== */
+
+.usedmarket-page #deleteConfirmModal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 0;
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+}
+
+.usedmarket-page #deleteConfirmModal.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.usedmarket-page .used-custom-modal {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 24px;
+    width: 80%;
+    max-width: 280px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.usedmarket-page .used-modal-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: #222;
+}
+
+.usedmarket-page .used-modal-desc {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.6;
+}
+
+.usedmarket-page .used-modal-btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.usedmarket-page .used-modal-btn {
+    flex: 1;
+    height: 44px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.usedmarket-page .btn-cancel-delete {
+    background: #f0f0f0;
+    color: #555;
+}
+
+.usedmarket-page .btn-cancel-delete:active {
+    background: #e0e0e0;
+}
+
+.usedmarket-page .btn-confirm-delete {
+    background: #ff4d4d;
+    color: white;
+}
+
+.usedmarket-page .btn-confirm-delete:active {
+    background: #e03e3e;
+}
+
+/* ===== 상태 배지 ===== */
+.used-state-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    margin-right: 3px;
+    vertical-align: middle;
+}
+
+.used-state-badge.badge-reserved {
+    color: #ff9800;
+}
+
+.used-state-badge.badge-sold {
+    color: #9e9e9e;
+}
+
+/* 판매완료 아이템 카드 */
+.usedmarket-page .market-item.is-sold .item-thumb {
+    filter: grayscale(50%);
+    opacity: 0.8;
+}
+
+.usedmarket-page .market-item.is-sold .item-title {
+    color: #9e9e9e;
+}
+
+/* ===== 상세 - 찜 버튼 ===== */
+.usedmarket-page .modal-view-footer .heart-icon {
+    font-size: 28px;
+    cursor: pointer;
+    color: #ccc;
+    transition: color 0.2s;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.usedmarket-page .modal-view-footer .heart-icon:active {
+    transform: scale(1.2);
+}
+
+/* ===== 하트 버스트 애니메이션 ===== */
+@keyframes heartPop {
+    0%   { transform: scale(1); }
+    20%  { transform: scale(0.8); }
+    50%  { transform: scale(1.6); }
+    75%  { transform: scale(0.95); }
+    100% { transform: scale(1); }
+}
+
+@keyframes particleBurst {
+    0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+    70%  { opacity: 0.8; }
+    100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+}
+
+@keyframes heartRing {
+    0%   { transform: translate(-50%, -50%) scale(0.4); opacity: 0.9; border-width: 3px; }
+    100% { transform: translate(-50%, -50%) scale(2.8); opacity: 0; border-width: 1px; }
+}
+
+.heart-pop {
+    animation: heartPop 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards !important;
+}
+
+.heart-particle {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    animation: particleBurst 0.7s ease-out forwards;
+}
+
+.heart-ring {
+    position: fixed;
+    border-radius: 50%;
+    border: 3px solid #ff6b6b;
+    pointer-events: none;
+    z-index: 9998;
+    animation: heartRing 0.55s ease-out forwards;
+}
+
+/* ===== 상세 - 상태 변경 커스텀 드롭다운 (판매자 전용) ===== */
+.usedmarket-page .status-dropdown {
+    position: relative;
+    width: 200px;
+    flex-shrink: 0;
+}
+
+.usedmarket-page .status-dropdown-btn {
+    width: 100%;
+    padding: 14px 16px;
+    background-color: #B2A4FF;
+    color: #fff;
+    border: none;
+    border-radius: 30px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 2px 8px rgba(178, 164, 255, 0.35);
+    transition: background-color 0.15s, transform 0.1s;
+}
+
+.usedmarket-page .status-dropdown-btn:active {
+    transform: scale(0.98);
+    background-color: #9d8df0;
+}
+
+.usedmarket-page .status-dropdown-arrow {
+    font-size: 16px;
+    transition: transform 0.25s ease;
+}
+
+.usedmarket-page .status-dropdown.open .status-dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.usedmarket-page .status-dropdown-menu {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%) translateY(6px);
+    width: 190px;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.13);
+    list-style: none;
+    padding: 8px;
+    margin: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+    z-index: 200;
+}
+
+.usedmarket-page .status-dropdown.open .status-dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+.usedmarket-page .status-dropdown-menu li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #444;
+    transition: background 0.15s;
+}
+
+.usedmarket-page .status-dropdown-menu li:hover {
+    background: #f5f0ff;
+}
+
+.usedmarket-page .status-dropdown-menu li.active {
+    background: #ede9ff;
+    font-weight: 700;
+    color: #7c6aef;
+}
+
+.usedmarket-page .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.usedmarket-page .dot-trading  { background: #4CAF50; }
+.usedmarket-page .dot-reserved { background: #FF9800; }
+.usedmarket-page .dot-sold     { background: #9E9E9E; }

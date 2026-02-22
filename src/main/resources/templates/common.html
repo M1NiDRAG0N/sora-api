@@ -5,21 +5,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>소라고동</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/unified-layout.css">
     <link rel="stylesheet" href="/css/finance.css">
     <link rel="stylesheet" href="/css/chat.css">
     <link rel="stylesheet" href="/css/community.css">
-    <link rel="stylesheet" href="/css/findAccount.css">
+    <link rel="stylesheet" href="/css/findAccount.css"> 
     <link rel="stylesheet" href="/css/profile.css">
     <link rel="stylesheet" href="/css/timesale.css">
+    <link rel="stylesheet" href="/css/usedmarket.css">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 
     <script type="module" src="https://unpkg.com/ionicons@7/dist/ionicons/ionicons.esm.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script defer th:src="@{https://maps.googleapis.com/maps/api/js(key=${googleMapsApiKey},libraries='places,geocoding')}"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/api.js"></script>
     <script src="/js/validation.js"></script>
+    <script src="/js/sse-client.js"></script>
 </head>
 
 <body>
@@ -29,13 +37,16 @@
 
         <th:block th:if="${currentUri == '/main'}" th:insert="~{main/main :: div}"></th:block>
         <th:block th:if="${currentUri == '/finance'}" th:insert="~{finance/finance :: div}"></th:block>
-<<<<<<< HEAD
         <th:block th:if="${currentUri == '/community'}" th:insert="~{community/community :: div}"></th:block>
-=======
         <th:block th:if="${currentUri == '/timesale'}" th:insert="~{timesale/timesale :: div}"></th:block>
->>>>>>> c957e25d1b2e4b10fb8b7f0ceb462791d706f602
+        <th:block th:if="${currentUri == '/timesale/detail'}" th:insert="~{timesale/timesaledetail :: div}"></th:block>
+        <th:block th:if="${currentUri == '/used-market'}" th:insert="~{usedmarket/usedmarket :: div}"></th:block>
+        <th:block th:if="${currentUri == '/chatList'}" th:insert="~{chat/chatList :: div}"></th:block>
 
         <div th:replace="~{layout/nav :: nav}"></div>
+
+        <!-- Global Profile Layer -->
+        <th:block th:replace="~{profile/profile :: div}"></th:block>
 
         <!-- ================================================ -->
 

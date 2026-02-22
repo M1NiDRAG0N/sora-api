@@ -12,7 +12,6 @@ import com.scit.soragodong.domain.response.ApiResponse;
 
 import jakarta.servlet.http.HttpSession;
 
-
 @Controller
 public class MainController {
 
@@ -22,17 +21,6 @@ public class MainController {
         return "common";
     }
 
-    @GetMapping("/finance")
-    public String financePage(Model model) {
-        model.addAttribute("currentUri", "/finance");
-        return "common";
-    }
-    @GetMapping("/timesale")
-    public String getTimesalePage(Model model) {
-        model.addAttribute("currentUri", "/timesale");
-        return "common";
-    }
-    
 
     /**
      * 세션 정보 확인 (테스트용)

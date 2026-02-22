@@ -217,4 +217,46 @@ public class EmailService {
         EmailRequest request = new EmailRequest(email, "[SORA] 환영합니다! 🎉", htmlContent);
         sendHtmlEmail(request);
     }
+
+    /**
+     * 이메일 인증 코드 발송 (비동기)
+     */
+    @Async
+    public void sendVerificationEmail(String email, String verificationCode) {
+        String htmlContent = String.format(
+            "<!DOCTYPE html>" +
+            "<html lang='ko'>" +
+            "<head>" +
+            "    <meta charset='UTF-8'>" +
+            "    <meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
+            "</head>" +
+            "<body style='margin: 0; padding: 0; font-family: \"Segoe UI\", Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, ##667eea 0%%, ##764ba2 100%%);'>" +
+            "    <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>" +
+            "        <div style='background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;'>" +
+            "            <div style='background: linear-gradient(135deg, ##667eea 0%%, ##764ba2 100%%); padding: 50px 30px; text-align: center; color: white;'>" +
+            "                <h1 style='margin: 0; font-size: 36px; font-weight: 700;'>🔐</h1>" +
+            "                <p style='margin: 10px 0 0 0; font-size: 24px; font-weight: 600;'>이메일 인증</p>" +
+            "            </div>" +
+            "            <div style='padding: 40px 30px;'>" +
+            "                <h2 style='margin: 0 0 20px 0; color: ##333; font-size: 20px;'>인증 코드</h2>" +
+            "                <p style='margin: 0 0 30px 0; color: ##666; line-height: 1.6; font-size: 14px;'>소라고동 가입을 위해 아래 인증 코드를 입력해주세요.</p>" +
+            "                <div style='background: ##f8f9fa; border: 2px solid ##667eea; border-radius: 8px; padding: 25px; text-align: center; margin: 30px 0;'>" +
+            "                    <p style='margin: 0 0 10px 0; font-size: 12px; color: ##999;'>인증 코드</p>" +
+            "                    <h1 style='margin: 10px 0 0 0; font-size: 48px; font-weight: 700; color: ##667eea; letter-spacing: 5px;'>%s</h1>" +
+            "                </div>" +
+            "                <p style='margin: 0; color: ##999; font-size: 12px; line-height: 1.6;'>⏱️ 이 코드는 <strong>10분</strong> 동안 유효합니다.<br/>코드를 공유하지 마세요.</p>" +
+            "            </div>" +
+            "            <div style='background: ##f8f9fa; padding: 25px 30px; text-align: center; border-top: 1px solid ##eee;'>" +
+            "                <p style='margin: 0; color: ##999; font-size: 12px;'>© 2024 SORA. 모든 권리 보유</p>" +
+            "            </div>" +
+            "        </div>" +
+            "    </div>" +
+            "</body>" +
+            "</html>",
+            verificationCode
+        );
+        
+        EmailRequest request = new EmailRequest(email, "[SORA] 이메일 인증 코드", htmlContent);
+        sendHtmlEmail(request);
+    }
 }
