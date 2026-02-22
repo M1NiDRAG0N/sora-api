@@ -8,13 +8,17 @@ import lombok.Builder;
 public record BoardDto(
         Integer boardIdx,
         Integer userIdx,
+        Integer profileIdx,
         String boardCategory,
         String boardTitle,
         String boardContent,
         String userNickname,
         Boolean isUse,
+        Boolean isLiked,
         Integer likeCount,
         Integer viewCount,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt) {
+        LocalDateTime updatedAt,
+        Integer fileGrpIdx,
+        Integer replyCount) {
 }

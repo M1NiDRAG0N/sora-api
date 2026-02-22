@@ -10,37 +10,34 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PageResponse<T> {
-    
-    private int code;
-    private String message;
-    private java.util.List<T> data;
-    private int page;
-    private int size;
-    private long totalElements;
+
+    private java.util.List<T> content;
+    private int currentPage;
     private int totalPages;
+    private long totalElements;
     private boolean hasNext;
-    
+    private boolean hasPrevious;
+
     /**
      * 페이징 성공 응답
      */
     public static <T> PageResponse<T> success(
-            java.util.List<T> data,
-            int page,
+            java.util.List<T> content,
+            int currentPage,
             int size,
             long totalElements) {
-        
+
         int totalPages = (int) Math.ceil((double) totalElements / size);
-        boolean hasNext = page < totalPages - 1;
-        
+        boolean hasNext = currentPage < totalPages;
+        boolean hasPrevious = currentPage > 1;
+
         return PageResponse.<T>builder()
-            .code(200)
-            .message("Success")
-            .data(data)
-            .page(page)
-            .size(size)
+            .content(content)
+            .currentPage(currentPage)
             .totalElements(totalElements)
             .totalPages(totalPages)
             .hasNext(hasNext)
+            .hasPrevious(hasPrevious)
             .build();
     }
 }

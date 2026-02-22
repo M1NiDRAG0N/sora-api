@@ -1,0 +1,712 @@
+<div th:fragment="div" id="profile-layer" class="profile-layer">
+
+    <div class="app-container" style="background: transparent; box-shadow: none;">
+        <!-- Header -->
+        <header class="profile-header">
+            <button class="profile-icon-btn btn-back">
+                <ion-icon name="chevron-back"></ion-icon>
+            </button>
+            <div class="profile-header-title" id="profile-title">내 프로필</div>
+            <div style="position: relative;">
+                <button class="profile-icon-btn" id="profile-header-right-icon">
+                    <ion-icon name="ellipsis-horizontal"></ion-icon>
+                </button>
+                <div id="profile-dropdown" class="custom-dropdown-menu">
+                    <button class="menu-item danger" id="btn-logout">로그아웃</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="profile-scroll-content">
+            <!-- Profile Info -->
+            <div class="profile-info-section">
+                <img src="/images/default-profile.png" class="profile-img" id="profile-user-img">
+                <div class="profile-text-group">
+                    <div class="profile-user-name" id="profile-user-name">Loading...</div>
+                    <div class="profile-user-desc" id="profile-user-desc">...</div>
+                </div>
+            </div>
+
+            <!-- Stats Box 내가 쓴 글 / 내가 쓴 댓글 / 누른 좋아요 그 박스임.-->
+            <div class="profile-stats-box" id="profile-stats-box">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Action Button -->
+            <button class="profile-action-btn edit" id="profile-main-btn">프로필 수정</button>
+
+            <!-- Manner Score -->
+            <div class="profile-manner-card">
+                <div class="profile-manner-header">
+                    <span>매너 점수</span>
+                    <span class="profile-manner-score" id="profile-manner-val">0°C</span>
+                </div>
+                <div class="profile-progress-bg">
+                    <div class="profile-progress-bar" id="profile-manner-bar" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <!-- Dynamic Content List -->
+            <div id="profile-dynamic-area" class="profile-dynamic-content"></div>
+
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!--             [NEW] 프로필수정               -->
+    <!-- ========================================== -->
+    <div id="profileEditModal" class="full-screen-modal">
+        <div class="page-header transparent">
+            <button class="profile-icon-btn btn-back" id="btn-close-edit">
+                <ion-icon name="chevron-back"></ion-icon>
+            </button>
+            <div class="profile-header-title">프로필 수정</div>
+            <div class="header-right" id="btn-save-profile"
+                style="font-weight: 700; color: var(--primary); cursor: pointer;">
+                저장
+            </div>
+        </div>
+        <!-- <header class="profile-header" style="background: transparent; box-shadow: none;">
+            <button class="profile-icon-btn btn-back" id="btn-close-edit">
+                <ion-icon name="chevron-back"></ion-icon>
+            </button>
+            <div class="profile-header-title">프로필 수정</div>
+            <div class="profile-icon-btn" id="btn-save-profile"
+                style="font-weight: 700; color: var(--primary); cursor: pointer; width: auto; padding-right: 20px;">
+                저장
+            </div>
+        </header> -->
+        <div class="form-area bar">
+            <div class="signup-form-section">
+
+                <!-- Profile Image Edit -->
+                <div class="profile-edit-img-wrapper">
+                    <img src="/images/default-profile.png" id="edit-profile-img-preview" class="profile-edit-img">
+                    <div class="camera-badge" id="btn-upload-img">
+                        <ion-icon name="camera"></ion-icon>
+                    </div>
+                    <input type="file" id="edit-file-input" accept="image/*" style="display: none;">
+                </div>
+
+                <!-- Nickname -->
+                <div class="input-group">
+                    <label class="label">닉네임</label>
+                    <input type="text" id="edit-nickname" class="input-field" placeholder="닉네임 입력">
+                </div>
+
+                <!-- Address -->
+                <div class="input-group">
+                    <label class="label">주소</label>
+                    <div style="display:flex; gap: 8px;">
+                        <input type="text" id="edit-address" class="input-field" placeholder="주소 입력" readonly>
+                        <button type="button" class="geocode_btn" id="btn-search-addr">찾기</button>
+                    </div>
+                    <input type="hidden" id="edit-lat">
+                    <input type="hidden" id="edit-lng">
+                </div>
+
+                <div class="divider" style="margin: 20px 0; border-bottom: 1px solid #eee;"></div>
+
+
+                <!-- Current Password (Optional unless changing password) -->
+                <div class="input-group">
+                    <label class="label">현재 비밀번호 (비밀번호 변경 시 필수)</label>
+                    <input type="password" id="edit-current-pw" class="input-field" placeholder="비밀번호 변경 시에만 입력해주세요">
+                </div>
+                <!-- Password Change -->
+                <div class="input-group">
+                    <label class="label">비밀번호 변경 (선택)</label>
+                    <input type="password" id="edit-new-pw" class="input-field"
+                        placeholder="새 비밀번호 (8자리 이상 대문자/소문자/숫자/특수문자)">
+                    <input type="password" id="edit-new-pw-check" class="input-field" placeholder="새 비밀번호 확인"
+                        style="margin-top: 8px;">
+                </div>
+
+                <div class="divider" style="margin: 20px 0; border-bottom: 1px solid #eee;"></div>
+
+
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        //  1. Event Handler (이벤트 리스너 모음)
+        // ==========================================
+        const ProfileEventHandler = {
+            init: () => {
+                const layer = document.getElementById('profile-layer');
+                // 뒤로가기 버튼
+                layer.querySelector('.btn-back').addEventListener('click', ProfileApp.close);
+
+                // 프로필 메인 버튼 (수정/채팅)
+                document.getElementById('profile-main-btn').addEventListener('click', () => {
+                    const isMe = ProfileApp.state.data && ProfileApp.state.data.myProfile;
+                    if (isMe) {
+                        ProfileEdit.open();
+                    } else {
+                        // TODO: Chat logic
+                        Utils.notify("채팅 기능은 준비중입니다.", "warning");
+                    }
+                });
+
+                // 통계 탭 클릭 (Delegation) ///   내가 쓴 글 / 내가 쓴 댓글 / 누른 좋아요
+                document.getElementById('profile-stats-box').addEventListener('click', (e) => {
+                    const item = e.target.closest('.profile-stat-item');
+                    if (item && !item.classList.contains('readonly')) {
+                        const key = item.dataset.tabKey;
+                        if (key) ProfileApp.switchTab(key);
+                    }
+                });
+                // 리스트 내부 서브탭 & 아이템 클릭 (Delegation)   ///   중고거래 / 커뮤니티 선택
+                document.getElementById('profile-dynamic-area').addEventListener('click', (e) => {
+                    // 서브탭 클릭
+                    const subTabBtn = e.target.closest('.profile-sub-tab-btn');
+                    if (subTabBtn) {
+                        const key = subTabBtn.dataset.subKey;
+                        if (key) ProfileApp.switchSubTab(key);
+                        return;
+                    }
+                    // 리스트 아이템 클릭
+                    const listItem = e.target.closest('.profile-list-item');
+                    if (listItem) {
+                        const id = listItem.dataset.id;
+                        const type = listItem.dataset.type;
+                        if (id) ProfileApp.goToDetail(id, type);
+                    }
+                });
+
+                // --- Dropdown Toggle ---
+                document.getElementById('profile-header-right-icon').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const dropdown = document.getElementById('profile-dropdown');
+                    dropdown.classList.toggle('active');
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    const dropdown = document.getElementById('profile-dropdown');
+                    const iconBtn = document.getElementById('profile-header-right-icon');
+                    if (dropdown && dropdown.classList.contains('active') && !dropdown.contains(e.target) && !iconBtn.contains(e.target)) {
+                        dropdown.classList.remove('active');
+                    }
+                });
+
+                // Logout Logic
+                document.getElementById('btn-logout').addEventListener('click', async () => {
+                    try {
+                        const response = await fetch('/logout', { method: 'POST' });
+                        if (response.ok || response.redirected) {
+                            window.location.href = '/auth/login';
+                        } else {
+                            window.location.href = '/auth/login';
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        window.location.href = '/auth/login';
+                    }
+                });
+
+                // --- Edit Modal Events ---
+                document.getElementById('btn-close-edit').addEventListener('click', ProfileEdit.close);
+                document.getElementById('btn-save-profile').addEventListener('click', ProfileEdit.save);
+
+                // Image Upload
+                document.getElementById('btn-upload-img').addEventListener('click', () => {
+                    document.getElementById('edit-file-input').click();
+                });
+                document.getElementById('edit-file-input').addEventListener('change', ProfileEdit.handleImageSelect);
+
+                // Address Search
+                document.getElementById('btn-search-addr').addEventListener('click', ProfileEdit.searchAddress);
+            }
+        };
+
+        // ==========================================
+        //  2. Renderer (HTML 생성 함수 모음)
+        // ==========================================
+        const ProfileRenderer = {
+            createStatsHTML: (tabs, currentTab) => {
+                let html = '';
+                tabs.forEach(t => {
+                    const isActive = (currentTab === t.key) ? 'active' : '';
+                    const clickAttr = t.active ? `data-tab-key="${t.key}"` : 'class="profile-stat-item readonly"';
+                    const className = t.active ? `profile-stat-item ${isActive}` : 'profile-stat-item readonly';
+
+                    // data-tab-key 속성 추가
+                    html += `
+                        <div class="${className}" ${t.active ? `data-tab-key="${t.key}"` : ''}>
+                            <div class="profile-stat-label">${t.label}</div>
+                            <div class="profile-stat-value">${t.value}</div>
+                        </div>
+                    `;
+                });
+                return html;
+            },
+
+            createListHTML: (title, showSubTabs, subTab, items, currentTab) => {
+                let html = `<div class="profile-section-title">${title}</div>`;
+
+                if (showSubTabs) {
+                    const mkActive = subTab === 'market' ? 'active' : '';
+                    const cmActive = subTab === 'community' ? 'active' : '';
+                    // onclick 제거하고 data-sub-key 추가
+                    html += `
+                        <div class="profile-sub-tabs">
+                            <button class="profile-sub-tab-btn ${mkActive}" data-sub-key="market">중고거래</button>
+                            <button class="profile-sub-tab-btn ${cmActive}" data-sub-key="community">커뮤니티</button>
+                        </div>
+                    `;
+                }
+
+                if (items.length > 0) {
+                    items.forEach(item => {
+                        const thumb = item.thumbnail
+                            ? `<img src="${item.thumbnail}" class="profile-list-thumb">`
+                            : "";
+
+                        const timeStr = (typeof Utils !== 'undefined') ? Utils.timeAgo(item.timeAgo) : item.timeAgo;
+                        let badgeText = (currentTab === 'comments') ? "댓글" : item.category;
+
+                        // onclick 제거하고 data-id와 data-type 추가
+                        html += `
+                            <div class="profile-list-item" data-id="${item.id}" data-type="${item.type}">
+                                <div class="profile-list-info">
+                                    <div class="profile-list-meta">
+                                        <span class="profile-badge comm">${badgeText}</span>   ${timeStr}
+                                    </div>
+                                    <div class="profile-list-title">${item.title}</div>
+                                    <div class="profile-feed-preview">${item.contentPreview || ''}</div>
+                                </div>
+                                ${thumb}
+                            </div>
+                        `;
+                    });
+                } else {
+                    const msg = (subTab === 'market') ? "중고거래 기능은 준비중입니다." : "내역이 없습니다.";
+                    html += `<div class="profile-empty-state">${msg}</div>`;
+                }
+                return html;
+            }
+        };
+
+        // ==========================================
+        //  3. Profile App (데이터 및 로직 관리)
+        // ==========================================
+        const ProfileApp = {
+            state: {
+                data: null,
+                currentTab: 'posts',
+                subTab: 'community',
+                isLoading: false
+            },
+
+            // 초기화
+            init: () => {
+                ProfileEventHandler.init();
+            },
+
+            open: async (targetUserIdx = null) => {
+                ProfileApp.resetUI();
+
+                // 데이터 로딩과 최소 딜레이(800ms)를 병렬로 수행
+                const dataPromise = ProfileApp.loadData(targetUserIdx);
+                const delayPromise = new Promise(resolve => setTimeout(resolve, 800));
+
+                await Promise.all([dataPromise, delayPromise]);
+
+                ProfileApp.showModal();
+
+                if (!history.state || history.state.modal !== 'profile') {
+                    history.pushState({ modal: 'profile', userIdx: targetUserIdx }, 'Profile', '');
+                }
+                ProfileApp.bindHistoryEvent();
+            },
+
+            showModal: () => {
+                const layer = document.getElementById('profile-layer');
+                if (typeof window.modalZIndex === 'undefined') window.modalZIndex = 5000;
+                window.modalZIndex++;
+                layer.style.zIndex = window.modalZIndex;
+
+                layer.style.display = 'flex';
+                void layer.offsetWidth;
+                layer.classList.add('active');
+            },
+
+            bindHistoryEvent: () => {
+                window.onpopstate = function (event) {
+                    const viewForm = document.querySelector('#viewForm');
+                    if (viewForm && viewForm.classList.contains('active')) {
+                        if (typeof CommunityView !== 'undefined') CommunityView.closeView();
+                        return;
+                    }
+                    if (document.getElementById('profileEditModal').classList.contains('active')) {
+                        ProfileEdit.close();
+                        return;
+                    }
+                    if (document.getElementById('profile-layer').classList.contains('active')) {
+                        ProfileApp.close();
+                    }
+                };
+            },
+
+            close: () => {
+                const layer = document.getElementById('profile-layer');
+                layer.classList.remove('active');
+                layer.classList.add('closing');
+
+                setTimeout(() => {
+                    layer.style.display = 'none';
+                    layer.classList.remove('closing');
+                    ProfileApp.resetState();
+                }, 300);
+            },
+
+            resetUI: () => {
+                document.getElementById('profile-user-name').innerText = '';
+                document.getElementById('profile-user-desc').innerText = '';
+                document.getElementById('profile-user-img').src = '/images/default-profile.png';
+                document.getElementById('profile-manner-val').innerText = '0°C';
+                document.getElementById('profile-manner-bar').style.width = '0%';
+                document.getElementById('profile-stats-box').innerHTML = '';
+                document.getElementById('profile-dynamic-area').innerHTML = '<div class="profile-empty-state">로딩 중...</div>';
+            },
+
+            resetState: () => {
+                ProfileApp.state.data = null;
+                ProfileApp.state.currentTab = 'posts';
+                ProfileApp.state.subTab = 'community';
+            },
+
+            loadData: async (userIdx) => {
+                try {
+                    ProfileApp.state.isLoading = true;
+                    const url = userIdx ? `/profile/api/${userIdx}` : '/profile/api/me';
+
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error("Failed to load profile");
+
+                    const data = await response.json();
+                    ProfileApp.state.data = data;
+
+                    ProfileApp.render();
+
+                } catch (e) {
+                    console.error(e);
+                    Utils.notify("프로필 정보를 불러올 수 없습니다.", "error");
+                    ProfileApp.close();
+                } finally {
+                    ProfileApp.state.isLoading = false;
+                }
+            },
+
+            render: () => {
+                if (!ProfileApp.state.data) return;
+                ProfileApp.renderHeader();
+                ProfileApp.renderStats();
+                ProfileApp.renderList();
+            },
+
+            renderHeader: () => {
+                const { data } = ProfileApp.state;
+                const isMe = data.myProfile;
+
+                document.getElementById('profile-title').innerText = isMe ? "내 프로필" : "프로필";
+                document.getElementById('profile-user-name').innerText = data.nickname;
+                document.getElementById('profile-user-desc').innerText = data.description || "소개글이 없습니다.";
+                document.getElementById('profile-user-img').src = data.profileImg || "/images/default-profile.png";
+
+                const score = data.mannerScore || 36;
+                document.getElementById('profile-manner-val').innerText = score + "°C";
+                document.getElementById('profile-manner-bar').style.width = Math.min(score, 100) + "%";
+
+                const rightIcon = document.getElementById('profile-header-right-icon');
+                const mainBtn = document.getElementById('profile-main-btn');
+
+                if (isMe) {
+                    rightIcon.innerHTML = '<ion-icon name="ellipsis-horizontal"></ion-icon>';
+                    mainBtn.innerText = "프로필 수정";
+                    mainBtn.className = "profile-action-btn edit";
+                } else {
+                    rightIcon.innerHTML = '<ion-icon name="ellipsis-vertical"></ion-icon>';
+                    mainBtn.innerText = "1:1 채팅하기";
+                    mainBtn.className = "profile-action-btn";
+                }
+            },
+
+            renderStats: () => {
+                const { data, currentTab } = ProfileApp.state;
+                const isMe = data.myProfile;
+                const statsBox = document.getElementById('profile-stats-box');
+
+                let tabs = [
+                    { key: 'posts', label: '작성한 글', value: data.postCount, active: true },
+                    { key: 'comments', label: '작성한 댓글', value: data.commentCount, active: isMe }
+                ];
+
+                if (isMe) {
+                    tabs.push({ key: 'likes', label: '누른 좋아요', value: data.likeCount, active: true });
+                }
+
+                statsBox.innerHTML = ProfileRenderer.createStatsHTML(tabs, currentTab);
+            },
+
+            switchTab: (key) => {
+                ProfileApp.state.currentTab = key;
+                ProfileApp.state.subTab = 'community';
+                ProfileApp.renderStats();
+                ProfileApp.renderList();
+            },
+
+            switchSubTab: (key) => {
+                ProfileApp.state.subTab = key;
+                ProfileApp.renderList();
+            },
+
+            renderList: () => {
+                const { data, currentTab, subTab } = ProfileApp.state;
+                const container = document.getElementById('profile-dynamic-area');
+
+                let items = [];
+                let title = "";
+                let showSubTabs = false;
+
+                if (currentTab === 'posts') {
+                    title = "작성한 글 목록";
+                    showSubTabs = true;
+                    // Filter posts by type based on subTab
+                    if (data.posts && Array.isArray(data.posts)) {
+                        items = data.posts.filter(p => p.type === subTab);
+                    }
+                } else if (currentTab === 'comments') {
+                    title = "내가 쓴 댓글";
+                    items = data.comments || [];
+                } else if (currentTab === 'likes') {
+                    title = "관심 목록";
+                    showSubTabs = true;
+                    // Assuming likes also have types, otherwise default to community or show all?
+                    // Original code showed likes only for community subTab.
+                    // Let's filter if type exists, otherwise show all if subTab is community (legacy behavior)
+                    if (data.likes && Array.isArray(data.likes)) {
+                        items = data.likes.filter(p => p.type === subTab);
+                    }
+                }
+
+                container.innerHTML = ProfileRenderer.createListHTML(title, showSubTabs, subTab, items, currentTab);
+            },
+
+            goToDetail: (id, type) => {
+                if (type === 'market') {
+                    // 중고거래 목록 페이지로 이동
+                    location.href = `/used-market?openDetail=${id}`;
+                } else {
+                    // 커뮤니티 (또는 댓글)
+                    if (typeof CommunityView !== 'undefined') {
+                        try {
+                            CommunityView.openView(id);
+                        } catch (e) {
+                            console.error("CommunityView error:", e);
+                            const profileUserIdx = ProfileApp.state.data ? ProfileApp.state.data.userIdx : '';
+                            location.href = `/community?openBoard=${id}&from=profile&profileUser=${profileUserIdx}`;
+                        }
+                    } else {
+                        const profileUserIdx = ProfileApp.state.data ? ProfileApp.state.data.userIdx : '';
+                        location.href = `/community?openBoard=${id}&from=profile&profileUser=${profileUserIdx}`;
+                    }
+                }
+            }
+        };
+
+        // ==========================================
+        //  4. Profile Edit (수정 로직)
+        // ==========================================
+        const ProfileEdit = {
+            selectedFile: null,
+
+            open: () => {
+                const data = ProfileApp.state.data;
+                if (!data) return;
+
+                // Pre-fill fields
+                document.getElementById('edit-nickname').value = data.nickname;
+                document.getElementById('edit-address').value = data.description; // 주소
+                document.getElementById('edit-profile-img-preview').src = data.profileImg || "/images/default-profile.png";
+
+                // Clear password fields
+                document.getElementById('edit-current-pw').value = '';
+                document.getElementById('edit-new-pw').value = '';
+                document.getElementById('edit-new-pw-check').value = '';
+                ProfileEdit.selectedFile = null;
+
+                const modal = document.getElementById('profileEditModal');
+                if (typeof window.modalZIndex === 'undefined') window.modalZIndex = 5000;
+                window.modalZIndex++;
+                modal.style.zIndex = window.modalZIndex;
+                modal.classList.add('active');
+
+                // Push history state to handle back button
+                history.pushState({ modal: 'profileEdit' }, 'Edit Profile', '');
+            },
+
+            close: () => {
+                const modal = document.getElementById('profileEditModal');
+                modal.classList.remove('active');
+                if (history.state && history.state.modal === 'profileEdit') {
+                    // history.back(); // This might trigger closing the main profile too if not careful
+                    // Just rely on the popstate event handler in ProfileApp
+                }
+            },
+
+            handleImageSelect: (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                if (!file.type.startsWith('image/')) {
+                    Utils.notify('이미지 파일만 업로드 가능합니다.', 'error');
+                    return;
+                }
+
+                ProfileEdit.selectedFile = file;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('edit-profile-img-preview').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            },
+
+            searchAddress: () => {
+                const addrInput = document.getElementById('edit-address');
+                const address = addrInput.value; // 현재 입력된 값 (있다면)
+
+                // Google Geocoding API (signup.js 참고)
+                // 만약 Daum Postcode를 쓰고 싶다면 스크립트 추가 필요. 
+                // 여기선 signup.js에 있던 Google Geocode 로직을 재사용하거나,
+                // 만약 signup.js가 로드되어 있지 않다면 직접 구현해야 함.
+                // profile.html에는 google maps script가 없으므로 동적 로드 혹은 부모 페이지 의존.
+                // common.html에 google maps가 있다고 가정하거나, signup 처럼 동작해야 함.
+
+                // [주의] profile.html은 fragment로 로드되므로, <head>의 script가 실행되지 않을 수 있음.
+                // 메인 페이지(common.html 등)에 google maps script가 있어야 함.
+
+                if (typeof google === 'undefined' || !google.maps || !google.maps.Geocoder) {
+                    Utils.notify('지도 API가 로드되지 않았습니다.', 'error');
+                    return;
+                }
+
+                new google.maps.Geocoder().geocode({ address: address || 'Seoul' }, (results, status) => {
+                    if (status === 'OK') {
+                        // 정확한 검색을 위해선 주소 입력 팝업이 좋지만, 
+                        // 여기선 signup.js 로직(입력된 텍스트로 좌표찾기)을 따름.
+                        // 하지만 "찾기" 버튼이므로 우편번호 찾기 팝업이 더 자연스러움.
+                        // 일단은 텍스트 입력 후 -> 좌표 변환 로직으로 구현.
+                        // (사용자가 직접 주소를 치고 찾기를 누르는 방식)
+
+                        // 사용자가 입력할 수 있게 readonly 제거 필요? 
+                        // -> 요구사항엔 "주소변경"이라고만 되어있음.
+                        // signup.html 에서는 geocode_btn 클릭 시 input value로 검색함.
+
+                        // 여기선 readonly를 풀어서 입력하게 하거나, 별도 팝업 필요.
+                        // 간단하게: prompt로 주소 입력 받고 검색
+
+                        const newAddr = prompt("검색할 주소를 입력하세요:", address);
+                        if (!newAddr) return;
+
+                        new google.maps.Geocoder().geocode({ address: newAddr }, (results, status) => {
+                            if (status === 'OK') {
+                                const lat = results[0].geometry.location.lat();
+                                const lng = results[0].geometry.location.lng();
+
+                                document.getElementById('edit-address').value = results[0].formatted_address;
+                                document.getElementById('edit-lat').value = lat;
+                                document.getElementById('edit-lng').value = lng;
+                            } else {
+                                Utils.notify('주소를 찾을 수 없습니다.', 'error');
+                            }
+                        });
+
+                    } else {
+                        Utils.notify('API 오류: ' + status, 'error');
+                    }
+                });
+            },
+
+            save: async () => {
+                const nickname = document.getElementById('edit-nickname').value.trim();
+                const address = document.getElementById('edit-address').value.trim();
+                const lat = document.getElementById('edit-lat').value;
+                const lng = document.getElementById('edit-lng').value;
+                const currentPw = document.getElementById('edit-current-pw').value;
+                const newPw = document.getElementById('edit-new-pw').value;
+                const newPwCheck = document.getElementById('edit-new-pw-check').value;
+
+                if (newPw && !currentPw) {
+                    Utils.notify('비밀번호 변경을 위해 현재 비밀번호를 입력해주세요.', 'warning');
+                    return;
+                }
+
+                if (newPw && (!Validation.password(newPw))) {
+                    Utils.notify('비밀번호는 8~16자, 대문자/소문자/숫자/특수문자(@,#,$,!,%,*,?,&)를 포함해야 합니다', 'error');
+                    return;
+                }
+
+                if (!nickname) {
+                    Utils.notify('닉네임을 입력해주세요.', 'warning');
+                    return;
+                }
+
+                if (newPw && newPw !== newPwCheck) {
+                    Utils.notify('새 비밀번호가 일치하지 않습니다.', 'warning');
+                    return;
+                }
+
+                const formData = new FormData();
+                const updateData = {
+                    nickname: nickname,
+                    address: address,
+                    lat: lat ? parseFloat(lat) : null,
+                    lng: lng ? parseFloat(lng) : null,
+                    currentPassword: currentPw,
+                    newPassword: newPw || null
+                };
+
+                formData.append('data', new Blob([JSON.stringify(updateData)], { type: 'application/json' }));
+                if (ProfileEdit.selectedFile) {
+                    formData.append('profileImage', ProfileEdit.selectedFile);
+                }
+
+                try {
+                    const response = await fetch('/profile/update', {
+                        method: 'PUT',
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        Utils.notify('프로필이 수정되었습니다.', 'success');
+                        ProfileEdit.close();
+                        ProfileApp.loadData(); // Reload data
+                    } else {
+                        const errorText = await response.text();
+                        // ErrorCode에 따라 메시지 분기 가능
+                        if (errorText.includes("INVALID_PASSWORD")) {
+                            Utils.notify('현재 비밀번호가 일치하지 않습니다.', 'error');
+                        } else {
+                            Utils.notify('수정 실패: ' + errorText, 'error');
+                        }
+                    }
+                } catch (e) {
+                    console.error(e);
+                    Utils.notify('오류가 발생했습니다.', 'error');
+                }
+            }
+        };
+
+        // 초기화
+        ProfileApp.init();
+
+        window.ProfileApp = ProfileApp;
+        window.openProfile = ProfileApp.open;
+    </script>
+</div>

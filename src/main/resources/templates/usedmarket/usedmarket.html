@@ -1,0 +1,1373 @@
+<!-- 통일된 구조: 중고거래 페이지 -->
+<div class="page-wrapper usedmarket-page" th:fragment="div">
+    
+    <!-- [1] 헤더 (고정) - 검색 영역 -->
+    <div class="page-header">
+        <div class="header-row">
+            <input type="text" id="mainSearchInput" class="header-search-input" placeholder="삼성1동 근처에서 검색">
+            <ion-icon name="search" class="search-icon"></ion-icon>
+        </div>
+    </div>
+
+    <!-- [2] 콘텐츠 (스크롤 영역) - 상품 리스트 -->
+    <div class="page-content">
+        <div class="content-inner">
+            <div class="content-list" id="contentList">
+                <!-- 동적으로 로드됨 -->
+            </div>
+
+            <div id="statusContainer" class="status-container hide">
+                <ion-icon name="reload-outline" class="spin-icon"></ion-icon>
+                <span>불러오는 중...</span>
+            </div>
+
+            <div id="emptyContainer" class="status-container hide">
+                <ion-icon name="cube-outline" style="font-size: 48px; color: #ccc;"></ion-icon>
+                <span style="color: #888;">등록된 상품이 없습니다</span>
+            </div>
+
+            <div class="scroll-sentinel"></div>
+        </div>
+    </div>
+
+    <!-- [3] 모달 레이어 (고정) -->
+    <div class="modal-layers">
+        
+        <!-- 공용 오버레이 (배경) -->
+        <div class="modal-overlay"></div>
+        
+        <!-- 글쓰기 모달 -->
+        <div class="modal-container" id="writeModal" style="z-index: 1001;">
+            <div class="modal-content modal-write">
+                <div class="modal-write-header">
+                    <button type="button" class="modal-close-btn">
+                        <ion-icon name="chevron-back"></ion-icon>
+                    </button>
+                    <div class="modal-write-title">내 물건 팔기</div>
+                    <div style="width: 40px;"></div>
+                </div>
+
+                <div class="modal-write-body">
+                    <div class="image-attach-row" id="imageRow">
+                        <div class="camera-btn" id="cameraBtn">
+                            <ion-icon name="camera" class="camera-icon"></ion-icon>
+                            <span class="camera-count" id="imgCount">0/10</span>
+                        </div>
+                    </div>
+                    <input type="file" id="imgUpload" hidden multiple accept="image/*">
+
+                    <label class="input-label">제목</label>
+                    <input type="text" class="input-box-styled" id="productTitle" placeholder="제목을 입력하세요">
+
+                    <label class="input-label">자세한 설명</label>
+                    <textarea class="textarea-box-styled" id="productDesc" placeholder="게시글 내용을 작성해주세요."></textarea>
+
+                    <label class="input-label">가격</label>
+                    <input type="number" class="input-box-styled" id="productPrice" placeholder="가격을 입력해주세요 (원)">
+
+                    <label class="input-label">거래 희망 장소</label>
+                    <!-- 지도 영역 -->
+                    <div id="writeLocationMap" style="width: 100%; height: 300px; border-radius: 8px; overflow: hidden; margin: 10px 0; background: #e0e0e0;"></div>
+                    
+                    <!-- 위치 정보 저장 필드 (숨김) -->
+                    <input type="hidden" id="selectedLocationAddress" value="">
+                    <input type="hidden" id="selectedLocationLat" value="">
+                    <input type="hidden" id="selectedLocationLng" value="">
+                </div>
+
+                <div class="modal-write-footer">
+                    <button class="btn-submit-full">작성완료</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 상세보기 모달 -->
+        <div class="modal-container" id="viewModal">
+            <div class="modal-content modal-view">
+                <div class="modal-view-header">
+                    <button type="button" class="modal-close-btn">
+                        <ion-icon name="chevron-back"></ion-icon>
+                    </button>
+                    <div class="modal-write-title">상세보기</div>
+                    <div class="detail-option-wrapper">
+                        <button type="button" class="detail-option-btn">
+                            <ion-icon name="ellipsis-horizontal"></ion-icon>
+                        </button>
+                        <div class="custom-dropdown-menu" id="ownerMenu">
+                            <button class="menu-item edit-post-btn">게시글 수정</button>
+                            <button class="menu-item danger delete-post-btn">게시글 삭제</button>
+                        </div>
+                        <div class="custom-dropdown-menu" id="guestMenu">
+                            <button class="menu-item danger report-post-btn">신고하기</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-view-body">
+                    <div class="swiper product-swiper">
+                        <div class="swiper-wrapper">
+                            <div class="swiper-slide"><img src="https://picsum.photos/400/400?random=1"></div>
+                            <div class="swiper-slide"><img src="https://picsum.photos/400/400?random=2"></div>
+                        </div>
+                        <div class="swiper-pagination"></div>
+                    </div>
+
+                    <div class="seller-info">
+                        <div class="profile">
+                            <img src="https://i.pravatar.cc/100?img=12" class="profile-img">
+                            <div>
+                                <div class="seller-name" id="view-seller">이용민</div>
+                                <div class="seller-location" id="view-location">어디동</div>
+                            </div>
+                        </div>
+                        <div class="temp-badge" id="view-temp">36.5°C 😊</div>
+                    </div>
+
+                    <div class="content">
+                        <h1 class="title" id="view-title"></h1>
+                        <div class="meta" id="view-time"></div>
+                        <div class="desc" id="view-desc"></div>
+
+                        <div class="detail-stats" id="view-stats"></div>
+
+                        <div class="map-area">
+                            <div class="map-title">거래 희망 장소 <span class="map-loc-name" id="view-location-name"></span></div>
+                            <div id="detailMap"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 삭제 확인 모달 -->
+                <div class="modal-overlay" id="deleteConfirmModal">
+                    <div class="used-custom-modal">
+                        <div class="used-modal-title">상품 삭제</div>
+                        <div class="used-modal-desc">
+                            정말 이 상품을 삭제하시겠습니까?<br>
+                            삭제된 상품은 복구할 수 없습니다.
+                        </div>
+                        <div class="used-modal-btn-row">
+                            <button class="used-modal-btn btn-cancel-delete">취소</button>
+                            <button class="used-modal-btn btn-confirm-delete">삭제</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-view-footer">
+                    <!-- 구매자 전용: 찜 버튼 -->
+                    <ion-icon name="heart-outline" class="heart-icon"></ion-icon>
+                    <div class="price-info">
+                        <div class="price" id="view-price"></div>
+                        <div class="price-sub">가격 제안 불가</div>
+                    </div>
+                    <!-- 판매자 전용: 상태 변경 -->
+                    <div id="status-dropdown" class="status-dropdown" style="display:none;">
+                        <button class="status-dropdown-btn" id="status-dropdown-btn" type="button">
+                            <span id="status-dropdown-label">거래중</span>
+                            <ion-icon name="chevron-down-outline" class="status-dropdown-arrow"></ion-icon>
+                        </button>
+                        <ul class="status-dropdown-menu" id="status-dropdown-menu">
+                            <li data-value="TRADING" class="active">
+                                <span class="status-dot dot-trading"></span>거래중
+                            </li>
+                            <li data-value="RESERVED">
+                                <span class="status-dot dot-reserved"></span>예약중
+                            </li>
+                            <li data-value="SOLD">
+                                <span class="status-dot dot-sold"></span>판매완료
+                            </li>
+                        </ul>
+                    </div>
+                    <button class="btn-primary chat-btn">채팅하기</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 키워드 관리 모달 -->
+        <div class="modal-container" id="keywordModal">
+            <div class="modal-content modal-keyword">
+                <div class="modal-write-header">
+                    <button type="button" class="modal-close-btn">
+                        <ion-icon name="chevron-back"></ion-icon>
+                    </button>
+                    <div class="modal-write-title">알림 키워드 관리</div>
+                    <div style="width: 40px;"></div>
+                </div>
+
+                <div class="modal-write-body">
+                    <p class="keyword-desc">
+                        관심 키워드를 등록하면 해당 키워드가 포함된 상품이 등록될 때 알림을 받을 수 있어요!
+                    </p>
+
+                    <div class="keyword-input-row">
+                        <input type="text" id="keywordInput" class="input-box-styled"
+                               placeholder="키워드 입력 (최대 20자)" maxlength="20">
+                        <button id="addKeywordBtn" class="btn-primary">추가</button>
+                    </div>
+
+                    <div class="keyword-count-label">
+                        등록된 키워드 (<span id="keywordCount">0</span>/10)
+                    </div>
+
+                    <div id="keywordList" class="keyword-list">
+                        <!-- 동적으로 로드됨 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- [4] FAB 버튼 (부동 버튼) -->
+    <div class="fab-container">
+        <button class="page-floating-btn fab-main">
+            <ion-icon name="add-outline"></ion-icon>
+        </button>
+        <div class="fab-menu hide">
+            <button class="fab-item write-pop-open-btn" title="글쓰기">
+                <ion-icon name="pencil-outline"></ion-icon>
+            </button>
+            <button class="fab-item keyword-open-btn" title="키워드 알림">
+                <ion-icon name="notifications-outline"></ion-icon>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const UsedMarketUI = {
+            writeMap: null,
+            writeMarker: null,
+            detailMap: null,
+            detailMarker: null,
+            selectedLat: null,
+            selectedLng: null,
+            selectedAddress: null,
+            geocoder: null,
+            selectedFiles: [],    // 등록/수정 시 새 이미지 파일
+            deletedFileIdxs: [],  // 수정 시 삭제할 기존 파일 ID
+            isEditMode: false,
+            editingUsedIdx: null,
+            currentDetailData: null,
+
+            // 목록 관련
+            currentPage: 1,
+            isLoading: false,
+            hasMore: true,
+            searchKeyword: '',
+
+            init: function() {
+                this.geocoder = new google.maps.Geocoder();
+                this.bindEvents();
+                this.loadList();
+                
+                // URL 파라미터 체크하여 상세 모달 열기
+                const urlParams = new URLSearchParams(window.location.search);
+                const openDetailId = urlParams.get('openDetail');
+                if (openDetailId) {
+                    this.openViewModal(openDetailId);
+                    // URL 정리 (선택 사항)
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            },
+            
+            bindEvents: function() {
+                // 상품 클릭 시 상세보기 열기
+                document.querySelectorAll('.market-item').forEach(item => {
+                    item.addEventListener('click', () => this.openViewModal());
+                });
+                
+                // 카메라 버튼 - 파일 선택
+                const cameraBtn = document.getElementById('cameraBtn');
+                if (cameraBtn) {
+                    cameraBtn.addEventListener('click', () => {
+                        document.getElementById('imgUpload').click();
+                    });
+                }
+                
+                // 이미지 업로드
+                const imgUpload = document.getElementById('imgUpload');
+                if (imgUpload) {
+                    imgUpload.addEventListener('change', (e) => this.handleFileSelect(e.target));
+                }
+                
+                // 오버레이 클릭 시 모달 닫기
+                const overlay = document.querySelector('.modal-overlay');
+                if (overlay) {
+                    overlay.addEventListener('click', (e) => {
+                        if (e.target === overlay) {
+                            this.closeAllModals();
+                        }
+                    });
+                }
+
+                // FAB 메뉴 토글
+                const fabMain = document.querySelector('.fab-main');
+                const fabMenu = document.querySelector('.fab-menu');
+                if (fabMain && fabMenu) {
+                    fabMain.addEventListener('click', () => {
+                        fabMenu.classList.toggle('hide');
+                        fabMain.querySelector('ion-icon').setAttribute('name',
+                            fabMenu.classList.contains('hide') ? 'add-outline' : 'close-outline');
+                    });
+                }
+
+                document.querySelector('.write-pop-open-btn').addEventListener('click', () => {
+                    fabMenu.classList.add('hide');
+                    fabMain.querySelector('ion-icon').setAttribute('name', 'add-outline');
+                    this.openWriteModal();
+                });
+
+                document.querySelector('.keyword-open-btn').addEventListener('click', () => {
+                    fabMenu.classList.add('hide');
+                    fabMain.querySelector('ion-icon').setAttribute('name', 'add-outline');
+                    this.openKeywordModal();
+                });
+
+                // 작성완료 버튼 클릭
+                document.querySelector('.btn-submit-full').addEventListener('click', () => this.submitProduct());
+
+                // 키워드 추가 버튼
+                document.getElementById('addKeywordBtn').addEventListener('click', () => this.addKeyword());
+                document.getElementById('keywordInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addKeyword();
+                });
+
+                // 모달 닫기 버튼
+                document.querySelectorAll('.modal-close-btn').forEach(btn => {
+                    btn.addEventListener('click', () => this.closeAllModals());
+                });
+
+                // 상세 옵션 드롭다운 토글
+                document.querySelector('.detail-option-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const ownerMenu = document.getElementById('ownerMenu');
+                    const guestMenu = document.getElementById('guestMenu');
+                    if (this.currentIsOwner) {
+                        ownerMenu.classList.toggle('active');
+                        guestMenu.classList.remove('active');
+                    } else {
+                        guestMenu.classList.toggle('active');
+                        ownerMenu.classList.remove('active');
+                    }
+                });
+
+                // 드롭다운 외부 클릭 시 닫기
+                document.addEventListener('click', () => {
+                    document.getElementById('ownerMenu').classList.remove('active');
+                    document.getElementById('guestMenu').classList.remove('active');
+                });
+
+                // 수정 버튼
+                document.querySelector('.edit-post-btn').addEventListener('click', () => {
+                    document.getElementById('ownerMenu').classList.remove('active');
+                    this.openEditMode();
+                });
+
+                // 삭제 버튼
+                document.querySelector('.delete-post-btn').addEventListener('click', () => {
+                    document.getElementById('ownerMenu').classList.remove('active');
+                    this.confirmDelete();
+                });
+
+                // 삭제 확인 모달 버튼
+                document.querySelector('.btn-cancel-delete').addEventListener('click', () => this.closeDeleteModal());
+                document.querySelector('.btn-confirm-delete').addEventListener('click', () => this.deleteUsedItem());
+
+                // 신고 버튼
+                document.querySelector('.report-post-btn').addEventListener('click', () => {
+                    document.getElementById('guestMenu').classList.remove('active');
+                    Utils.notify('신고 기능은 준비 중입니다.', 'warning');
+                });
+
+                // 찜(좋아요) 토글 - 구매자 전용
+                document.querySelector('.heart-icon').addEventListener('click', () => this.toggleLike());
+
+                // 상태 변경 드롭다운 - 판매자 전용
+                document.getElementById('status-dropdown-btn')?.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.toggleStatusDropdown();
+                });
+                document.getElementById('status-dropdown-menu')?.addEventListener('click', (e) => {
+                    const li = e.target.closest('li[data-value]');
+                    if (li) this.selectStatus(li.dataset.value);
+                });
+                document.addEventListener('click', () => this.closeStatusDropdown());
+
+                // 검색 기능
+                const searchInput = document.getElementById('mainSearchInput');
+                if (searchInput) {
+                    let searchTimeout;
+                    searchInput.addEventListener('input', (e) => {
+                        clearTimeout(searchTimeout);
+                        searchTimeout = setTimeout(() => {
+                            this.searchKeyword = e.target.value.trim();
+                            this.currentPage = 1;
+                            this.hasMore = true;
+                            document.getElementById('contentList').innerHTML = '';
+                            this.loadList();
+                        }, 500);
+                    });
+                }
+
+                // 무한 스크롤
+                const observer = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting && this.hasMore && !this.isLoading) {
+                        this.loadList();
+                    }
+                }, { threshold: 0.1 });
+
+                const sentinel = document.querySelector('.scroll-sentinel');
+                if (sentinel) observer.observe(sentinel);
+            },
+            
+            /**
+             * 목록 로드
+             */
+            loadList: async function() {
+                if (this.isLoading || !this.hasMore) return;
+
+                this.isLoading = true;
+                this.showStatus(true);
+
+                try {
+                    let url = `/used-market/list?page=${this.currentPage}`;
+                    if (this.searchKeyword) {
+                        url += `&keyword=${encodeURIComponent(this.searchKeyword)}`;
+                    }
+
+                    const response = await API.get(url);
+
+                    if (response.status === 200 && response.data) {
+                        const { content, hasNext } = response.data;
+
+                        if (content.length === 0 && this.currentPage === 1) {
+                            this.showEmpty(true);
+                        } else {
+                            this.showEmpty(false);
+                            this.renderItems(content);
+                            this.hasMore = hasNext;
+                            this.currentPage++;
+                        }
+                    }
+                } catch (error) {
+                    console.error('[중고거래] 목록 로드 실패:', error);
+                    if (typeof Utils !== 'undefined') {
+                        Utils.notify('목록을 불러오는데 실패했습니다', 'error');
+                    }
+                } finally {
+                    this.isLoading = false;
+                    this.showStatus(false);
+                }
+            },
+
+            /**
+             * 아이템 렌더링
+             */
+            renderItems: function(items) {
+                const container = document.getElementById('contentList');
+
+                items.forEach(item => {
+                    const html = this.createItemHtml(item);
+                    container.insertAdjacentHTML('beforeend', html);
+                });
+
+                // 클릭 이벤트 바인딩
+                container.querySelectorAll('.market-item:not([data-bound])').forEach(el => {
+                    el.setAttribute('data-bound', 'true');
+                    el.addEventListener('click', () => {
+                        const usedIdx = el.getAttribute('data-id');
+                        this.openViewModal(usedIdx);
+                    });
+                });
+            },
+
+            /**
+             * 아이템 HTML 생성
+             */
+            createItemHtml: function(item) {
+                const thumbnail = item.thumbnailPath || '';
+                const price = item.usedPrice ? item.usedPrice.toLocaleString() + '원' : '가격 미정';
+                const location = item.tradingLoc ? this.extractDong(item.tradingLoc) : '위치 미정';
+                const timeAgo = Utils.timeAgo(item.createdAt);
+                const likeCount = item.likeCount || 0;
+                const chatCount = item.chatCount || 0;
+                const isSold = item.usedState === 'SOLD';
+                const statusBadge = this.getStatusBadge(item.usedState);
+
+                return `
+                    <div class="market-item${isSold ? ' is-sold' : ''}" data-id="${item.usedIdx}">
+                        <img src="${thumbnail}" class="item-thumb" alt="상품">
+                        <div class="item-info">
+                            <div>
+                                <div class="item-title">${statusBadge}${this.escapeHtml(item.usedTitle)}</div>
+                                <div class="item-meta">${location} · ${timeAgo}</div>
+                                <div class="item-price">${price}</div>
+                            </div>
+                            <div class="item-stats">
+                                <span class="stat-icon"><ion-icon name="eye-outline"></ion-icon> ${item.viewCount || 0}</span>
+                                <span class="stat-icon"><ion-icon name="chatbubble-outline"></ion-icon> ${chatCount}</span>
+                                <span class="stat-icon"><ion-icon name="heart-outline"></ion-icon> ${likeCount}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            extractDong: function(address) {
+                if (!address) return '위치 미정';
+                // "서울특별시 강남구 역삼1동" -> "역삼1동"
+                const match = address.match(/(\S+동)/);
+                return match ? match[1] : address.split(' ').pop();
+            },
+
+            escapeHtml: function(str) {
+                if (!str) return '';
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            },
+
+            showStatus: function(show) {
+                const el = document.getElementById('statusContainer');
+                if (el) el.classList.toggle('hide', !show);
+            },
+
+            showEmpty: function(show) {
+                const el = document.getElementById('emptyContainer');
+                if (el) el.classList.toggle('hide', !show);
+            },
+
+            getOverlay: function() {
+                return document.querySelector('.modal-overlay');
+            },
+            
+            updateOverlay: function() {
+                const overlay = this.getOverlay();
+                const hasActiveModal = document.querySelector('.modal-container.active');
+                if (overlay) {
+                    if (hasActiveModal) {
+                        overlay.classList.add('active');
+                    } else {
+                        overlay.classList.remove('active');
+                    }
+                }
+            },
+
+            openWriteModal: function() {
+                this.resetWriteForm();
+                this.isEditMode = false;
+                document.querySelector('.modal-write-title').innerText = '내 물건 팔기';
+                document.getElementById('writeModal').classList.add('active');
+                this.updateOverlay();
+
+                // 지도 초기화
+                setTimeout(() => this.initWriteMap(), 100);
+            },
+            
+            closeWriteModal: function() { 
+                document.getElementById('writeModal').classList.remove('active');
+                this.updateOverlay();
+            },
+            
+            openViewModal: async function(usedIdx) {
+                if (!usedIdx) return;
+
+                try {
+                    const response = await API.get(`/used-market/${usedIdx}`);
+
+                    if (response.status === 200 && response.data) {
+                        this.renderDetail(response.data);
+                        document.getElementById('viewModal').classList.add('active');
+                        this.updateOverlay();
+
+                        // Swiper 초기화 + 상세 지도
+                        setTimeout(() => {
+                            new Swiper('.product-swiper', {
+                                pagination: { el: '.swiper-pagination' },
+                                loop: true
+                            });
+                            this.initDetailMap(response.data.tradingLat, response.data.tradingLng);
+                        }, 100);
+                    }
+                } catch (error) {
+                    console.error('[중고거래] 상세 조회 실패:', error);
+                    if (typeof Utils !== 'undefined') {
+                        Utils.notify('상품 정보를 불러오는데 실패했습니다', 'error');
+                    }
+                }
+            },
+
+            renderDetail: function(data) {
+                // 이미지 슬라이드
+                const swiperWrapper = document.querySelector('.product-swiper .swiper-wrapper');
+                if (swiperWrapper) {
+                    if (data.images && data.images.length > 0) {
+                        swiperWrapper.innerHTML = data.images.map(img =>
+                            `<div class="swiper-slide">
+                                <img src="${img}" onerror="this.src=''">\
+                            </div>`
+                        ).join('');
+                    } else {
+                        swiperWrapper.innerHTML = '<div class="swiper-slide"><img src=""></div>';
+                    }
+                }
+
+                // 상품 정보
+                const setHtml = (id, value) => {
+                    const el = document.getElementById(id);
+                    if (el) el.innerHTML = value || '';
+                };
+
+                setHtml('view-title', this.escapeHtml(data.usedTitle));
+                setHtml('view-desc', this.escapeHtml(data.usedContent));
+                setHtml('view-price', data.usedPrice ? data.usedPrice.toLocaleString() + '원' : '가격 미정');
+                setHtml('view-time', Utils.timeAgo(data.createdAt));
+
+                // 통일된 stats (조회/채팅/관심)
+                setHtml('view-stats', `
+                    <span class="stat-icon"><ion-icon name="eye-outline"></ion-icon> ${data.viewCount || 0}</span>
+                    <span class="stat-icon"><ion-icon name="chatbubble-outline"></ion-icon> ${data.chatCount || 0}</span>
+                    <span class="stat-icon"><ion-icon name="heart-outline"></ion-icon> ${data.likeCount || 0}</span>
+                `);
+
+                setHtml('view-location-name', this.extractDong(data.tradingLoc));
+
+                // 판매자 정보
+                setHtml('view-seller', this.escapeHtml(data.sellerNickname || '알 수 없음'));
+                setHtml('view-location', this.extractDong(data.sellerAddress));
+
+                // 매너 온도
+                const mannerScore = data.sellerMannerScore || 36;
+                const tempEmoji = mannerScore >= 40 ? '😊' : mannerScore >= 36 ? '😐' : '😟';
+                setHtml('view-temp', `${mannerScore}°C ${tempEmoji}`);
+
+                // 프로필 이미지
+                const profileImg = document.querySelector('.seller-info .profile-img');
+                if (profileImg) {
+                    profileImg.src = data.sellerProfileIdx
+                        ? `/img/${data.sellerProfileIdx}`
+                        : '/images/default-profile.png';
+                }
+
+                // Footer - 판매자/구매자 분기
+                const heartIcon = document.querySelector('.modal-view-footer .heart-icon');
+                const statusDropdown = document.getElementById('status-dropdown');
+                const chatBtn = document.querySelector('.modal-view-footer .chat-btn');
+
+                if (data.isOwner) {
+                    if (heartIcon) heartIcon.style.display = 'none';
+                    if (chatBtn) chatBtn.style.display = 'none';
+                    if (statusDropdown) {
+                        statusDropdown.style.display = 'block';
+                        this.setStatusDropdownValue(data.usedState);
+                    }
+                } else {
+                    if (heartIcon) {
+                        heartIcon.style.display = '';
+                        heartIcon.setAttribute('name', data.isLiked ? 'heart' : 'heart-outline');
+                        heartIcon.style.color = data.isLiked ? '#ff6b6b' : '';
+                    }
+                    if (statusDropdown) statusDropdown.style.display = 'none';
+                    if (chatBtn) chatBtn.style.display = '';
+                }
+
+                // 현재 상품 데이터 캐싱
+                this.currentUsedIdx = data.usedIdx;
+                this.currentIsOwner = data.isOwner || false;
+                this.currentDetailData = data;
+            },
+            
+            closeViewModal: function() {
+                // 모달 닫을 때 리스트 카드 최신 데이터로 동기화
+                this.updateListCard(this.currentDetailData);
+                document.getElementById('viewModal').classList.remove('active');
+                this.updateOverlay();
+            },
+
+            /**
+             * 상세에서 변경된 값(조회수, 찜수, 상태)을 리스트 카드에 반영
+             */
+            updateListCard: function(data) {
+                if (!data) return;
+                const card = document.querySelector(`.market-item[data-id="${data.usedIdx}"]`);
+                if (!card) return;
+
+                // 판매완료 스타일 동기화
+                card.classList.toggle('is-sold', data.usedState === 'SOLD');
+
+                // 상태 배지 + 제목
+                const titleEl = card.querySelector('.item-title');
+                if (titleEl) {
+                    titleEl.innerHTML = this.getStatusBadge(data.usedState) + this.escapeHtml(data.usedTitle);
+                }
+
+                // 통계 (조회수, 찜수) - chatCount는 카드에 없으므로 인덱스로 접근
+                const statIcons = card.querySelectorAll('.stat-icon');
+                if (statIcons.length >= 3) {
+                    statIcons[0].innerHTML = `<ion-icon name="eye-outline"></ion-icon> ${data.viewCount || 0}`;
+                    statIcons[2].innerHTML = `<ion-icon name="heart-outline"></ion-icon> ${data.likeCount || 0}`;
+                }
+            },
+
+            // ==================== 수정 ====================
+
+            openEditMode: async function() {
+                const data = this.currentDetailData;
+                if (!data) return;
+
+                this.resetWriteForm();
+                this.isEditMode = true;
+                this.editingUsedIdx = data.usedIdx;
+
+                // 폼 필드 채우기
+                document.getElementById('productTitle').value = data.usedTitle || '';
+                document.getElementById('productDesc').value = data.usedContent || '';
+                document.getElementById('productPrice').value = data.usedPrice || '';
+                document.getElementById('selectedLocationAddress').value = data.tradingLoc || '';
+                document.getElementById('selectedLocationLat').value = data.tradingLat || '';
+                document.getElementById('selectedLocationLng').value = data.tradingLng || '';
+                document.querySelector('.modal-write-title').innerText = '상품 수정';
+
+                // 기존 이미지 로드
+                try {
+                    const res = await API.get(`/used-market/${data.usedIdx}/files`);
+                    if (res.status === 200 && res.data) {
+                        this.renderExistingFiles(res.data);
+                    }
+                } catch (e) {
+                    console.error('[수정] 기존 파일 로드 실패:', e);
+                }
+
+                document.getElementById('writeModal').classList.add('active');
+                this.updateOverlay();
+
+                // 지도 초기화 및 기존 좌표 마커 표시
+                setTimeout(() => {
+                    this.initWriteMap();
+                    const lat = parseFloat(data.tradingLat);
+                    const lng = parseFloat(data.tradingLng);
+                    if (lat && lng && this.writeMap) {
+                        const location = { lat, lng };
+                        this.writeMap.setCenter(location);
+                        this.writeMap.setZoom(16);
+                        this.updateWriteMarker(location);
+                        this.selectedLat = lat;
+                        this.selectedLng = lng;
+                        this.selectedAddress = data.tradingLoc;
+                    }
+                }, 100);
+            },
+
+            renderExistingFiles: function(files) {
+                const cameraBtn = document.getElementById('cameraBtn');
+                files.forEach(file => {
+                    const html = `
+                        <div class="preview-box existing-file" data-file-idx="${file.fileIdx}">
+                            <img src="${file.fileUrl}" class="preview-img">
+                            <div class="btn-remove-img" onclick="UsedMarketUI.removeExistingFile(this, ${file.fileIdx})">
+                                <ion-icon name="close"></ion-icon>
+                            </div>
+                        </div>`;
+                    cameraBtn.insertAdjacentHTML('afterend', html);
+                });
+                this.updateImageCount();
+            },
+
+            removeExistingFile: function(btn, fileIdx) {
+                btn.closest('.preview-box').remove();
+                this.deletedFileIdxs.push(fileIdx);
+                this.updateImageCount();
+            },
+
+            // ==================== 삭제 ====================
+
+            confirmDelete: function() {
+                document.getElementById('deleteConfirmModal').classList.add('show');
+            },
+
+            closeDeleteModal: function() {
+                document.getElementById('deleteConfirmModal').classList.remove('show');
+            },
+
+            deleteUsedItem: async function() {
+                try {
+                    const response = await API.delete(`/used-market/${this.currentUsedIdx}`);
+                    if (response.status === 200) {
+                        Utils.notify('상품이 삭제되었습니다.', 'success');
+                        this.closeDeleteModal();
+                        this.closeAllModals();
+
+                        // 목록에서 카드 제거
+                        const card = document.querySelector(`.market-item[data-id="${this.currentUsedIdx}"]`);
+                        if (card) card.remove();
+                    }
+                } catch (error) {
+                    console.error('[삭제] 실패:', error);
+                    Utils.notify('삭제 중 오류가 발생했습니다.', 'error');
+                }
+            },
+
+            // ==================== 키워드 관리 ====================
+
+            openKeywordModal: function() {
+                document.getElementById('keywordModal').classList.add('active');
+                this.updateOverlay();
+                this.loadKeywords();
+            },
+
+            closeKeywordModal: function() {
+                document.getElementById('keywordModal').classList.remove('active');
+                this.updateOverlay();
+            },
+
+            loadKeywords: async function() {
+                try {
+                    const response = await API.get('/used-market/keywords');
+                    if (response.status === 200 && response.data) {
+                        this.renderKeywords(response.data);
+                    }
+                } catch (error) {
+                    console.error('[키워드] 로드 실패:', error);
+                }
+            },
+
+            renderKeywords: function(keywords) {
+                const container = document.getElementById('keywordList');
+                const countEl = document.getElementById('keywordCount');
+
+                countEl.textContent = keywords.length;
+
+                if (keywords.length === 0) {
+                    container.innerHTML = '<div class="keyword-empty">등록된 키워드가 없습니다</div>';
+                    return;
+                }
+
+                container.innerHTML = keywords.map(k => `
+                    <div class="keyword-tag" data-id="${k.keywordIdx}">
+                        <span>${this.escapeHtml(k.keyword)}</span>
+                        <ion-icon name="close-outline" onclick="UsedMarketUI.deleteKeyword(${k.keywordIdx})"></ion-icon>
+                    </div>
+                `).join('');
+            },
+
+            addKeyword: async function() {
+                const input = document.getElementById('keywordInput');
+                const keyword = input.value.trim();
+
+                if (!keyword) {
+                    Utils.notify('키워드를 입력해주세요', 'error');
+                    return;
+                }
+
+                if (keyword.length > 20) {
+                    Utils.notify('키워드는 20자 이내로 입력해주세요', 'error');
+                    return;
+                }
+
+                try {
+                    const response = await API.post('/used-market/keywords', { keyword });
+                    if (response.status === 200) {
+                        Utils.notify(response.message || '키워드가 등록되었습니다', 'success');
+                        input.value = '';
+                        this.loadKeywords();
+                    }
+                } catch (error) {
+                    console.error('[키워드] 등록 실패:', error);
+                    Utils.notify(error.message || '키워드 등록에 실패했습니다', 'error');
+                }
+            },
+
+            deleteKeyword: async function(keywordIdx) {
+                try {
+                    const response = await API.delete(`/used-market/keywords/${keywordIdx}`);
+                    if (response.status === 200) {
+                        Utils.notify('키워드가 삭제되었습니다', 'success');
+                        this.loadKeywords();
+                    }
+                } catch (error) {
+                    console.error('[키워드] 삭제 실패:', error);
+                    Utils.notify('키워드 삭제에 실패했습니다', 'error');
+                }
+            },
+            
+            /**
+             * 상태 배지 HTML 반환
+             */
+            getStatusBadge: function(state) {
+                const badges = {
+                    RESERVED: '<span class="used-state-badge badge-reserved">[예약중]</span> ',
+                    SOLD: '<span class="used-state-badge badge-sold">[판매완료]</span> '
+                };
+                return badges[state] || '';
+            },
+
+            /**
+             * 찜(좋아요) 토글 - 구매자 전용
+             */
+            toggleLike: async function() {
+                const data = this.currentDetailData;
+                if (!data || data.isOwner) return;
+                try {
+                    const res = await API.post(`/used-market/${data.usedIdx}/like`);
+                    if (res?.data !== undefined) {
+                        const isLiked = res.data;
+                        const heartIcon = document.querySelector('.modal-view-footer .heart-icon');
+                        if (heartIcon) {
+                            heartIcon.setAttribute('name', isLiked ? 'heart' : 'heart-outline');
+                            heartIcon.style.color = isLiked ? '#ff6b6b' : '';
+                            if (isLiked) this.burstHeart(heartIcon);
+                        }
+                        this.currentDetailData.isLiked = isLiked;
+                        // 찜 카운트 즉시 반영
+                        this.currentDetailData.likeCount = Math.max(0, (data.likeCount || 0) + (isLiked ? 1 : -1));
+                        this.refreshDetailStats();
+                    }
+                } catch (e) {
+                    Utils.notify('오류가 발생했습니다.', 'error');
+                }
+            },
+
+            /**
+             * 상세보기 stats (조회수/채팅/찜) 재렌더링
+             */
+            refreshDetailStats: function() {
+                const data = this.currentDetailData;
+                if (!data) return;
+                const statsEl = document.getElementById('view-stats');
+                if (statsEl) {
+                    statsEl.innerHTML = `
+                        <span class="stat-icon"><ion-icon name="eye-outline"></ion-icon> ${data.viewCount || 0}</span>
+                        <span class="stat-icon"><ion-icon name="chatbubble-outline"></ion-icon> ${data.chatCount || 0}</span>
+                        <span class="stat-icon"><ion-icon name="heart-outline"></ion-icon> ${data.likeCount || 0}</span>
+                    `;
+                }
+            },
+
+            /**
+             * 하트 버스트 파티클 효과
+             */
+            burstHeart: function(el) {
+                const rect = el.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                const colors = ['#ff6b6b', '#ff4757', '#ff8e8e', '#ffd6d6', '#ff3f67', '#ff7f7f'];
+
+                // 하트 pop 애니메이션
+                el.classList.remove('heart-pop');
+                void el.offsetWidth; // reflow
+                el.classList.add('heart-pop');
+                el.addEventListener('animationend', () => el.classList.remove('heart-pop'), { once: true });
+
+                // 링 ripple 효과
+                const ringSize = 36;
+                const ring = document.createElement('div');
+                ring.className = 'heart-ring';
+                ring.style.cssText = `left:${cx}px; top:${cy}px; width:${ringSize}px; height:${ringSize}px;`;
+                document.body.appendChild(ring);
+                ring.addEventListener('animationend', () => ring.remove());
+
+                // 파티클 방사
+                const count = 10;
+                for (let i = 0; i < count; i++) {
+                    const angle = (360 / count) * i + (Math.random() - 0.5) * 25;
+                    const dist = 28 + Math.random() * 22;
+                    const tx = Math.cos(angle * Math.PI / 180) * dist;
+                    const ty = Math.sin(angle * Math.PI / 180) * dist;
+                    const size = 4 + Math.random() * 6;
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    const delay = Math.random() * 0.08;
+
+                    const p = document.createElement('div');
+                    p.className = 'heart-particle';
+                    p.style.cssText = `
+                        left:${cx - size / 2}px;
+                        top:${cy - size / 2}px;
+                        width:${size}px;
+                        height:${size}px;
+                        background:${color};
+                        --tx:${tx}px;
+                        --ty:${ty}px;
+                        animation-delay:${delay}s;
+                    `;
+                    document.body.appendChild(p);
+                    p.addEventListener('animationend', () => p.remove());
+                }
+            },
+
+            /**
+             * 상품 상태 변경 - 판매자 전용
+             */
+            updateStatus: async function(state) {
+                const data = this.currentDetailData;
+                if (!data) return;
+                try {
+                    await API.patch(`/used-market/${data.usedIdx}/status?state=${state}`);
+                    this.currentDetailData.usedState = state;
+                    Utils.notify('상태가 변경되었습니다.', 'success');
+                } catch (e) {
+                    Utils.notify('상태 변경에 실패했습니다.', 'error');
+                    this.setStatusDropdownValue(this.currentDetailData.usedState);
+                }
+            },
+
+            /** 상태 드롭다운 열기/닫기 */
+            toggleStatusDropdown: function() {
+                const dropdown = document.getElementById('status-dropdown');
+                dropdown?.classList.toggle('open');
+            },
+
+            closeStatusDropdown: function() {
+                document.getElementById('status-dropdown')?.classList.remove('open');
+            },
+
+            /** 드롭다운 값 설정 (라벨 + active 클래스) */
+            setStatusDropdownValue: function(state) {
+                const labels = { TRADING: '거래중', RESERVED: '예약중', SOLD: '판매완료' };
+                const label = document.getElementById('status-dropdown-label');
+                if (label) label.textContent = labels[state] ?? state;
+                document.querySelectorAll('#status-dropdown-menu li').forEach(li => {
+                    li.classList.toggle('active', li.dataset.value === state);
+                });
+            },
+
+            /** 드롭다운 항목 선택 → 상태 변경 API 호출 */
+            selectStatus: function(state) {
+                this.closeStatusDropdown();
+                this.setStatusDropdownValue(state);
+                this.updateStatus(state);
+            },
+
+            closeAllModals: function() {
+                // 상세 모달이 열려 있었으면 리스트 카드 동기화
+                if (document.getElementById('viewModal')?.classList.contains('active')) {
+                    this.updateListCard(this.currentDetailData);
+                }
+
+                document.querySelectorAll('.modal-container').forEach(modal => {
+                    modal.classList.remove('active');
+                });
+                this.updateOverlay();
+
+                // FAB 메뉴도 닫기
+                const fabMenu = document.querySelector('.fab-menu');
+                const fabMain = document.querySelector('.fab-main');
+                if (fabMenu) fabMenu.classList.add('hide');
+                if (fabMain) fabMain.querySelector('ion-icon').setAttribute('name', 'add-outline');
+            },
+
+            /**
+             * 상세보기 지도 초기화
+             */
+            initDetailMap: function(lat, lng) {
+                const mapDiv = document.getElementById('detailMap');
+                const mapArea = document.querySelector('.map-area');
+
+                if (!lat || !lng) {
+                    if (mapArea) mapArea.style.display = 'none';
+                    return;
+                }
+
+                if (mapArea) mapArea.style.display = '';
+
+                const center = { lat: lat, lng: lng };
+
+                this.detailMap = new google.maps.Map(mapDiv, {
+                    zoom: 16,
+                    center: center,
+                    mapTypeId: 'roadmap',
+                    disableDefaultUI: true,
+                    zoomControl: true
+                });
+
+                this.detailMarker = new google.maps.Marker({
+                    position: center,
+                    map: this.detailMap,
+                    title: '거래 희망 장소'
+                });
+            },
+
+            /**
+             * 글쓰기 모달의 지도 초기화
+             */
+            initWriteMap: function() {
+                const mapDiv = document.getElementById('writeLocationMap');
+                if (!mapDiv) {
+                    console.error('[글쓰기지도] 지도 컨테이너를 찾을 수 없습니다');
+                    return;
+                }
+
+                // 기존 지도가 있으면 제거
+                if (this.writeMap) {
+                    this.writeMap = null;
+                }
+
+                // 기본 위치 (Seoul)
+                const defaultCenter = { lat: 37.5665, lng: 126.9780 };
+
+                this.writeMap = new google.maps.Map(mapDiv, {
+                    zoom: 15,
+                    center: defaultCenter,
+                    mapTypeId: 'roadmap'
+                });
+
+                console.log('[글쓰기지도] 지도 초기화 완료');
+
+                // 지도 클릭 이벤트 - 마커 생성
+                this.writeMap.addListener('click', (event) => {
+                    this.onWriteMapClick(event.latLng);
+                });
+
+                // 사용자 현재 위치 시도
+                this.getWriteMapCurrentLocation();
+            },
+
+            /**
+             * 글쓰기 지도의 현재 위치 가져오기
+             */
+            getWriteMapCurrentLocation: function() {
+                if (!navigator.geolocation) {
+                    console.log('[글쓰기지도] Geolocation을 지원하지 않습니다');
+                    return;
+                }
+
+                console.log('[글쓰기지도] 현재 위치 조회 중...');
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        console.log(`[글쓰기지도] 현재 위치: ${lat}, ${lng}`);
+
+                        const location = { lat: lat, lng: lng };
+                        
+                        // 지도 중심을 사용자 위치로 이동
+                        if (this.writeMap) {
+                            this.writeMap.setCenter(location);
+                            this.writeMap.setZoom(17);
+                        }
+
+                        // 마커 생성
+                        this.selectedLat = lat;
+                        this.selectedLng = lng;
+                        this.updateWriteMarker(location);
+
+                        // 주소 가져오기
+                        this.getAddressFromCoordinates(location);
+                    },
+                    (error) => {
+                        console.log('[글쓰기지도] 위치 접근 거부:', error.message);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            },
+
+            /**
+             * 글쓰기 지도 클릭 시 처리
+             */
+            onWriteMapClick: function(latLng) {
+                this.selectedLat = latLng.lat();
+                this.selectedLng = latLng.lng();
+
+                console.log(`[글쓰기지도] 클릭 좌표: ${this.selectedLat}, ${this.selectedLng}`);
+
+                // 마커 표시
+                this.updateWriteMarker(latLng);
+
+                // Geocoding으로 주소 가져오기
+                this.getAddressFromCoordinates(latLng);
+            },
+
+            /**
+             * 좌표로부터 주소 가져오기
+             */
+            getAddressFromCoordinates: function(latLng) {
+                const lat = typeof latLng.lat === 'function' ? latLng.lat() : latLng.lat;
+                const lng = typeof latLng.lng === 'function' ? latLng.lng() : latLng.lng;
+
+                this.geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+                    if (status === google.maps.GeocoderStatus.OK && results[0]) {
+                        this.selectedAddress = results[0].formatted_address;
+                        console.log('[글쓰기지도] 주소:', this.selectedAddress);
+                    } else {
+                        console.error('[글쓰기지도] Geocoding 실패:', status);
+                        this.selectedAddress = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                    }
+
+                    // Hidden input 업데이트
+                    document.getElementById('selectedLocationAddress').value = this.selectedAddress;
+                    document.getElementById('selectedLocationLat').value = lat;
+                    document.getElementById('selectedLocationLng').value = lng;
+                });
+            },
+
+            /**
+             * 글쓰기 지도 마커 업데이트
+             */
+            updateWriteMarker: function(latLng) {
+                if (this.writeMarker) {
+                    this.writeMarker.setMap(null);
+                }
+
+                this.writeMarker = new google.maps.Marker({
+                    position: latLng,
+                    map: this.writeMap,
+                    title: '선택된 위치'
+                });
+            },
+
+            submitProduct: async function() {
+                const title = document.getElementById('productTitle').value.trim();
+                const content = document.getElementById('productDesc').value.trim();
+                const price = document.getElementById('productPrice').value;
+                const address = document.getElementById('selectedLocationAddress').value;
+                const lat = document.getElementById('selectedLocationLat').value;
+                const lng = document.getElementById('selectedLocationLng').value;
+
+                // 유효성 검사
+                if (!title) {
+                    Utils.notify('제목을 입력해주세요', 'error');
+                    return;
+                }
+                if (!content) {
+                    Utils.notify('설명을 입력해주세요', 'error');
+                    return;
+                }
+                if (!price || price <= 0) {
+                    Utils.notify('올바른 가격을 입력해주세요', 'error');
+                    return;
+                }
+                if (!address) {
+                    Utils.notify('지도에서 거래 위치를 선택해주세요', 'error');
+                    return;
+                }
+
+                const validFiles = this.selectedFiles.filter(f => f !== null);
+                const remainingExistingFiles = document.querySelectorAll('#imageRow .preview-box.existing-file').length;
+
+                // 신규/수정 공통 - 최종 이미지가 1장 이상이어야 함
+                if (validFiles.length === 0 && remainingExistingFiles === 0) {
+                    Utils.notify('최소 1장 이상의 이미지를 추가해주세요', 'error');
+                    return;
+                }
+
+                try {
+                    const formData = new FormData();
+                    formData.append('usedTitle', title);
+                    formData.append('usedContent', content);
+                    formData.append('usedPrice', price);
+                    formData.append('tradingLoc', address);
+                    if (lat) formData.append('tradingLatitude', lat);
+                    if (lng) formData.append('tradingLongitude', lng);
+
+                    if (this.isEditMode) {
+                        // 수정 모드
+                        validFiles.forEach(file => formData.append('newFiles', file));
+                        this.deletedFileIdxs.forEach(idx => formData.append('deleteFileIdxs', idx));
+
+                        Utils.notify('상품을 수정하고 있습니다...', 'info');
+
+                        const resp = await fetch(`/used-market/${this.editingUsedIdx}`, { method: 'PUT', body: formData });
+                        const result = await resp.json();
+
+                        if (resp.ok) {
+                            Utils.notify(result.message || '상품이 수정되었습니다.', 'success');
+                            setTimeout(() => {
+                                this.closeWriteModal();
+                                this.openViewModal(this.editingUsedIdx);
+                            }, 1000);
+                        } else {
+                            Utils.notify(result.message || '수정에 실패했습니다.', 'error');
+                        }
+                    } else {
+                        // 신규 등록 모드
+                        validFiles.forEach(file => formData.append('files', file));
+
+                        const response = await API.postFormData('/used-market/register', formData);
+
+                        if (response.status === 200 && response.data) {
+                            Utils.notify(response.message || '상품이 등록되었습니다.', 'success');
+
+                            setTimeout(() => {
+                                this.closeWriteModal();
+                                location.reload();
+                            }, 1500);
+                        }
+                    }
+
+                } catch (error) {
+                    console.error('[중고거래] 요청 실패:', error);
+                    Utils.notify('오류가 발생했습니다: ' + error.message, 'error');
+                }
+            },
+
+            handleFileSelect: function(input) {
+                const cameraBtn = document.getElementById('cameraBtn');
+                Array.from(input.files).forEach(file => {
+                    if (!file.type.startsWith('image/')) return;
+                    if (this.selectedFiles.length >= 10) {
+                        Utils.notify('최대 10장까지 업로드 가능합니다', 'error');
+                        return;
+                    }
+
+                    // 파일 저장
+                    const fileIndex = this.selectedFiles.length;
+                    this.selectedFiles.push(file);
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const html = `<div class="preview-box" data-file-index="${fileIndex}"><img src="${e.target.result}" class="preview-img"><div class="btn-remove-img" onclick="UsedMarketUI.removeFile(${fileIndex}); this.parentElement.remove();"><ion-icon name="close"></ion-icon></div></div>`;
+                        cameraBtn.insertAdjacentHTML('afterend', html);
+                        this.updateImageCount();
+                    };
+                    reader.readAsDataURL(file);
+                });
+                input.value = '';
+            },
+
+            removeFile: function(index) {
+                this.selectedFiles[index] = null; // null로 표시 (배열 인덱스 유지)
+                this.updateImageCount();
+            },
+
+            updateImageCount: function() {
+                // 새 파일: 배열에서 null 제외하여 카운트 (DOM 제거 타이밍 이슈 방지)
+                const newCount = this.selectedFiles.filter(f => f !== null).length;
+                // 기존 파일(수정 모드): DOM 기준
+                const existingCount = document.querySelectorAll('#imageRow .preview-box.existing-file').length;
+                document.getElementById('imgCount').innerText = `${newCount + existingCount}/10`;
+            },
+
+            resetWriteForm: function() {
+                document.getElementById('productTitle').value = '';
+                document.getElementById('productDesc').value = '';
+                document.getElementById('productPrice').value = '';
+                document.getElementById('selectedLocationAddress').value = '';
+                document.getElementById('selectedLocationLat').value = '';
+                document.getElementById('selectedLocationLng').value = '';
+                this.selectedFiles = [];
+                this.deletedFileIdxs = [];
+                this.editingUsedIdx = null;
+                this.selectedAddress = null;
+                this.selectedLat = null;
+                this.selectedLng = null;
+
+                // 프리뷰 이미지 제거
+                document.querySelectorAll('#imageRow .preview-box').forEach(el => el.remove());
+                this.updateImageCount();
+
+                // 마커 제거
+                if (this.writeMarker) {
+                    this.writeMarker.setMap(null);
+                    this.writeMarker = null;
+                }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            UsedMarketUI.init();
+        });
+    </script>
+</div>

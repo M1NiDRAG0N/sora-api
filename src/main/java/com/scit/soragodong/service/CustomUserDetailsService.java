@@ -9,6 +9,7 @@ import com.scit.soragodong.domain.entity.Users;
 import com.scit.soragodong.exception.CustomException;
 import com.scit.soragodong.exception.ErrorCode;
 import com.scit.soragodong.repository.UserRepository;
+import com.scit.soragodong.security.CustomUserDetails;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,10 +25,6 @@ public class CustomUserDetailsService implements UserDetailsService {
         Users user = userRepository.findByUserEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorCode.LOGIN_FAILED));
 
-        return org.springframework.security.core.userdetails.User
-                .withUsername(user.getUserEmail().toString())
-                .password(user.getPassword())
-                .roles("USER")
-                .build();
+        return CustomUserDetails.of(user);
     }
 }

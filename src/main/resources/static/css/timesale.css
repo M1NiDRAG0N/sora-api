@@ -1,7 +1,199 @@
-/* ===== 상세 페이지 전용 스타일 ===== */
+﻿/* ===== ?곸꽭 ?섏씠吏 ?꾩슜 ?ㅽ???===== */
+/* 타임세일 페이지 컨테이너 - flex 레이아웃 설정 */
+.timesale-page {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
 
-/* 뒤로가기 버튼 */
-.header-back-btn {
+/* ?ㅻ줈媛湲?踰꾪듉 */
+.timesale-page .header-back-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 24px;
+    color: var(--text-main);
+    border-radius: 50%;
+    transition: 0.2s ease;
+}
+
+.timesale-page .header-back-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+
+
+/* 媛寃??뺣낫 移대뱶 */
+
+.timesale-page .store-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.timesale-page .store-time {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-sub);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.timesale-page .store-time::before {
+    content: "⏰";
+    font-size: 16px;
+}
+
+/* ?뚯떇 由ъ뒪??*/
+.timesale-page .food-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+/* ?뚯떇 ?꾩씠??*/
+.timesale-page .food-item {
+    background: var(--white);
+    border-radius: 18px;
+    padding: 14px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.timesale-page .food-img {
+    width: 80px;
+    height: 80px;
+    border-radius: 14px;
+    object-fit: cover;
+    background: #f5f5f5;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    flex-shrink: 0;
+}
+
+.timesale-page .food-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.timesale-page .food-name {
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.timesale-page .food-price-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.timesale-page .food-price {
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--text-main);
+}
+
+.timesale-page .food-original-price {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-sub);
+    text-decoration: line-through;
+}
+
+.timesale-page .food-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-sub);
+    font-weight: 600;
+}
+
+.timesale-page .food-discount {
+    color: #ff6b6b;
+    font-weight: 800;
+}
+
+.timesale-page .status {
+    padding: 12px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-sub);
+    font-weight: 700;
+    min-height: 40px;
+}
+
+
+/* ===== 상세모달 ===== */
+.reservation-modal {
+    position: absolute;
+    inset: 0;
+    z-index: 1000;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.reservation-modal.active {
+    display: flex;
+    opacity: 1;
+}
+
+.modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    height: 100%;
+    margin-left: auto;
+    background: var(--bg-start);
+    display: flex;
+    flex-direction: column;
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+/* 모달 */
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: transparent;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
+}
+
+.modal-back-btn {
     width: 40px;
     height: 40px;
     display: flex;
@@ -14,11 +206,456 @@
     transition: background 0.2s ease;
 }
 
-.header-back-btn:hover {
+.modal-back-btn:hover {
     background: rgba(0, 0, 0, 0.05);
 }
 
+.modal-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.modal-spacer {
+    width: 40px;
+}
+
+/* 紐⑤떖 蹂몃Ц */
+.modal-body {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px;
+    padding-bottom: 100px;
+}
+
+.modal-body::-webkit-scrollbar {
+    display: none;
+}
+
+/* 媛寃??뺣낫 */
+.modal-store-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--white);
+    border-radius: 16px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-main);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.modal-store-info ion-icon {
+    font-size: 20px;
+    color: var(--primary);
+}
+
+/* ?곹뭹 移대뱶 */
+.modal-product-card {
+    display: flex;
+    gap: 14px;
+    padding: 16px;
+    background: var(--white);
+    border-radius: 18px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.modal-product-img {
+    width: 100px;
+    height: 100px;
+    border-radius: 14px;
+    object-fit: cover;
+    background: #f5f5f5;
+    flex-shrink: 0;
+}
+
+.modal-product-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.modal-product-name {
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.modal-price-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.modal-price-current {
+    font-size: 20px;
+    font-weight: 900;
+    color: #ff6b6b;
+}
+
+.modal-price-original {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-sub);
+    text-decoration: line-through;
+}
+
+.modal-sale-time {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-sub);
+}
+
+/* ?뱀뀡 */
+.modal-section {
+    margin-bottom: 20px;
+}
+
+.modal-section-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text-main);
+    margin: 0 0 12px 0;
+}
+
+/* ?섎웾 議곗젅 */
+.modal-quantity-control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 16px;
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.quantity-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--primary);
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--primary);
+    font-size: 20px;
+}
+
+.quantity-btn:hover {
+    background: var(--primary);
+    color: var(--white);
+}
+
+.quantity-btn:active {
+    transform: scale(0.95);
+}
+
+.quantity-input {
+    width: 60px;
+    height: 50px;
+    border: none;
+    background: transparent;
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--text-main);
+    text-align: center;
+}
+
+.modal-quantity-note {
+    margin-top: 8px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-sub);
+}
+
+/* 珥?湲덉븸 */
+.modal-total-price {
+    padding: 20px;
+    background: var(--white);
+    border-radius: 16px;
+    text-align: center;
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+/* ?덈궡 臾멸뎄 */
+.modal-notice {
+    padding: 16px;
+    background: rgba(178, 164, 255, 0.1);
+    border-radius: 16px;
+    border: 1px solid rgba(178, 164, 255, 0.2);
+}
+
+.modal-notice p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-main);
+    font-weight: 600;
+    text-align: center;
+}
+
+.modal-notice p+p {
+    margin-top: 4px;
+}
+
+/* 紐⑤떖 ?명꽣 */
+.modal-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px;
+    background: var(--white);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.modal-reserve-btn {
+    width: 100%;
+    padding: 18px;
+    border-radius: 16px;
+    border: none;
+    background: var(--primary);
+    color: var(--white);
+    font-size: 16px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 16px rgba(178, 164, 255, 0.3);
+}
+
+.modal-reserve-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(178, 164, 255, 0.4);
+}
+
+.modal-reserve-btn:active {
+    transform: translateY(0);
+}
+
+/* ===== ?밸퀎?몄씪 ?꾩슜 異붽? ?ㅽ???===== */
+
+/* ?ㅽ겕濡??곸뿭 */
+.timesale-page .sale-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 100px;
+    /* ?ㅻ퉬寃뚯씠??怨듦컙 ?뺣낫 */
+}
+
+.timesale-page .no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.timesale-page .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Map */
+.timesale-page .map-wrap {
+    padding: 10px 16px 0;
+}
+
+.timesale-page .map-box {
+    width: 100%;
+    height: 210px;
+    border-radius: 18px;
+    overflow: hidden;
+    background: linear-gradient(180deg, #f0f0ff, #e8e8ff);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 20px rgba(178, 164, 255, 0.10);
+    position: relative;
+}
+
+.timesale-page #map {
+    width: 100%;
+    height: 100%;
+}
+
+.timesale-page .map-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-sub);
+    font-size: 13px;
+    padding: 12px;
+    text-align: center;
+}
+
+/* Tabs */
+.timesale-page .tab-wrap {
+    padding: 12px 16px 8px;
+}
+
+.timesale-page .tabs {
+    background: var(--white);
+    border-radius: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.04);
+}
+
+.timesale-page .tab-btn {
+    padding: 12px 0;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text-sub);
+    cursor: pointer;
+    text-align: center;
+    user-select: none;
+    background: transparent;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.timesale-page .tab-btn.active {
+    color: var(--text-main);
+    background: rgba(178, 164, 255, 0.18);
+}
+
+/* List */
+.timesale-page .list-wrap {
+    padding: 8px 16px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.timesale-page .list-status {
+    padding: 6px 16px 14px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-sub);
+    font-weight: 700;
+    min-height: 30px;
+}
+
+/* Food Card */
+.timesale-page .food-card {
+    background: var(--white);
+    border-radius: 18px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.04);
+    padding: 12px;
+    display: grid;
+    grid-template-columns: 92px 1fr;
+    gap: 12px;
+    align-items: center;
+}
+
+.timesale-page .food-thumb {
+    width: 92px;
+    height: 68px;
+    border-radius: 12px;
+    background: #f3f3f3;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.timesale-page .food-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.timesale-page .food-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--text-main);
+    line-height: 1.35;
+}
+
+.timesale-page .food-store {
+    font-weight: 900;
+    font-size: 13px;
+    margin-bottom: 2px;
+}
+
+.timesale-page .muted {
+    color: var(--text-sub);
+    font-weight: 600;
+}
+
+/* Store Card */
+.timesale-page .store-card {
+    background: var(--white);
+    border-radius: 18px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.04);
+    padding: 12px;
+    display: grid;
+    grid-template-columns: 1fr 92px;
+    gap: 12px;
+    align-items: center;
+}
+
+.timesale-page .store-name {
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--text-main);
+}
+
+.timesale-page .store-times {
+    font-size: 12px;
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-weight: 700;
+}
+
+.timesale-page .store-thumb {
+    width: 92px;
+    height: 68px;
+    border-radius: 12px;
+    background: #f3f3f3;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.timesale-page .store-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Sentinel */
+.timesale-page #sentinel {
+    height: 20px;
+    margin: 10px 0;
+}
+
+
+/* detail-content */
 /* 스크롤 컨텐츠 */
+
 .detail-content {
     flex: 1;
     overflow-y: auto;
@@ -40,7 +677,7 @@
 .detail-store-card {
     background: var(--white);
     border-radius: 20px;
-    padding: 16px;
+    padding: 14px;
     margin: 16px 0;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
     border: 1px solid rgba(0, 0, 0, 0.05);
@@ -83,11 +720,6 @@
     display: flex;
     align-items: center;
     gap: 6px;
-}
-
-.detail-store-time::before {
-    content: "🕐";
-    font-size: 16px;
 }
 
 /* 음식 리스트 */
@@ -177,523 +809,7 @@
     min-height: 40px;
 }
 
-/* Sentinel */
-#detailSentinel {
-    height: 20px;
-    margin: 10px 0;
-}
-
-/* ===== 예약 모달 ===== */
-.reservation-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    display: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.reservation-modal.active {
-    display: flex;
-    opacity: 1;
-}
-
-.modal-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-}
-
-.modal-content {
-    position: relative;
-    width: 100%;
-    max-width: 500px;
-    height: 100%;
-    margin-left: auto;
-    background: var(--bg-start);
-    display: flex;
-    flex-direction: column;
-    animation: slideInRight 0.3s ease-out;
-}
-
-@keyframes slideInRight {
-    from {
-        transform: translateX(100%);
-    }
-
-    to {
-        transform: translateX(0);
-    }
-}
-
-/* 모달 헤더 */
-.modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    background: transparent;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    flex-shrink: 0;
-}
-
-.modal-back-btn {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 24px;
-    color: var(--text-main);
-    border-radius: 50%;
-    transition: background 0.2s ease;
-}
-
-.modal-back-btn:hover {
-    background: rgba(0, 0, 0, 0.05);
-}
-
-.modal-title {
-    font-size: 18px;
-    font-weight: 800;
-    color: var(--text-main);
-    margin: 0;
-}
-
-.modal-spacer {
-    width: 40px;
-}
-
-/* 모달 본문 */
-.modal-body {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 16px;
-    padding-bottom: 100px;
-}
-
-.modal-body::-webkit-scrollbar {
-    display: none;
-}
-
-/* 가게 정보 */
-.modal-store-info {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 16px;
-    background: var(--white);
-    border-radius: 16px;
-    margin-bottom: 16px;
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text-main);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-}
-
-.modal-store-info ion-icon {
-    font-size: 20px;
-    color: var(--primary);
-}
-
-/* 상품 카드 */
-.modal-product-card {
-    display: flex;
-    gap: 14px;
-    padding: 16px;
-    background: var(--white);
-    border-radius: 18px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-}
-
-.modal-product-img {
-    width: 100px;
-    height: 100px;
-    border-radius: 14px;
-    object-fit: cover;
-    background: #f5f5f5;
-    flex-shrink: 0;
-}
-
-.modal-product-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.modal-product-name {
-    font-size: 16px;
-    font-weight: 900;
-    color: var(--text-main);
-    margin: 0;
-}
-
-.modal-price-wrap {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-}
-
-.modal-price-current {
-    font-size: 20px;
-    font-weight: 900;
-    color: #ff6b6b;
-}
-
-.modal-price-original {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text-sub);
-    text-decoration: line-through;
-}
-
-.modal-sale-time {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-sub);
-}
-
-/* 섹션 */
-.modal-section {
-    margin-bottom: 20px;
-}
-
-.modal-section-title {
-    font-size: 15px;
-    font-weight: 800;
-    color: var(--text-main);
-    margin: 0 0 12px 0;
-}
-
-/* 수량 조절 */
-.modal-quantity-control {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-    padding: 16px;
-    background: var(--white);
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-}
-
-.quantity-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 2px solid var(--primary);
-    background: var(--white);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: var(--primary);
-    font-size: 20px;
-}
-
-.quantity-btn:hover {
-    background: var(--primary);
-    color: var(--white);
-}
-
-.quantity-btn:active {
-    transform: scale(0.95);
-}
-
-.quantity-input {
-    width: 60px;
-    height: 50px;
-    border: none;
-    background: transparent;
-    font-size: 24px;
-    font-weight: 900;
-    color: var(--text-main);
-    text-align: center;
-}
-
-.modal-quantity-note {
-    margin-top: 8px;
-    text-align: center;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-sub);
-}
-
-/* 총 금액 */
-.modal-total-price {
-    padding: 20px;
-    background: var(--white);
-    border-radius: 16px;
-    text-align: center;
-    font-size: 28px;
-    font-weight: 900;
-    color: var(--primary);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-}
-
-/* 안내 문구 */
-.modal-notice {
-    padding: 16px;
-    background: rgba(178, 164, 255, 0.1);
-    border-radius: 16px;
-    border: 1px solid rgba(178, 164, 255, 0.2);
-}
-
-.modal-notice p {
-    margin: 0;
-    font-size: 12px;
-    line-height: 1.6;
-    color: var(--text-main);
-    font-weight: 600;
-    text-align: center;
-}
-
-.modal-notice p+p {
-    margin-top: 4px;
-}
-
-/* 모달 푸터 */
-.modal-footer {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 16px;
-    background: var(--white);
-    border-top: 1px solid rgba(0, 0, 0, 0.05);
-    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.04);
-}
-
-.modal-reserve-btn {
-    width: 100%;
-    padding: 18px;
-    border-radius: 16px;
-    border: none;
-    background: var(--primary);
-    color: var(--white);
-    font-size: 16px;
-    font-weight: 900;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 16px rgba(178, 164, 255, 0.3);
-}
-
-.modal-reserve-btn:hover {
-    background: var(--primary-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(178, 164, 255, 0.4);
-}
-
-.modal-reserve-btn:active {
-    transform: translateY(0);
-}
-
-/* ===== 특별세일 전용 추가 스타일 ===== */
-
-/* 스크롤 영역 */
-.sale-content {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 100px;
-    /* 네비게이션 공간 확보 */
-}
-
-.no-scrollbar::-webkit-scrollbar {
-    display: none;
-}
-
-.no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-
-/* Map */
-.map-wrap {
-    padding: 10px 16px 0;
-}
-
-.map-box {
-    width: 100%;
-    height: 210px;
-    border-radius: 18px;
-    overflow: hidden;
-    background: linear-gradient(180deg, #f0f0ff, #e8e8ff);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    box-shadow: 0 10px 20px rgba(178, 164, 255, 0.10);
-    position: relative;
-}
-
-#map {
-    width: 100%;
-    height: 100%;
-}
-
-.map-placeholder {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-sub);
-    font-size: 13px;
-    padding: 12px;
-    text-align: center;
-}
-
-/* Tabs */
-.tab-wrap {
-    padding: 12px 16px 8px;
-}
-
-.tabs {
-    background: var(--white);
-    border-radius: 16px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    border: 1px solid rgba(0, 0, 0, 0.06);
-    overflow: hidden;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.04);
-}
-
-.tab-btn {
-    padding: 12px 0;
-    font-size: 14px;
-    font-weight: 800;
-    color: var(--text-sub);
-    cursor: pointer;
-    text-align: center;
-    user-select: none;
-    background: transparent;
-    border: none;
-    transition: all 0.2s ease;
-}
-
-.tab-btn.active {
-    color: var(--text-main);
-    background: rgba(178, 164, 255, 0.18);
-}
-
-/* List */
-.list-wrap {
-    padding: 8px 16px 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.list-status {
-    padding: 6px 16px 14px;
-    text-align: center;
-    font-size: 12px;
-    color: var(--text-sub);
-    font-weight: 700;
-    min-height: 30px;
-}
-
-/* Food Card */
-.food-card {
-    background: var(--white);
-    border-radius: 18px;
-    border: 1px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.04);
-    padding: 12px;
-    display: grid;
-    grid-template-columns: 92px 1fr;
-    gap: 12px;
-    align-items: center;
-}
-
-.food-thumb {
-    width: 92px;
-    height: 68px;
-    border-radius: 12px;
-    background: #f3f3f3;
-    overflow: hidden;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.food-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.food-lines {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    font-size: 12px;
-    color: var(--text-main);
-    line-height: 1.35;
-}
-
-.food-store {
-    font-weight: 900;
-    font-size: 13px;
-    margin-bottom: 2px;
-}
-
-.muted {
-    color: var(--text-sub);
-    font-weight: 600;
-}
-
-/* Store Card */
-.store-card {
-    background: var(--white);
-    border-radius: 18px;
-    border: 1px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.04);
-    padding: 12px;
-    display: grid;
-    grid-template-columns: 1fr 92px;
-    gap: 12px;
-    align-items: center;
-}
-
-.store-name {
-    font-size: 14px;
-    font-weight: 900;
-    color: var(--text-main);
-    margin-bottom: 6px;
-}
-
-.store-times {
-    font-size: 12px;
-    color: var(--text-main);
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    font-weight: 700;
-}
-
-.store-thumb {
-    width: 92px;
-    height: 68px;
-    border-radius: 12px;
-    background: #f3f3f3;
-    overflow: hidden;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.store-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-/* Sentinel */
-#sentinel {
+.detail-content #detailSentinel {
     height: 20px;
     margin: 10px 0;
 }

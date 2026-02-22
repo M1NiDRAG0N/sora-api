@@ -32,6 +32,10 @@ public class ProductStockHistory {
     private Integer historyIdx;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "STORE_IDX", nullable = false)
+    private Store store;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "PRODUCT_NUM", nullable = false)
     private StoreProduct storeProduct;
 

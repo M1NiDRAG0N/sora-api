@@ -1,7 +1,8 @@
 package com.scit.soragodong.domain.entity;
 
+import org.hibernate.annotations.Formula;
+
 import com.scit.soragodong.common.BaseEntity;
-import com.scit.soragodong.domain.enums.UserRole;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -33,7 +34,8 @@ public class Board extends BaseEntity {
     private String boardContent;
 
     @Column(name = "IS_USE", nullable = false)
-    private Boolean isUse;
+    @Builder.Default // 빌더 쓸 때도 이 값이 기본으로 들어가게 해줌
+    private Boolean isUse = true;
 
     @Builder.Default
     @Column(name = "LIKE_COUNT", nullable = false)
@@ -44,10 +46,35 @@ public class Board extends BaseEntity {
     @Column(name = "VIEW_COUNT", nullable = false)
     private Integer viewCount = 0;
 
-    @PrePersist
-    protected void onCreate() {
-        if (this.isUse == null)
-            this.isUse = true;
+    @OneToOne(fetch = FetchType.LAZY) // 또는 @ManyToOne
+    @JoinColumn(name = "FILE_GRP_IDX")
+    private FileGrp fileGrp;
+
+    @Formula("(SELECT count(1) FROM BOARD_REPLY r WHERE r.BOARD_IDX = BOARD_IDX and r.IS_USE = true)")
+    private int replyCount;
+
+    public void delete() {
+        this.isUse = false;
     }
 
+    public void updateBoard(String title, String content, String category) {
+        this.boardTitle = title;
+        this.boardContent = content;
+        this.boardCategory = category;
+    }
+
+    // 추천 증가 메서드
+    // 서비스 단에서 그냥 1더해서 저장해도 되지만 여기서 숫자 증가 로직을 만들어놓는게 더 안정적임.
+    public void increaseLike() {
+        this.likeCount++;
+    }
+
+    public void decreaseLike() {
+        this.likeCount--;
+    }
+
+    // 조회수 증가 메서드
+    public void increaseViewCount() {
+        this.viewCount++;
+    }
 }
