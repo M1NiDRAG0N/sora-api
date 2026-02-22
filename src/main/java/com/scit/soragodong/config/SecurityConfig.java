@@ -42,7 +42,9 @@ public class SecurityConfig {
                     .authorizeHttpRequests(auth -> auth
                                     .requestMatchers(
                                                     "/landing", "/auth/**", "/"
-                                                    , "/css/**", "/js/**", "/images/**", "/static/**")
+                                                    , "/css/**", "/js/**", "/images/**", "/static/**"
+                                            //모니터링 용 추가
+                                            , "/api/internal/**")
                                     .permitAll()
                                     .anyRequest().authenticated())
                     .formLogin(form -> form
