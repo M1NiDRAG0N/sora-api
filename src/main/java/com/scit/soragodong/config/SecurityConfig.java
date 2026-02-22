@@ -6,7 +6,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -21,59 +20,48 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final CustomUserDetailsService userDetailsService;
-    private final CustomAuthenticationSuccessHandler successHandler;
-    private final CustomAuthenticationFailureHandler failureHandler;
+        private final CustomUserDetailsService userDetailsService;
+        private final CustomAuthenticationSuccessHandler successHandler;
+        private final CustomAuthenticationFailureHandler failureHandler;
 
-    @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-        return http.getSharedObject(AuthenticationManagerBuilder.class)
-                .userDetailsService(userDetailsService)
-                .passwordEncoder(bCryptPasswordEncoder())
-                .and()
-                .build();
-    }
+        @Bean
+        public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
+                AuthenticationManagerBuilder authenticationManagerBuilder = http
+                                .getSharedObject(AuthenticationManagerBuilder.class);
+                authenticationManagerBuilder
+                                .userDetailsService(userDetailsService)
+                                .passwordEncoder(bCryptPasswordEncoder());
+                return authenticationManagerBuilder.build();
+        }
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        @Bean
+        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        http
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    "/landing"
-                    , "/auth/**"
-                    , "/"
-                ).permitAll()
-                .anyRequest().authenticated()
-            )
-            .formLogin(form -> form
-                .loginPage("/auth/login")
-                .loginProcessingUrl("/auth/login-proc")
-                .successHandler(successHandler)
-                .failureHandler(failureHandler)
-                .usernameParameter("userEmail")
-                .passwordParameter("password")
-            )
-            .logout(logout -> logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/login")
-            )
-            .userDetailsService(userDetailsService);
+                http
+                    .csrf(csrf -> csrf.disable())
+                    .authorizeHttpRequests(auth -> auth
+                                    .requestMatchers(
+                                                    "/landing", "/auth/**", "/"
+                                                    , "/css/**", "/js/**", "/images/**", "/static/**")
+                                    .permitAll()
+                                    .anyRequest().authenticated())
+                    .formLogin(form -> form
+                                    .loginPage("/auth/login")
+                                    .loginProcessingUrl("/auth/login-proc")
+                                    .successHandler(successHandler)
+                                    .failureHandler(failureHandler)
+                                    .usernameParameter("userEmail")
+                                    .passwordParameter("password"))
+                    .logout(logout -> logout
+                                    .logoutUrl("/logout")
+                                    .logoutSuccessUrl("/login"))
+                    .userDetailsService(userDetailsService);
 
-        return http.build();
-    }
+                return http.build();
+        }
 
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return web -> web.ignoring()
-            .requestMatchers("/css/**", "/js/**", "/images/**", "/static/**"
-                                //테스트용 추가
-                                ,"admin/**");
-    }
-
-    @Bean
-    public BCryptPasswordEncoder bCryptPasswordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        @Bean
+        public BCryptPasswordEncoder bCryptPasswordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 }

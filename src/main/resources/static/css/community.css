@@ -22,7 +22,8 @@
 .cat-scroll::-webkit-scrollbar,
 .category-select-area::-webkit-scrollbar,
 .image-attach-row::-webkit-scrollbar,
-.chat-body::-webkit-scrollbar {
+.chat-body::-webkit-scrollbar,
+#viewForm::-webkit-scrollbar {
     display: none;
     /* Chrome, Safari */
 }
@@ -35,6 +36,16 @@
 
 /* --- 2. 커뮤니티 메인 (Community) --- */
 
+/* 커뮤니티 페이지 컨테이너 - flex 레이아웃 설정 */
+.community-page,
+.detail-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
 /* 스크롤 영역 */
 .community-scroll-area {
     flex: 1;
@@ -44,7 +55,7 @@
 }
 
 /* 카테고리 바 (Sticky) */
-.category-bar {
+.category-bar2 {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -123,20 +134,20 @@
 }
 
 /* 검색 모드 토글 */
-.category-bar.search-mode .cat-scroll {
+.category-bar2.search-mode .cat-scroll {
     opacity: 0;
     transform: translateX(-20px);
     pointer-events: none;
 }
 
-.category-bar.search-mode .search-input-box {
+.category-bar2.search-mode .search-input-box {
     opacity: 1;
     pointer-events: auto;
     transform: translateX(0);
 }
 
 /* 피드 리스트 */
-.feed-list {
+.feed-list2 {
     padding: 15px 20px;
     display: flex;
     flex-direction: column;
@@ -146,7 +157,7 @@
 .feed-card {
     background: rgba(255, 255, 255, 0.9);
     border-radius: 20px;
-    padding: 20px;
+    padding: 15px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.5);
     cursor: pointer;
@@ -216,6 +227,7 @@
 }
 
 .feed-text-area {
+    padding: 5px;
     flex: 1;
 }
 
@@ -262,28 +274,6 @@
     gap: 4px;
 }
 
-/* 글쓰기 버튼 (FAB) */
-.fab-write {
-    position: absolute;
-    bottom: 90px;
-    right: 20px;
-    width: 50px;
-    height: 50px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    border: 1px solid #eee;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 24px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-    z-index: 100;
-}
-
-
 /* --- 3. 글쓰기 페이지 (Write) --- */
 
 .write-header {
@@ -300,7 +290,7 @@
     cursor: pointer;
 }
 
-.page-title {
+.page-title2 {
     font-weight: 700;
     color: #333;
     font-size: 18px;
@@ -318,6 +308,24 @@
     gap: 8px;
     overflow-x: auto;
     padding: 10px 20px;
+}
+
+/* 드래그 가능한 영역의 기본 커서 */
+.cat-scroll,
+.category-select-area {
+    cursor: grab;
+    /* 손바닥 모양 */
+    overflow-x: auto;
+    /* 드래그할 때 텍스트가 선택되는 것을 방지 */
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* 드래그 중일 때 커서 (움켜쥔 손) */
+.cat-scroll.active,
+.category-select-area.active {
+    cursor: grabbing;
+    cursor: -webkit-grabbing;
 }
 
 .select-chip {
@@ -351,7 +359,7 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
 }
 
-.title-input {
+#title-input {
     width: 100%;
     border: none;
     outline: none;
@@ -367,81 +375,23 @@
     margin-bottom: 20px;
 }
 
-.content-textarea {
+#content-textarea {
     width: 100%;
-    flex: 1;
+    /* flex: 1; */
     border: none;
     outline: none;
     resize: none;
     font-size: 15px;
     line-height: 1.6;
     color: #333;
+    overflow-y: hidden;
+    height: auto;
 }
 
-/* 이미지 첨부 */
-.image-attach-row {
-    display: flex;
-    gap: 10px;
+/* 이미지 첨부 (기본은 common.css, 커뮤니티 전용 오버라이드) */
+.community-page .image-attach-row {
     margin-top: 20px;
-    overflow-x: auto;
     padding-bottom: 5px;
-}
-
-.camera-btn {
-    width: 70px;
-    height: 70px;
-    border: 1px solid #eee;
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    color: #aaa;
-    cursor: pointer;
-    background: #fafafa;
-    flex-shrink: 0;
-}
-
-.camera-icon {
-    font-size: 24px;
-    margin-bottom: 4px;
-}
-
-.camera-count {
-    font-size: 11px;
-}
-
-/* 미리보기 박스 */
-.preview-box {
-    position: relative;
-    width: 70px;
-    height: 70px;
-    flex-shrink: 0;
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid #eee;
-}
-
-.preview-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.btn-remove-img {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    width: 18px;
-    height: 18px;
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 50%;
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 12px;
-    cursor: pointer;
 }
 
 
@@ -566,18 +516,30 @@
 
 .stat-item {
     display: flex;
-    align-items: center;
     gap: 6px;
     font-size: 13px;
     color: #888;
     font-weight: 500;
 }
 
+.like-btn {
+    color: #888;
+    fill: none;
+}
+
+/* 꽉 찬 하트일 때 빨간색 */
+.heart-active {
+    color: #ff4b4b;
+    /* 예쁜 빨간색 */
+}
+
 .stat-item ion-icon {
     font-size: 18px;
 }
 
-/* 댓글 섹션 */
+/* =========================================
+   [수정됨] 댓글 섹션 스타일
+   ========================================= */
 .comment-section-title {
     font-size: 15px;
     font-weight: 700;
@@ -589,16 +551,27 @@
 .comment-list {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 7px;
 }
 
+/* 댓글 카드 (양쪽 정렬을 위해 수정) */
 .comment-item {
     display: flex;
-    gap: 12px;
+    justify-content: space-between;
+    /* 왼쪽 그룹과 오른쪽 버튼 사이 벌리기 */
+    align-items: flex-start;
     background: white;
     padding: 15px;
     border-radius: 16px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+/* 왼쪽: 프사 + 텍스트 묶음 (새로 추가) */
+.comment-left-group {
+    display: flex;
+    gap: 12px;
+    flex: 1;
+    /* 남은 공간 모두 차지 */
 }
 
 .comment-user-img {
@@ -611,10 +584,11 @@
 }
 
 .comment-content {
-    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 4px;
+    padding-right: 10px;
+    /* 텍스트가 버튼 침범하지 않게 */
 }
 
 .comment-user-name {
@@ -627,25 +601,93 @@
     font-size: 13px;
     color: #555;
     line-height: 1.4;
+    word-break: break-all;
+    /* 긴 단어 줄바꿈 */
+}
+
+/* 오른쪽: 더보기 버튼 박스 (새로 추가) */
+.comment-action-box {
+    position: relative;
+    /* 드롭다운 위치 기준 */
+    flex-shrink: 0;
+    /* 사이즈 줄어들지 않음 */
+}
+
+/* 댓글 점 3개 버튼 */
+.btn-comment-more {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #bbb;
+    cursor: pointer;
+    padding: 4px;
+    margin-top: -4px;
+    /* 위치 미세 조정 */
+}
+
+/* 댓글 전용 드롭다운 메뉴 */
+.comment-dropdown {
+    display: none;
+    /* 기본 숨김 */
+    position: absolute;
+    right: 0;
+    top: 24px;
+    background: white;
+    border: 1px solid #eee;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    width: 80px;
+    z-index: 50;
+    overflow: hidden;
+}
+
+.comment-dropdown.active {
+    display: block;
+    /* 활성화 시 보임 */
+    animation: fadeIn 0.2s ease-out;
+}
+
+/* 댓글 메뉴 아이템 */
+.comment-menu-item {
+    display: block;
+    width: 100%;
+    padding: 8px 0;
+    text-align: center;
+    background: white;
+    border: none;
+    border-bottom: 1px solid #f9f9f9;
+    font-size: 13px;
+    cursor: pointer;
+    color: #333;
+}
+
+.comment-menu-item:last-child {
+    border-bottom: none;
+    color: #ff4d4f;
+    /* 삭제 버튼 빨강 */
+}
+
+.comment-menu-item:hover {
+    background-color: #f5f5f5;
 }
 
 /* 하단 플로팅 입력창 (상세보기용) */
 .input-container-floating {
-    position: absolute;
+    /* position: absolute; */
     bottom: 20px;
     left: 20px;
     right: 20px;
     height: 60px;
     background: white;
-    border-radius: 30px;
+    border-radius: 20px;
     display: flex;
     align-items: center;
     padding: 0 10px 0 20px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     z-index: 30;
 }
 
-.input-field {
+.input-field2 {
     flex: 1;
     border: none;
     outline: none;
@@ -653,9 +695,29 @@
     background: transparent;
 }
 
-.input-field::placeholder {
+.input-field2::placeholder {
     color: #aaa;
 }
+
+.input-field2 {
+    width: 100%;
+    padding: 16px;
+    /* border: 1px solid rgba(255, 255, 255, 0.6); */
+    border-radius: 16px;
+    font-size: 15px;
+    outline: none;
+    transition: 0.2s;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+}
+
+.input-field2:focus {
+    background: var(--white);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(178, 164, 255, 0);
+}
+
 
 .btn-mic {
     font-size: 24px;
@@ -682,4 +744,421 @@
 
 .btn-send-circle:active {
     background: #B2A4FF;
+}
+
+/* ✅ 앱 스타일 풀스크린 모달 */
+.full-screen-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    /* 배경색 */
+    z-index: 5000;
+    /* 제일 위에 뜨게 */
+
+    /* 처음엔 숨김 & 아래로 내려가 있음 */
+    visibility: hidden;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-in-out, visibility 0.3s;
+    overflow-y: auto;
+    /* 내용이 길면 스크롤 */
+}
+
+/* 활성화되면 올라옴 */
+.full-screen-modal.active {
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* 모달이 떴을 때 뒤에 있는 메인 화면 스크롤 막기 */
+body.modal-open {
+    overflow: hidden;
+}
+
+#viewForm {
+    position: absolute;
+    /* 화면 기준 고정 */
+    top: 0;
+    /* 처음엔 화면 아래쪽(100%)에 숨겨둠 */
+    left: 100%;
+    width: 100%;
+    height: 100%;
+    /* 화면 꽉 차게 */
+    z-index: 5000;
+    /* 다른 모든 요소보다 위에 오도록 (헤더, 네비보다 높게) */
+    background-color: #fff;
+    /* 배경색 필수 (투명하면 뒤가 비침) */
+    transition: left 0.3s ease-in-out;
+    /* 부드럽게 올라오는 애니메이션 */
+    overflow-y: auto;
+    /* 내용이 길면 스크롤 가능하게 */
+}
+
+#writeForm {
+    position: absolute;
+    /* 화면 기준 고정 */
+    top: 0;
+    /* 처음엔 화면 아래쪽(100%)에 숨겨둠 */
+    left: 100%;
+    width: 100%;
+    height: 100%;
+    /* 화면 꽉 차게 */
+    z-index: 5001;
+    /* 다른 모든 요소보다 위에 오도록 (헤더, 네비보다 높게) */
+    background-color: #fff;
+    /* 배경색 필수 (투명하면 뒤가 비침) */
+    transition: left 0.3s ease-in-out;
+    /* 부드럽게 올라오는 애니메이션 */
+    overflow-y: auto;
+    /* 내용이 길면 스크롤 가능하게 */
+}
+
+#viewForm.active,
+#writeForm.active {
+    left: 0;
+}
+
+/* --- 이미지 슬라이더 --- */
+.slider-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 15px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f0f0f0;
+}
+
+.slider-wrapper {
+    display: flex;
+    transition: transform 0.3s ease-in-out;
+}
+
+.slider-slide {
+    min-width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000;
+}
+
+.slider-slide img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+    max-height: 500px;
+}
+
+.slider-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    background: rgba(0, 0, 0, 0.4);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    z-index: 10;
+    transition: background 0.2s;
+}
+
+.slider-btn:active {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.slider-btn.prev {
+    left: 10px;
+}
+
+.slider-btn.next {
+    right: 10px;
+}
+
+.slider-dots {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+}
+
+.slider-dot {
+    width: 8px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.slider-dot.active {
+    background: white;
+    transform: scale(1.2);
+}
+
+
+
+
+
+
+
+
+/* =========================================
+       1. 더보기 버튼 & 드롭다운 메뉴 스타일
+       (기본은 common.css, 커뮤니티 전용 오버라이드)
+       ========================================= */
+.header-right-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.community-page .custom-dropdown-menu {
+    top: 40px;
+    width: 140px;
+}
+
+
+/* =========================================
+       2. 게시글 삭제 확인 모달 스타일 (Image 3)
+       ========================================= */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(5px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    padding: 20px;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.modal-overlay.show {
+    display: flex;
+}
+
+.custom-modal {
+    background: white;
+    width: 300px;
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 12px;
+}
+
+.modal-desc {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.5;
+    margin-bottom: 24px;
+    word-break: keep-all;
+}
+
+.modal-btn-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.modal-btn {
+    flex: 1;
+    padding: 12px 0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-close {
+    background-color: #f0f0f0;
+    color: #666;
+}
+
+.btn-delete2 {
+    background-color: #ff6b6b;
+    /* 사진 속 살구빛 도는 빨강 */
+    color: white;
+}
+
+.comment-time {
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 2px;
+    margin-left: 5px;
+}
+
+/* =========================================
+   [추가] 댓글 수정 모드 스타일
+   ========================================= */
+
+/* 수정 모드일 때 숨길 요소들 */
+.comment-item.editing .comment-text,
+.comment-item.editing .comment-action-box {
+    display: none;
+}
+
+/* 수정용 폼 박스 (기본은 숨김) */
+.comment-edit-form {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    margin-top: 5px;
+    gap: 8px;
+}
+
+/* 수정 모드일 때 폼 박스 보이기 */
+.comment-item.editing .comment-edit-form {
+    display: flex;
+}
+
+/* 수정용 입력창 */
+.comment-edit-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 0.3px solid #B2A4FF;
+    /* 테두리를 메인 색상으로 강조 */
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+    resize: none;
+    font-family: inherit;
+    /* 기본 폰트 상속 */
+}
+
+.comment-edit-input:focus {
+    box-shadow: 0 0 0 3px rgba(178, 164, 255, 0.2);
+}
+
+/* 수정용 버튼 묶음 (완료, 취소) */
+.comment-edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.btn-comment-save,
+.btn-comment-cancel {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-comment-cancel {
+    background: #f0f0f0;
+    color: #555;
+}
+
+.btn-comment-save {
+    background: var(--primary);
+    color: white;
+}
+
+
+
+
+
+
+/* 댓글 삭제 로직 */
+
+/* =========================================
+   [추가] 댓글 수정 모드 스타일
+   ========================================= */
+/* =========================================
+   [수정됨] 댓글 수정 모드 & 헤더 스타일
+   ========================================= */
+
+/* 댓글 헤더 (닉네임, 시간, 버튼이 들어가는 줄) */
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    /* 왼쪽(닉네임)과 오른쪽(버튼) 양끝 정렬 */
+    align-items: center;
+    width: 100%;
+}
+
+/* 닉네임과 시간을 묶는 그룹 */
+.comment-info-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 수정 모드일 때 숨길 요소들 (일반 텍스트, 점 3개 메뉴) */
+.comment-item.editing .comment-text,
+.comment-item.editing .comment-action-box {
+    display: none;
+}
+
+/* 수정용 버튼 묶음 (기본은 숨김) */
+.comment-edit-actions {
+    display: none;
+    gap: 6px;
+}
+
+/* 수정 모드일 때 버튼 보이기 */
+.comment-item.editing .comment-edit-actions {
+    display: flex;
+}
+
+/* 수정용 폼 박스 (기본은 숨김) */
+.comment-edit-form {
+    display: none;
+    width: 100%;
+    margin-top: 8px;
+    /* 헤더와의 간격 */
+}
+
+/* 수정 모드일 때 입력창 보이기 */
+.comment-item.editing .comment-edit-form {
+    display: block;
+}
+
+
+/* 취소/수정 버튼 스타일 (사진 참고) */
+.btn-comment-cancel,
+.btn-comment-save {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-comment-cancel {
+    background: #f9f9f9;
+    color: #555;
+}
+
+.btn-comment-save {
+    background: #D0C9FF;
+    /* 보라색 */
+    color: white;
 }

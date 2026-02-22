@@ -1,0 +1,97 @@
+<div class="profile-app-container" th:fragment="div">
+
+    <div class="filter-tabs">
+        <button class="filter-btn active">전체</button>
+        <button class="filter-btn">중고거래</button>
+        <button class="filter-btn">1:1채팅</button>
+    </div>
+
+    <div class="chat-list-content"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            chatList.init();
+        });
+
+        const chatList = {
+            data: [], // 전체 데이터 저장
+            currentFilter: 'ALL', // 현재 필터 상태
+            stompClient: null,
+            userId: null, // 로그인한 사용자 ID (API 등으로 가져와야 함)
+
+            init: () => {
+                chatList.load();
+                chatList.bindEvents();
+                chatList.connectWebSocket();
+            },
+
+            load: () => {
+                fetch('/api/chat/list')
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.json();
+                    })
+                    .then(data => {
+                        chatList.data = data;
+                        chatList.render();
+
+                        // 데이터 로드 후 사용자 ID 추출 (임시: 첫 번째 데이터가 있다면 거기서 유추하거나 별도 API 필요)
+                        // 실제로는 HTML에 userIdx를 hidden input으로 박아두거나, /api/me 호출 필요
+                        // 여기서는 생략하고 목록 렌더링에 집중
+                    })
+                    .catch(error => console.error('Error loading chat list:', error));
+            },
+        }
+        const Renderer = {
+            createUsedCardHTML: (dto) => {
+                const profileImg = dto.otherUserProfileIdx != null ? `/img/${dto.otherUserProfileIdx}` : '/images/default-profile.png';
+                const productImg = profileImg; // 임시
+                const timeAgo = (window.Utils && window.Utils.timeAgo) ? Utils.timeAgo(dto.lastMessageAt) : (dto.lastMessageAt || '');
+
+                return `
+                        <div class="chat-item market" onclick="location.href='/chat/room/${dto.chatRoomIdx}'">
+                            <div class="chat-thumb-wrap">
+                                <img src="${productImg}" class="chat-thumb">
+                                <img src="${profileImg}" class="profile-badge">
+                            </div>
+                            <div class="chat-info">
+                                <div class="chat-top">
+                                    <span class="chat-name">${dto.otherUserNickname}</span>
+                                    <span class="chat-time">${timeAgo}</span>
+                                </div>
+                                <div class="chat-bottom">
+                                    <div class="chat-preview">${dto.lastMessage || '대화 내용이 없습니다.'}</div>
+                                    ${dto.unreadCount > 0 ? `<div class="unread-badge">${dto.unreadCount}</div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                `;
+            },
+            createNormalCardHtml: (dto) => {
+                const profileImg = dto.otherUserProfileIdx != null ? `/img/${dto.otherUserProfileIdx}` : '/images/default-profile.png';
+                const timeAgo = (window.Utils && window.Utils.timeAgo) ? Utils.timeAgo(dto.lastMessageAt) : (dto.lastMessageAt || '');
+
+                return `
+                        <div class="chat-item" onclick="location.href='/chat/room/${dto.chatRoomIdx}'">
+                            <div class="chat-thumb-wrap">
+                                <img src="${profileImg}" class="chat-thumb">
+                            </div>
+                            <div class="chat-info">
+                                <div class="chat-top">
+                                    <span class="chat-name">${dto.otherUserNickname}</span>
+                                    <span class="chat-time">${timeAgo}</span>
+                                </div>
+                                <div class="chat-bottom">
+                                    <div class="chat-preview">${dto.lastMessage || '대화 내용이 없습니다.'}</div>
+                                    ${dto.unreadCount > 0 ? `<div class="unread-badge">${dto.unreadCount}</div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                `;
+            }
+        }
+    </script>
+</div>

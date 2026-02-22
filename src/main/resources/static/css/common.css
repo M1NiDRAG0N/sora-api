@@ -205,80 +205,6 @@ button {
     color: var(--text-sub);
 }
 
-/* 슬라이더 영역 */
-.slider-section {
-    width: 100%;
-    padding: 20px 0;
-    margin-bottom: 20px;
-}
-
-.swiper {
-    width: 100%;
-    padding-bottom: 40px !important;
-}
-
-/* ✅ 카드 스타일 (중앙 정렬 강화) */
-.swiper-slide {
-    background: var(--white);
-    border-radius: 20px;
-    width: 260px !important;
-    height: 180px !important;
-    padding: 25px;
-    /* Flexbox 중앙 정렬 */
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    align-items: center !important;
-    text-align: center !important;
-    /* 텍스트 강제 중앙 */
-    box-shadow: 0 10px 20px rgba(178, 164, 255, 0.15);
-    transition: transform 0.3s;
-}
-
-.swiper-slide-active {
-    transform: scale(1.05);
-}
-
-.card-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: #F0EDFF;
-    color: var(--primary-dark);
-    font-size: 24px;
-    margin-bottom: 15px;
-    /* 아이콘 내부 중앙 정렬 */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-left: auto;
-    margin-right: auto;
-    /* 마진 오토로 한번 더 중앙 보장 */
-}
-
-.card-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text-main);
-    margin-bottom: 8px;
-    width: 100%;
-}
-
-.card-desc {
-    font-size: 12px;
-    color: var(--text-sub);
-    line-height: 1.4;
-    word-break: keep-all;
-    width: 100%;
-}
-
-.swiper-pagination-bullet-active {
-    background: var(--primary-dark) !important;
-    width: 20px;
-    border-radius: 5px;
-    transition: width 0.3s;
-}
-
 /* 6. 입력 폼 & 버튼 */
 .form-area {
     padding: 10px 25px 40px;
@@ -525,6 +451,7 @@ input[type="checkbox"] {
 .bottom-nav {
     position: absolute;
     bottom: 0;
+    left: 0;
     width: 100%;
     height: 80px;
     z-index: 50;
@@ -806,5 +733,284 @@ input[type="checkbox"] {
 
 .chat-close-btn {
     font-size: 28px;
+    cursor: pointer;
+}
+
+/* ========== Signup Form Styles ========== */
+
+/* 이메일 인증 섹션 */
+.email-section {
+    margin-bottom: 24px;
+}
+
+/* 인증 코드 입력 섹션 */
+.verification-section {
+    margin-bottom: 24px;
+    padding: 20px;
+    background: rgba(102, 126, 234, 0.08);
+    border-radius: 16px;
+    border-left: 4px solid var(--primary-dark);
+}
+
+/* 인증 코드 발송 버튼 */
+.btn-send-code {
+    width: 100%;
+    padding: 14px;
+    background: var(--primary-dark);
+    color: var(--white);
+    border: none;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 12px;
+}
+
+.btn-send-code:active {
+    transform: scale(0.98);
+    background: var(--primary);
+}
+
+.btn-send-code:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* 이메일 인증 버튼 */
+.btn-verify-code {
+    width: 100%;
+    padding: 14px;
+    background: var(--primary-dark);
+    color: var(--white);
+    border: none;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-verify-code:active {
+    transform: scale(0.98);
+    background: var(--primary);
+}
+
+/* 주소 검색 버튼 */
+.geocode_btn {
+    padding: 12px;
+    background: #555;
+    color: var(--white);
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.geocode_btn:active {
+    transform: scale(0.98);
+    background: #444;
+}
+
+/* 닉네임 중복확인 버튼 */
+.btn-check-nickname {
+    padding: 12px;
+    background: #555;
+    color: var(--white);
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-check-nickname:active {
+    transform: scale(0.98);
+    background: #444;
+}
+
+/* 닉네임 상태 메시지 */
+.nickname-status {
+    display: block;
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* 회원가입 폼 섹션 */
+.signup-form-section {
+    animation: slideUp 0.3s ease-out;
+    margin-bottom: 40px;
+}
+
+.signup-form-section .btn-primary {
+    margin-top: 20px;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fab-write {
+    position: absolute;
+    bottom: 90px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 28px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    z-index: 100;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.fab-write:active{
+    transform: scale(0.92);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* =========================================
+   12. 공통 컴포넌트 - 드롭다운 메뉴
+   ========================================= */
+
+.custom-dropdown-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    min-width: 140px;
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 8px 0;
+    z-index: 1000;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.custom-dropdown-menu.active {
+    display: block;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.custom-dropdown-menu.hide {
+    display: none;
+}
+
+.menu-item {
+    display: block;
+    width: 100%;
+    padding: 12px 0;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 500;
+    color: #333;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.1s;
+}
+
+.menu-item:active {
+    background-color: #f5f5f5;
+}
+
+.menu-item.danger {
+    color: #ff4d4f;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* =========================================
+   13. 공통 컴포넌트 - 이미지 첨부/업로드
+   ========================================= */
+
+.image-attach-row {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.image-attach-row::-webkit-scrollbar {
+    display: none;
+}
+
+.camera-btn {
+    width: 70px;
+    height: 70px;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #aaa;
+    cursor: pointer;
+    background: #fafafa;
+    flex-shrink: 0;
+}
+
+.camera-icon {
+    font-size: 24px;
+    margin-bottom: 4px;
+}
+
+.camera-count {
+    font-size: 11px;
+}
+
+.preview-box {
+    position: relative;
+    width: 70px;
+    height: 70px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #eee;
+}
+
+.preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.btn-remove-img {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
     cursor: pointer;
 }

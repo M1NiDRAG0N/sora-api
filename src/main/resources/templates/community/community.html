@@ -1,0 +1,1226 @@
+<div class="page-wrapper community-page" th:fragment="div">
+
+    <div class="community-scroll-area" id="communityMain">
+
+        <div class="category-bar2" id="categoryBar">
+            <div class="cat-scroll">
+                <div class="cat-chip active" data-cate="전체">전체</div>
+                <div class="cat-chip" data-cate="소분/나눔">소분/나눔</div>
+                <div class="cat-chip" data-cate="꿀팁/정보">꿀팁/정보</div>
+                <div class="cat-chip" data-cate="자유/수다">자유/수다</div>
+                <div class="cat-chip" data-cate="요리/집밥">요리/집밥</div>
+                <div class="cat-chip" data-cate="질문/고민">질문/고민</div>
+            </div>
+            <div class="search-input-box">
+                <input type="text" class="header-search-input" id="searchInput" placeholder="검색어를 입력하세요">
+            </div>
+            <div class="search-btn">
+                <ion-icon name="search-outline" id="searchIcon"></ion-icon>
+            </div>
+        </div>
+
+        <div class="feed-list2" id="feedListContainer"></div>
+
+        <div id="loading-trigger" style="padding: 20px; text-align: center; color: #888;">
+            <span class="loading-text">불러오는 중...</span>
+        </div>
+
+    </div>
+
+    <!-- 글쓰기 버튼 -->
+    <button class="fab-write">
+        <ion-icon name="pencil-outline"></ion-icon>
+    </button>
+
+
+    <!-- 글쓰기 페이지 시작 -->
+    <div class="bg-gradient" id="writeForm">
+
+        <div class="write-header">
+            <div class="btn-cancel">취소</div>
+            <div class="page-title2">글쓰기</div>
+            <div class="btn-done">완료</div>
+        </div>
+
+        <input type="hidden" id="loginUserIdx" th:value="${#authentication.principal.userIdx}">
+
+        <div class="category-select-area">
+            <div class="select-chip selected" data-value="소분/나눔">소분/나눔</div>
+            <div class="select-chip" data-value="꿀팁/정보">꿀팁/정보</div>
+            <div class="select-chip" data-value="자유/수다">자유/수다</div>
+            <div class="select-chip" data-value="요리/집밥">요리/집밥</div>
+            <div class="select-chip" data-value="질문/고민">질문/고민</div>
+        </div>
+
+        <div class="write-card">
+            <input type="text" id="title-input" placeholder="제목을 입력하세요.">
+            <div class="divider"></div>
+            <textarea id="content-textarea" placeholder="내용을 입력하세요."></textarea>
+
+            <div class="image-attach-row" id="imageRow">
+                <div class="camera-btn">
+                    <ion-icon name="camera" class="camera-icon"></ion-icon>
+                    <span class="camera-count" id="imgCount">0/10</span>
+                </div>
+                <input type="file" id="fileInput" style="display: none;" accept="image/*" multiple>
+            </div>
+        </div>
+
+        <div class="bottom-spacer"></div>
+
+    </div>
+
+    <!-- 글쓰기 페이지 끗 -->
+
+    <!-- 게시글 상세보기 시작 -->
+    <div class="bg-gradient" id="viewForm">
+        <input type="hidden" id="loginUserIdxMain" th:value="${#authentication.principal.userIdx}">
+        <div class="view-header">
+            <button type="button" class="header-btn-icon btn-back">
+                <ion-icon name="chevron-back"></ion-icon>
+            </button>
+            <div>상세보기</div>
+
+            <div class="header-right-group">
+                <button type="button" class="header-btn-icon btn-menu">
+                    <ion-icon name="ellipsis-horizontal"></ion-icon>
+                </button>
+                <div class="custom-dropdown-menu" id="board-owner-menu">
+                    <button class="menu-item" id="btn-edit-board">게시글 수정</button>
+                    <button class="menu-item danger" id="btn-delete-confirm">게시글 삭제</button>
+                </div>
+
+                <div class="custom-dropdown-menu" id="board-visitor-menu">
+                    <button class="menu-item danger" id="btn-report-board">신고하기</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="deleteConfirmModal">
+            <div class="custom-modal">
+                <div class="modal-title">게시글 삭제</div>
+                <div class="modal-desc">
+                    정말 이 게시글을 삭제하시겠습니까?<br>
+                    삭제된 글은 복구할 수 없습니다.
+                </div>
+                <div class="modal-btn-row">
+                    <button class="modal-btn btn-close">취소</button>
+                    <button class="modal-btn btn-delete2">삭제</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-scroll-area">
+
+            <article class="post-card-full">
+                <div class="post-header-row">
+                    <div class="writer-info">
+                        <img src="" class="writer-img">
+                        <div class="writer-text">
+                            <span class="writer-name" id="view-writer"></span>
+                            <span class="write-time" id="view-time"></span>
+                        </div>
+                    </div>
+                    <span class="category-badge" id="view-category"></span>
+                </div>
+
+                <div class="post-text" id="view-content"></div>
+
+                <img src="" class="post-image" alt="이미지" id="view-image" style="display: none;">
+                <div id="dynamic-image-container"></div>
+                <!-- 좋아요 누르면 fill : red 추가-->
+                <div class="post-stats-row">
+                    <div class="stat-item">
+                        <button class="like-btn"><ion-icon name="heart-outline" id="view-like-icon"></ion-icon></button>
+                        <span id="view-like"></span>
+                    </div>
+                    <div class="stat-item">
+                        <ion-icon name="eye-outline"></ion-icon> <span id="view-view"></span>
+                    </div>
+                </div>
+            </article>
+            <div class="input-container-floating">
+                <input type="text" class="input-field2" placeholder="댓글 입력...">
+                <button type="button" class="btn-send-circle">
+                    <ion-icon name="paper-plane"></ion-icon>
+                </button>
+            </div>
+            <section>
+
+                <div class="comment-section-title">댓글 <span id="reply-count"></span>
+                </div>
+
+                <!-- 댓글 목록 태그-->
+                <div class="comment-list" id="reply-card"></div>
+            </section>
+
+        </div>
+
+
+    </div>
+
+    <!-- 게시글 상세보기 끗 -->
+
+
+
+    <div id="chatLayer" class="page-layer">
+        <div class="chat-header">
+            <button type="button" onclick="closeChat()" style="font-size: 28px;">
+                <ion-icon name="chevron-down"></ion-icon>
+            </button>
+            <div class="header-title">소라고동 AI</div>
+            <div style="width: 28px;"></div>
+        </div>
+
+        <div class="chat-body no-scrollbar" id="chatContainer"></div>
+
+        <div class="chat-input-area">
+            <input type="text" class="chat-input" placeholder="메시지를 입력하세요...">
+            <button type="button" class="btn-send">
+                <ion-icon name="paper-plane"></ion-icon>
+            </button>
+        </div>
+    </div>
+    <script>
+        /**
+         * [UI 유틸] 드래그 스크롤 기능
+         */
+        const DragScroll = {
+            enable: (selector) => {
+                const slider = document.querySelector(selector);
+                if (!slider) return;
+
+                let isDown = false;
+                let startX;
+                let scrollLeft;
+
+                slider.addEventListener('mousedown', (e) => {
+                    isDown = true;
+                    slider.classList.add('active');
+                    startX = e.pageX - slider.offsetLeft;
+                    scrollLeft = slider.scrollLeft;
+                });
+
+                const stopDrag = () => {
+                    isDown = false;
+                    slider.classList.remove('active');
+                };
+
+                slider.addEventListener('mouseleave', stopDrag);
+                slider.addEventListener('mouseup', stopDrag);
+
+                slider.addEventListener('mousemove', (e) => {
+                    if (!isDown) return;
+                    e.preventDefault();
+                    const x = e.pageX - slider.offsetLeft;
+                    const walk = (x - startX) * 1.5;
+                    slider.scrollLeft = scrollLeft - walk;
+                });
+            }
+        };
+
+        // ==========================================
+        //  1. Event Handler (모든 이벤트 리스너 모음)
+        // ==========================================
+        const EventHandler = {
+            init: () => {
+                // ------------------------------ 메인 (Main) ------------------------------
+                // 카테고리 칩 선택 (Delegation)
+                document.querySelector('.cat-scroll').addEventListener('click', (e) => {
+                    const chip = e.target.closest('.cat-chip');
+                    if (chip) CommunityMain.selectCategory(chip);
+                });
+                // 검색 버튼
+                document.querySelector('.search-btn').addEventListener('click', CommunityMain.toggleSearchMode);
+                // 검색 엔터키
+                document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') CommunityMain.search();
+                });
+                // 무한 스크롤 (스크롤 내리면 다음 스크롤 불러오기)
+                const scrollBox = document.querySelector('.community-scroll-area');
+                if (scrollBox) {
+                    scrollBox.addEventListener('scroll', CommunityMain.pageLoading);
+                }
+                // 피드 리스트 (게시글 클릭 & 프로필 클릭)
+                document.getElementById('feedListContainer').addEventListener('click', (e) => {
+                    const profileGroup = e.target.closest('.feed-user-group');
+                    const feedCard = e.target.closest('.feed-card');
+
+                    if (profileGroup) {
+                        e.stopPropagation();
+                        const userIdx = profileGroup.dataset.userIdx;
+                        if (userIdx) window.openProfile(userIdx);
+                        return;
+                    }
+
+                    if (feedCard) {
+                        const boardIdx = feedCard.dataset.boardIdx;
+                        if (boardIdx) CommunityView.openView(boardIdx);
+                    }
+                });
+
+
+                // ------------------------------ 글쓰기 (Write) ------------------------------
+                // FAB 버튼
+                document.querySelector('.fab-write').addEventListener('click', CommunityWrite.open);
+                const writeForm = document.getElementById('writeForm');
+
+                // 취소 버튼
+                writeForm.querySelector('.btn-cancel').addEventListener('click', CommunityWrite.close);
+
+                // 완료 버튼
+                writeForm.querySelector('.btn-done').addEventListener('click', () => {
+                    if (CommunityWrite.state.isEditMode) CommunityWrite.updatePost();
+                    else CommunityWrite.submitPost();
+                });
+
+                // 카테고리 선택 (Delegation)
+                writeForm.querySelector('.category-select-area').addEventListener('click', (e) => {
+                    const chip = e.target.closest('.select-chip');
+                    if (chip) CommunityWrite.selectCategoryWrite(chip);
+                });
+
+                // 카메라 버튼
+                writeForm.querySelector('.camera-btn').addEventListener('click', () => {
+                    document.getElementById('fileInput').click();
+                });
+
+                // 파일 선택 (input change)
+                document.getElementById('fileInput').addEventListener('change', function () {
+                    CommunityWrite.handleFileSelect(this);
+                });
+
+                // 이미지 삭제 (Delegation)
+                document.getElementById('imageRow').addEventListener('click', (e) => {
+                    const removeBtn = e.target.closest('.btn-remove-img');
+                    if (removeBtn) {
+                        const previewBox = removeBtn.closest('.preview-box');
+
+                        if (previewBox.classList.contains('new-file')) {
+                            // 신규 파일 삭제
+                            const newFiles = Array.from(document.querySelectorAll('.preview-box.new-file'));
+                            const index = newFiles.indexOf(previewBox);
+                            if (index !== -1) CommunityWrite.removeNewFile(index);
+
+                        } else if (previewBox.classList.contains('existing-file')) {
+                            // 기존 파일 삭제
+                            const fileIdx = removeBtn.dataset.fileIdx;
+                            if (fileIdx) CommunityWrite.removeExistingFile(removeBtn, fileIdx);
+                        }
+                    }
+                });
+
+                // 텍스트박스 자동조절
+                document.getElementById('content-textarea').addEventListener('input', function () {
+                    CommunityWrite.autoResize(this);
+                });
+
+                // ------------------------------ 상세보기 (View) ------------------------------
+                const viewForm = document.getElementById('viewForm');
+                // 뒤로가기
+                viewForm.querySelector('.btn-back').addEventListener('click', CommunityView.closeView);
+
+                // 메뉴 버튼 (점 3개)
+                viewForm.querySelector('.btn-menu').addEventListener('click', CommunityView.toggleBoardMenu);
+
+                // 메뉴 아이템 (수정/삭제/신고)
+                document.getElementById('btn-edit-board').addEventListener('click', CommunityView.editBoard);
+                document.getElementById('btn-delete-confirm').addEventListener('click', CommunityView.confirmDelete);
+                document.getElementById('btn-report-board').addEventListener('click', CommunityView.reportBoard);
+
+                // 삭제 모달 버튼
+                const deleteModal = document.getElementById('deleteConfirmModal');
+                deleteModal.querySelector('.btn-close').addEventListener('click', CommunityView.closeDeleteModal);
+                deleteModal.querySelector('.btn-delete2').addEventListener('click', CommunityView.deleteBoard);
+
+                // 좋아요 버튼
+                viewForm.querySelector('.like-btn').addEventListener('click', CommunityView.clickLike);
+
+                // 작성자 프로필 이동
+                viewForm.querySelector('.writer-info').addEventListener('click', () => {
+                    const userIdx = CommunityView.board_info.userIdx;
+                    if (userIdx) window.openProfile(userIdx);
+                });
+
+                // 이미지 슬라이더 (Delegation)
+                document.getElementById('dynamic-image-container').addEventListener('click', (e) => {
+                    // 이전/다음 버튼
+                    const btn = e.target.closest('.slider-btn');
+                    if (btn) {
+                        if (btn.classList.contains('prev')) CommunitySlider.moveSlide(-1);
+                        else if (btn.classList.contains('next')) CommunitySlider.moveSlide(1);
+                        return;
+                    }
+                    // 도트
+                    const dot = e.target.closest('.slider-dot');
+                    if (dot) {
+                        const dots = Array.from(document.querySelectorAll('.slider-dot'));
+                        const index = dots.indexOf(dot);
+                        if (index !== -1) CommunitySlider.goToSlide(index);
+                    }
+                });
+
+
+                // ------------------------------ 댓글 (Reply) ------------------------------
+                const inputArea = document.querySelector('.input-container-floating');
+
+                // 전송 버튼
+                inputArea.querySelector('.btn-send-circle').addEventListener('click', CommunityReply.sendReply);
+
+                // 엔터키
+                inputArea.querySelector('.input-field2').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') CommunityReply.sendReply();
+                });
+
+                // 댓글 리스트 (Delegation)
+                document.getElementById('reply-card').addEventListener('click', (e) => {
+                    const replyItem = e.target.closest('.comment-item');
+                    if (!replyItem) return;
+
+                    const replyIdx = replyItem.dataset.replyIdx;
+
+                    // 프로필 클릭
+                    if (e.target.closest('.user-img-md') || e.target.closest('.comment-user-name')) {
+                        const userIdx = e.target.closest('.comment-left-group').dataset.userIdx;
+                        if (userIdx) window.openProfile(userIdx);
+                        return;
+                    }
+
+                    // 더보기 메뉴 토글
+                    if (e.target.closest('.btn-comment-more')) {
+                        CommunityReply.toggleMenu(replyIdx);
+                        return;
+                    }
+
+                    // 메뉴 아이템 (수정/삭제)
+                    const menuItem = e.target.closest('.comment-menu-item');
+                    if (menuItem) {
+                        const action = menuItem.dataset.action;
+                        if (action === 'edit') CommunityReply.edit(replyIdx);
+                        else if (action === 'delete') CommunityReply.delete(replyIdx);
+                        return;
+                    }
+
+                    // 수정 모드 버튼 (취소/저장)
+                    if (e.target.closest('.btn-comment-cancel')) {
+                        CommunityReply.cancelEdit(replyIdx);
+                        return;
+                    }
+                    if (e.target.closest('.btn-comment-save')) {
+                        CommunityReply.saveEdit(replyIdx);
+                        return;
+                    }
+                });
+            }
+        };
+
+        // ==========================================
+        //  2. Renderer (HTML 생성 함수 모음)
+        // ==========================================
+        const Renderer = {
+            // ------------------------------ 게시글 메인화면 글카드 ------------------------------
+            createFeedCardHTML: (dto) => {
+                const profileImg = dto.profileIdx != null ? `/images/profiles/${dto.profileIdx}.png` : '/images/default-profile.png';
+                const heartIconName = dto.isLiked ? 'heart' : 'heart-outline';
+                const heartColorClass = dto.isLiked ? 'heart-active' : '';
+
+                return `
+                    <div class="feed-card" data-board-idx="${dto.boardIdx}">
+                        <div class="feed-header">
+                            <div class="feed-user-group" data-user-idx="${dto.userIdx}">
+                                <img src="${profileImg}" class="user-img-md">
+                                <div class="user-info-text">
+                                    <span class="user-name">${dto.userNickname}</span>
+                                    <span class="post-time">${Utils.timeAgo(dto.createdAt)}</span>
+                                </div>
+                            </div>
+                            <span class="post-tag">${dto.boardCategory}</span>
+                        </div>
+                        <div class="feed-body">
+                            <div class="feed-text-area">
+                                <div class="feed-title">${dto.boardTitle}</div>
+                                <div class="feed-preview">${dto.boardContent}</div>
+                            </div>
+                            ${dto.fileGrpIdx ? `<img src="/img/group/${dto.fileGrpIdx}" class="feed-thumb">` : ''}
+                        </div>
+                        <div class="feed-footer">
+                            <div class="action-item">
+                                <ion-icon name="chatbubble-outline"></ion-icon><span>${dto.replyCount}</span>
+                            </div>
+                            <div class="action-item">
+                                <ion-icon name="${heartIconName}" class="${heartColorClass}"></ion-icon><span>${dto.likeCount}</span>
+                            </div>
+                            <div class="action-item">
+                                <ion-icon name="eye-outline"></ion-icon><span>${dto.viewCount}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            // ------------------------------ 댓글 카드 ------------------------------ 
+            createReplyCardHTML: (dto) => {
+                const loginUserIdx = document.querySelector('#loginUserIdxMain').value;
+                const isOwner = (String(loginUserIdx) === String(dto.userIdx));
+                const profileImg = dto.profileIdx != null ? `/images/profiles/${dto.profileIdx}.png` : '/images/default-profile.png';
+
+                return `
+                <div class="comment-item" id="reply-item-${dto.replyIdx}" data-reply-idx="${dto.replyIdx}">
+                    <div class="comment-left-group" data-user-idx="${dto.userIdx}">
+                        <img src="${profileImg}" class="user-img-md" style="cursor: pointer;">
+                        <div class="comment-content" style="width: 100%;">
+                            <div class="comment-header">
+                                <div class="comment-info-left">
+                                    <span class="comment-user-name" style="cursor: pointer;">${dto.userNickname}</span>
+                                    <span class="comment-time" style="font-size: 11px; color: #aaa;">${Utils.timeAgo(dto.createdAt)}</span>
+                                </div>
+                                <div class="comment-edit-actions">
+                                    <button class="btn-comment-cancel">취소</button>
+                                    <button class="btn-comment-save">수정</button>
+                                </div>
+                            </div>
+                            <span class="comment-text" id="reply-text-${dto.replyIdx}">${dto.replyContent}</span>
+                            <div class="comment-edit-form" id="reply-edit-form-${dto.replyIdx}">
+                                <textarea class="comment-edit-input" id="reply-input-${dto.replyIdx}" rows="1"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    ${isOwner ? `
+                    <div class="comment-action-box">
+                        <button type="button" class="btn-comment-more">
+                            <ion-icon name="ellipsis-vertical"></ion-icon>
+                        </button>
+                        <div class="comment-dropdown" id="reply-menu-${dto.replyIdx}">
+                            <button class="comment-menu-item" data-action="edit">수정</button>
+                            <button class="comment-menu-item" data-action="delete">삭제</button>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>`;
+            },
+
+            // ------------------------------ 글쓰기 사진 미리보기 ------------------------------
+            createNewFileHTML: (file, index, src) => {
+                return `
+                    <div class="preview-box new-file">
+                        <img src="${src}" class="preview-img">
+                        <div class="btn-remove-img">
+                            <ion-icon name="close"></ion-icon>
+                        </div>
+                    </div>
+                `;
+            },
+
+            // 
+            createExistingFileHTML: (file) => {
+                return `
+                    <div class="preview-box existing-file">
+                        <img src="/img/${file.fileIdx}" class="preview-img">
+                        <div class="btn-remove-img" data-file-idx="${file.fileIdx}">
+                            <ion-icon name="close"></ion-icon>
+                        </div>
+                    </div>
+                `;
+            },
+
+            // ------------------------------ 게시글 상세보기에서의 사진 미리보기 ------------------------------
+            createSliderHTML: (files) => {
+                let slides = '';
+                let dots = '';
+                files.forEach((file, index) => {
+                    slides += `<div class="slider-slide"><img src="/img/${file.fileIdx}" alt="Slide ${index}"></div>`;
+                    dots += `<div class="slider-dot ${index === 0 ? 'active' : ''}"></div>`;
+                });
+                const showNav = files.length > 1;
+
+                return `
+                    <div class="slider-container">
+                        <div class="slider-wrapper">${slides}</div>
+                        ${showNav ? `
+                            <button class="slider-btn prev"><ion-icon name="chevron-back"></ion-icon></button>
+                            <button class="slider-btn next"><ion-icon name="chevron-forward"></ion-icon></button>
+                            <div class="slider-dots">${dots}</div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+        };
+
+
+        /**
+         * [메인] 커뮤니티 메인 화면 로직
+         */
+        const CommunityMain = {
+            state: {
+                currentPage: 1,
+                category: '전체',
+                keyword: '',
+                isLoading: false,
+                isLastPage: false
+            },
+
+            init: () => {
+                CommunityMain.checkUrlParams();
+                CommunityMain.loadPost(true);
+                DragScroll.enable('.cat-scroll');
+                DragScroll.enable('.category-select-area');
+            },
+
+            checkUrlParams: () => {
+                const params = new URLSearchParams(window.location.search);
+                const from = params.get('from');
+                const profileUser = params.get('profileUser');
+
+                if (from === 'profile' && typeof ProfileApp !== 'undefined') {
+                    if (profileUser) ProfileApp.open(profileUser);
+                    else ProfileApp.open();
+                }
+            },
+
+            selectCategory: (element) => {
+                document.querySelectorAll('.cat-chip').forEach(chip => chip.classList.remove('active'));
+                element.classList.add('active');
+
+                CommunityMain.state.category = element.getAttribute('data-cate');
+                CommunityMain.loadPost(true);
+            },
+
+            toggleSearchMode: () => {
+                const bar = document.getElementById('categoryBar');
+                const icon = document.getElementById('searchIcon');
+                const input = document.getElementById('searchInput');
+
+                bar.classList.toggle('search-mode');
+
+                if (bar.classList.contains('search-mode')) {
+                    icon.setAttribute('name', 'close-outline');
+                    input.focus();
+                } else {
+                    icon.setAttribute('name', 'search-outline');
+                    input.value = '';
+                    CommunityMain.state.keyword = '';
+                    CommunityMain.loadPost(true);
+                }
+            },
+
+            search: () => {
+                const input = document.querySelector('#searchInput');
+                CommunityMain.state.keyword = input.value;
+                CommunityMain.loadPost(true);
+            },
+
+            pageLoading: (e) => {
+                if (CommunityMain.state.isLoading || CommunityMain.state.isLastPage) return;
+                const container = e.target;
+                if (container.scrollTop + container.clientHeight >= container.scrollHeight - 50) {
+                    CommunityMain.loadPost(false);
+                }
+            },
+
+            loadPost: async (isReset = false) => {
+                if (CommunityMain.state.isLoading) return;
+
+                if (isReset) {
+                    CommunityMain.state.currentPage = 1;
+                    CommunityMain.state.isLastPage = false;
+                    document.getElementById('feedListContainer').innerHTML = '';
+                }
+
+                if (CommunityMain.state.isLastPage) return;
+
+                CommunityMain.state.isLoading = true;
+
+                try {
+                    const { currentPage, category, keyword } = CommunityMain.state;
+                    const url = `/community/list?page=${currentPage}&category=${encodeURIComponent(category)}&keyword=${encodeURIComponent(keyword)}`;
+
+                    const response = await API.get(url);
+
+                    if (!response || response.length === 0) {
+                        CommunityMain.state.isLastPage = true;
+                        const loader = document.getElementById('loading-trigger');
+                        if (loader) loader.innerText = "마지막 게시글입니다.";
+                        return;
+                    }
+
+                    const container = document.getElementById('feedListContainer');
+                    response.forEach(dto => {
+                        container.insertAdjacentHTML('beforeend', Renderer.createFeedCardHTML(dto));
+                    });
+
+                    CommunityMain.state.currentPage++;
+
+                } catch (error) {
+                    console.error('로딩 실패:', error);
+                } finally {
+                    CommunityMain.state.isLoading = false;
+                }
+            }
+        };
+
+        /**
+         * [글쓰기] 게시글 작성 및 수정 관리
+         */
+        const CommunityWrite = {
+            state: {
+                selectedFiles: [],
+                deletedFileIdxs: [],
+                isEditMode: false,
+                editingBoardIdx: null
+            },
+
+            autoResize: (target) => {
+                const textarea = target || document.getElementById('content-textarea');
+                textarea.style.height = 'auto';
+                textarea.style.height = textarea.scrollHeight + 'px';
+            },
+
+            open: () => {
+                CommunityWrite.resetForm();
+                CommunityWrite.state.isEditMode = false;
+
+                document.querySelector('.page-title2').innerText = '글쓰기';
+                document.querySelector('.btn-done').innerText = '완료';
+
+                const writeForm = document.querySelector('#writeForm');
+                if (typeof window.modalZIndex === 'undefined') window.modalZIndex = 5000;
+                window.modalZIndex++;
+                writeForm.style.zIndex = window.modalZIndex;
+
+                writeForm.classList.add('active');
+            },
+
+            openEdit: async () => {
+                const boardIdx = CommunityView.board_info.boardIdx;
+                if (!boardIdx) return;
+
+                CommunityWrite.resetForm();
+                CommunityWrite.state.isEditMode = true;
+                CommunityWrite.state.editingBoardIdx = boardIdx;
+
+                document.querySelector('.page-title2').innerText = '게시글 수정';
+                document.querySelector('.btn-done').innerText = '수정';
+
+                try {
+                    document.querySelector("#title-input").value = CommunityView.board_info.boardTitle;
+                    const contentInput = document.querySelector("#content-textarea");
+                    contentInput.value = CommunityView.board_info.boardContent;
+
+                    const currentCategory = CommunityView.board_info.boardCategory;
+                    document.querySelectorAll('.select-chip').forEach(chip => {
+                        chip.classList.remove('selected');
+                        if (chip.getAttribute('data-value') === currentCategory) {
+                            chip.classList.add('selected');
+                        }
+                    });
+
+                    const files = await API.get(`/community/files/${boardIdx}`);
+                    CommunityWrite.renderExistingFiles(files);
+
+                    const writeForm = document.querySelector('#writeForm');
+                    if (typeof window.modalZIndex === 'undefined') window.modalZIndex = 5000;
+                    window.modalZIndex++;
+                    writeForm.style.zIndex = window.modalZIndex;
+
+                    writeForm.classList.add('active');
+                    CommunityWrite.autoResize(contentInput);
+                } catch (error) {
+                    console.error(error);
+                    Utils.notify("게시글 정보를 불러오는데 실패했습니다.", "error");
+                }
+            },
+
+            close: () => {
+                document.querySelector('#writeForm').classList.remove('active');
+                CommunityWrite.resetForm();
+            },
+
+            resetForm: () => {
+                document.querySelector("#title-input").value = '';
+                const textarea = document.querySelector("#content-textarea");
+                textarea.value = '';
+                textarea.style.height = 'auto';
+
+                CommunityWrite.state.selectedFiles = [];
+                CommunityWrite.state.deletedFileIdxs = [];
+
+                document.getElementById('imageRow').querySelectorAll('.preview-box').forEach(box => box.remove());
+                document.getElementById('imgCount').innerText = "0/10";
+            },
+
+            selectCategoryWrite: (element) => {
+                document.querySelectorAll('.select-chip').forEach(chip => chip.classList.remove('selected'));
+                element.classList.add('selected');
+            },
+
+            handleFileSelect: (input) => {
+                const files = Array.from(input.files);
+                const currentCount = document.querySelectorAll('.preview-box').length;
+
+                if (currentCount + files.length > 10) {
+                    Utils.notify("사진은 최대 10장까지 첨부할 수 있습니다.", "error");
+                    input.value = "";
+                    return;
+                }
+
+                files.forEach(file => {
+                    if (file.type.startsWith('image/')) CommunityWrite.state.selectedFiles.push(file);
+                });
+
+                CommunityWrite.renderNewFiles();
+                input.value = "";
+            },
+
+            renderNewFiles: () => {
+                const container = document.getElementById('imageRow');
+                container.querySelectorAll('.preview-box.new-file').forEach(box => box.remove());
+
+                CommunityWrite.state.selectedFiles.forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const div = document.createElement('div');
+                        // Renderer 사용
+                        div.innerHTML = Renderer.createNewFileHTML(file, index, e.target.result);
+                        // innerHTML로 넣었으므로 div 자체는 껍데기만 씀 (preview-box 클래스는 안쪽으로)
+                        // 하지만 위 Renderer는 <div>전체를 리턴하므로
+                        // 여기서는 div를 만들지 말고, HTML 문자열을 바로 container에 넣는게 맞음.
+                        // 하지만 기존 로직(div 생성)을 유지하려면 Renderer를 수정해야 함.
+
+                        // [수정] 위 방식대로면 div 안에 또 div가 생김.
+                        // 아래처럼 변경
+                        container.insertAdjacentHTML('beforeend', Renderer.createNewFileHTML(file, index, e.target.result));
+
+                        CommunityWrite.updateImageCount();
+                    };
+                    reader.readAsDataURL(file);
+                });
+                setTimeout(CommunityWrite.updateImageCount, 50);
+            },
+
+            removeNewFile: (index) => {
+                CommunityWrite.state.selectedFiles.splice(index, 1);
+                CommunityWrite.renderNewFiles();
+            },
+
+            removeExistingFile: (element, fileIdx) => {
+                element.closest('.preview-box').remove();
+                CommunityWrite.state.deletedFileIdxs.push(fileIdx);
+                CommunityWrite.updateImageCount();
+            },
+
+            renderExistingFiles: (files) => {
+                const container = document.getElementById('imageRow');
+                if (!files) return;
+
+                files.forEach(file => {
+                    container.insertAdjacentHTML('beforeend', Renderer.createExistingFileHTML(file));
+                });
+                CommunityWrite.updateImageCount();
+            },
+
+            updateImageCount: () => {
+                const total = document.querySelectorAll('.preview-box').length;
+                document.getElementById('imgCount').innerText = `${total}/10`;
+            },
+
+            submitPost: async () => {
+                const cate = document.querySelector(".selected").getAttribute('data-value');
+                const title = document.querySelector("#title-input").value.trim();
+                const content = document.querySelector("#content-textarea").value.trim();
+                const loginUserIdx = document.querySelector("#loginUserIdx").value;
+
+                if (!title || !content) {
+                    Utils.notify('제목과 내용을 입력해주세요.', 'error');
+                    return;
+                }
+
+                const boardDto = { userIdx: loginUserIdx, boardCategory: cate, boardTitle: title, boardContent: content };
+                const formData = new FormData();
+                formData.append("board", new Blob([JSON.stringify(boardDto)], { type: "application/json" }));
+                CommunityWrite.state.selectedFiles.forEach(file => formData.append("files", file));
+
+                try {
+                    const response = await fetch('/community/write', { method: 'POST', body: formData });
+                    if (!response.ok) throw new Error('등록 실패');
+
+                    const resultDto = await response.json();
+                    Utils.notify('게시글을 등록했습니다!', 'success');
+                    CommunityWrite.close();
+
+                    const container = document.getElementById('feedListContainer');
+                    container.insertAdjacentHTML('afterbegin', Renderer.createFeedCardHTML(resultDto));
+
+                } catch (error) {
+                    console.error(error);
+                    Utils.notify('글 등록 중 오류가 발생했습니다.', 'error');
+                }
+            },
+
+            updatePost: async () => {
+                const cate = document.querySelector(".selected").getAttribute('data-value');
+                const title = document.querySelector("#title-input").value.trim();
+                const content = document.querySelector("#content-textarea").value.trim();
+
+                if (!title || !content) {
+                    Utils.notify('제목과 내용을 입력해주세요.', 'error');
+                    return;
+                }
+
+                const boardDto = {
+                    boardIdx: CommunityWrite.state.editingBoardIdx,
+                    boardCategory: cate,
+                    boardTitle: title,
+                    boardContent: content
+                };
+
+                const formData = new FormData();
+                formData.append("board", new Blob([JSON.stringify(boardDto)], { type: "application/json" }));
+                CommunityWrite.state.selectedFiles.forEach(file => formData.append("newFiles", file));
+                formData.append("deleteFileIdxs", new Blob([JSON.stringify(CommunityWrite.state.deletedFileIdxs)], { type: "application/json" }));
+
+                try {
+                    const response = await fetch('/community/edit', { method: 'PUT', body: formData });
+                    if (response.ok) {
+                        Utils.notify('게시글이 수정되었습니다.', 'success');
+                        CommunityWrite.close();
+                        location.reload();
+                    } else {
+                        throw new Error('수정 실패');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    Utils.notify('수정 중 오류가 발생했습니다.', 'error');
+                }
+            }
+        };
+
+        /**
+         * [상세보기] 게시글 상세 화면 관리
+         */
+        const CommunityView = {
+            board_info: {
+                boardIdx: '',
+                replyCount: '',
+                userNickname: '',
+                boardCategory: '',
+                boardTitle: '',
+                boardContent: '',
+                likeCount: '',
+                userIdx: ''
+            },
+
+            openView: async (boardIdx) => {
+                const viewForm = document.querySelector('#viewForm');
+
+                if (typeof window.modalZIndex === 'undefined') window.modalZIndex = 5000;
+                window.modalZIndex++;
+                viewForm.style.zIndex = window.modalZIndex;
+
+                try {
+                    const [board, boardReply] = await Promise.all([
+                        API.get(`/community/view/${boardIdx}`),
+                        API.get(`/community/reply/${boardIdx}`)
+                    ]);
+
+                    const heartIcon = document.querySelector('#view-like-icon');
+                    if (board.isLiked) {
+                        heartIcon.setAttribute('name', 'heart');
+                        heartIcon.classList.add('heart-active');
+                    } else {
+                        heartIcon.setAttribute('name', 'heart-outline');
+                        heartIcon.classList.remove('heart-active');
+                    }
+
+                    Object.assign(CommunityView.board_info, board);
+                    currentBoardIdx = boardIdx;
+
+                    document.querySelector('#reply-count').innerText = board.replyCount;
+                    document.querySelector('#view-writer').innerText = board.userNickname;
+                    document.querySelector('#view-time').innerText = Utils.timeAgo(board.createdAt);
+                    document.querySelector('#view-category').innerText = board.boardCategory;
+                    document.querySelector('#view-content').innerText = board.boardContent;
+                    document.querySelector('#view-like').innerText = board.likeCount;
+                    document.querySelector('#view-view').innerText = board.viewCount;
+
+                    const replyContainer = document.querySelector('#reply-card');
+                    replyContainer.innerHTML = '';
+                    boardReply.forEach(dto => {
+                        replyContainer.insertAdjacentHTML('beforeend', Renderer.createReplyCardHTML(dto));
+                    });
+
+                    const imgTag = document.querySelector('#view-image');
+                    const dynContainer = document.getElementById('dynamic-image-container');
+                    imgTag.style.display = 'none';
+                    imgTag.src = '';
+                    dynContainer.innerHTML = '';
+
+                    if (board.fileGrpIdx) {
+                        const files = await API.get(`/community/files/${boardIdx}`);
+                        if (files && files.length > 0) {
+                            dynContainer.innerHTML = Renderer.createSliderHTML(files);
+                            CommunitySlider.init(dynContainer, files.length);
+                        }
+                    }
+
+                    viewForm.classList.add('active');
+
+                    history.pushState({ modal: 'communityView', boardIdx: boardIdx }, 'View', `?openBoard=${boardIdx}`);
+                    window.onpopstate = function (event) {
+                        if (document.querySelector('#viewForm').classList.contains('active')) {
+                            CommunityView.closeView();
+                        }
+                    };
+
+                } catch (error) {
+                    console.error("상세보기 로딩 실패:", error);
+                }
+            },
+
+            closeView: () => {
+                const viewForm = document.querySelector('#viewForm');
+                viewForm.classList.remove('active');
+
+                Object.keys(CommunityView.board_info).forEach(key => CommunityView.board_info[key] = '');
+                document.querySelector('#reply-card').innerHTML = '';
+                document.getElementById('dynamic-image-container').innerHTML = '';
+                document.querySelector('#board-owner-menu').classList.remove('active');
+                document.querySelector('#board-visitor-menu').classList.remove('active');
+
+                const url = new URL(window.location);
+                if (url.searchParams.has('openBoard')) {
+                    url.searchParams.delete('openBoard');
+                    url.searchParams.delete('from');
+                    url.searchParams.delete('profileUser');
+                    history.replaceState({}, '', url);
+                }
+            },
+
+            toggleBoardMenu: () => {
+                const loginUserIdx = document.querySelector('#loginUserIdxMain').value;
+                const boardUserIdx = CommunityView.board_info.userIdx;
+
+                if (String(loginUserIdx) === String(boardUserIdx)) {
+                    document.querySelector('#board-owner-menu').classList.toggle('active');
+                } else {
+                    document.querySelector('#board-visitor-menu').classList.toggle('active');
+                }
+            },
+
+            editBoard: () => {
+                document.querySelector('#board-owner-menu').classList.remove('active');
+                CommunityWrite.openEdit();
+            },
+
+            reportBoard: () => {
+                document.querySelector('#board-visitor-menu').classList.remove('active');
+                Utils.notify("신고 기능은 준비중입니다.", "warning");
+            },
+
+            confirmDelete: () => {
+                document.querySelector('#board-owner-menu').classList.remove('active');
+                document.querySelector('#deleteConfirmModal').classList.add('show');
+            },
+
+            closeDeleteModal: () => {
+                document.querySelector('#deleteConfirmModal').classList.remove('show');
+            },
+
+            deleteBoard: async () => {
+                const boardIdx = CommunityView.board_info.boardIdx;
+                try {
+                    const response = await API.delete(`/community/delete/${boardIdx}`);
+                    if (response.status == 200) {
+                        Utils.notify('게시글을 삭제했습니다.', 'success');
+                        CommunityView.closeDeleteModal();
+                        CommunityView.closeView();
+
+                        const deletedCard = document.querySelector(`.feed-card[data-board-idx="${boardIdx}"]`);
+                        if (deletedCard) deletedCard.remove();
+                    }
+                } catch (error) {
+                    console.error("삭제 실패:", error);
+                    Utils.notify('삭제 중 오류가 발생했습니다.', 'error');
+                }
+            },
+
+            clickLike: async () => {
+                const boardIdx = CommunityView.board_info.boardIdx;
+                try {
+                    // 서버 요청 (토글)
+                    const response = await API.get(`community/like/${boardIdx}`);
+                    const isLiked = response.data; // true: 좋아요 됨, false: 취소됨
+
+                    // 1. 상세보기 화면 갱신
+                    const likeCountEl = document.querySelector('#view-like');
+                    const heartIcon = document.querySelector('#view-like-icon');
+                    let currentCount = Number(likeCountEl.innerText);
+
+                    if (isLiked) {
+                        heartIcon.setAttribute('name', 'heart');
+                        heartIcon.classList.add('heart-active');
+                        currentCount++;
+                        Utils.notify('좋아요를 눌렀습니다.', 'like');
+                    } else {
+                        heartIcon.setAttribute('name', 'heart-outline');
+                        heartIcon.classList.remove('heart-active');
+                        currentCount--;
+                        Utils.notify('좋아요를 취소했습니다.', 'warning');
+                    }
+                    likeCountEl.innerText = currentCount;
+
+                    // 2. 메인 목록(피드) 화면 갱신
+                    const feedCard = document.querySelector(`.feed-card[data-board-idx="${boardIdx}"]`);
+                    if (feedCard) {
+                        const listHeartIcon = feedCard.querySelector('ion-icon[name*="heart"]');
+                        const listLikeCountSpan = listHeartIcon.nextElementSibling;
+
+                        if (listHeartIcon) {
+                            if (isLiked) {
+                                listHeartIcon.setAttribute('name', 'heart');
+                                listHeartIcon.classList.add('heart-active');
+                            } else {
+                                listHeartIcon.setAttribute('name', 'heart-outline');
+                                listHeartIcon.classList.remove('heart-active');
+                            }
+                        }
+                        if (listLikeCountSpan) {
+                            listLikeCountSpan.innerText = currentCount;
+                        }
+                    }
+
+                } catch (error) {
+                    console.error(error);
+                    Utils.notify('오류가 발생했습니다.', 'error');
+                }
+            }
+        };
+
+        const CommunitySlider = {
+            currentIndex: 0,
+            totalSlides: 0,
+
+            init: (container, count) => {
+                CommunitySlider.currentIndex = 0;
+                CommunitySlider.totalSlides = count;
+                const wrapper = container.querySelector('.slider-wrapper');
+                if (wrapper) wrapper.style.transform = `translateX(0)`;
+            },
+
+            moveSlide: (direction) => {
+                const newIndex = CommunitySlider.currentIndex + direction;
+                if (newIndex >= 0 && newIndex < CommunitySlider.totalSlides) {
+                    CommunitySlider.goToSlide(newIndex);
+                }
+            },
+
+            goToSlide: (index) => {
+                CommunitySlider.currentIndex = index;
+                const wrapper = document.querySelector('.slider-wrapper');
+                if (wrapper) wrapper.style.transform = `translateX(-${index * 100}%)`;
+
+                document.querySelectorAll('.slider-dot').forEach((dot, i) => {
+                    if (i === index) dot.classList.add('active');
+                    else dot.classList.remove('active');
+                });
+            }
+        };
+
+        const CommunityReply = {
+            sendReply: async () => {
+                const replyContent = document.querySelector('.input-field2').value.trim();
+                const boardIdx = currentBoardIdx;
+
+                if (!replyContent) {
+                    Utils.notify("댓글을 입력하세요.", "error");
+                    return;
+                }
+
+                try {
+                    const response = await API.post(`/community/reply/${boardIdx}`, { replyContent });
+                    const container = document.querySelector('#reply-card');
+                    container.insertAdjacentHTML('beforeend', Renderer.createReplyCardHTML(response));
+
+                    document.querySelector('.input-field2').value = '';
+                    const countEl = document.querySelector('#reply-count');
+                    countEl.innerText = Number(countEl.innerText) + 1;
+
+                    Utils.notify('댓글을 등록했습니다.', 'success');
+                } catch (error) {
+                    console.error(error);
+                }
+            },
+
+            toggleMenu: (replyIdx) => {
+                const dropdownMenu = document.querySelector(`#reply-menu-${replyIdx}`);
+                document.querySelectorAll('.comment-dropdown.active').forEach(item => {
+                    if (item !== dropdownMenu) item.classList.remove('active');
+                });
+                dropdownMenu.classList.toggle('active');
+            },
+
+            delete: async (replyIdx) => {
+                try {
+                    const response = await API.delete(`/community/deleteReply/${replyIdx}`);
+                    if (response.status == 200) {
+                        Utils.notify('댓글을 삭제했습니다.', 'success');
+
+                        const item = document.querySelector(`#reply-item-${replyIdx}`);
+                        if (item) item.remove();
+
+                        const countEl = document.querySelector('#reply-count');
+                        countEl.innerText = Number(countEl.innerText) - 1;
+                    }
+                } catch (error) {
+                    console.error("삭제 실패:", error);
+                    Utils.notify('삭제 중 오류가 발생했습니다.', 'error');
+                }
+            },
+
+            edit: (replyIdx) => {
+                CommunityReply.toggleMenu(replyIdx);
+                document.querySelectorAll('.comment-item.editing').forEach(item => item.classList.remove('editing'));
+
+                const item = document.querySelector(`#reply-item-${replyIdx}`);
+                const input = document.querySelector(`#reply-input-${replyIdx}`);
+                const textSpan = document.querySelector(`#reply-text-${replyIdx}`);
+
+                input.value = textSpan.innerText;
+                item.classList.add('editing');
+                input.focus();
+            },
+
+            cancelEdit: (replyIdx) => {
+                document.querySelector(`#reply-item-${replyIdx}`).classList.remove('editing');
+            },
+
+            saveEdit: async (replyIdx) => {
+                const input = document.querySelector(`#reply-input-${replyIdx}`);
+                const newContent = input.value.trim();
+
+                if (!newContent) {
+                    Utils.notify("댓글 내용을 입력해주세요.", "error");
+                    return;
+                }
+
+                try {
+                    await API.put(`/community/reply/update/${replyIdx}`, { replyContent: newContent });
+
+                    document.querySelector(`#reply-text-${replyIdx}`).innerText = newContent;
+
+                    CommunityReply.cancelEdit(replyIdx);
+                    Utils.notify("댓글이 수정되었습니다.", "success");
+                } catch (error) {
+                    console.error("수정 실패:", error);
+                    Utils.notify("수정 중 오류가 발생했습니다.", "error");
+                }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            EventHandler.init(); // 모든 이벤트 리스너 등록
+            CommunityMain.init(); // 화면 초기화 로직
+        });
+
+        let currentBoardIdx = null; 
+    </script>
+</div>
