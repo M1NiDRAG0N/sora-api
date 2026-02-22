@@ -1,9 +1,9 @@
-/* =========================================
-   [findAccount.css] 계정 찾기 스타일 (타이머 변신 버전)
+﻿/* =========================================
+   [findAccount.css] 怨꾩젙 李얘린 ?ㅽ???(??대㉧ 蹂??踰꾩쟾)
    ========================================= */
 
-/* 1. 헤더 & 탭 (기존 유지) */
-.page-header {
+/* 1. ?ㅻ뜑 & ??(湲곗〈 ?좎?) */
+.findaccount-page .page-header{
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -15,7 +15,7 @@
     background: transparent;
 }
 
-.header-btn-icon {
+.findaccount-page .header-btn-icon{
     font-size: 24px;
     color: #333;
     cursor: pointer;
@@ -27,7 +27,7 @@
     justify-content: center;
 }
 
-.header-title-center {
+.findaccount-page .header-title-center{
     position: absolute;
     left: 0;
     right: 0;
@@ -39,14 +39,14 @@
     z-index: -1;
 }
 
-.account-tabs {
+.findaccount-page .account-tabs{
     display: flex;
     background: transparent;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     margin-bottom: 30px;
 }
 
-.tab-btn {
+.findaccount-page .tab-btn{
     flex: 1;
     text-align: center;
     padding: 15px 0;
@@ -60,12 +60,12 @@
     transition: 0.2s;
 }
 
-.tab-btn.active {
+.findaccount-page .tab-btn.active{
     color: #333;
     font-weight: 700;
 }
 
-.tab-btn.active::after {
+.findaccount-page .tab-btn.active::after{
     content: '';
     position: absolute;
     bottom: 0;
@@ -75,15 +75,15 @@
     background: #333;
 }
 
-/* 2. 폼 & 입력창 */
-.form-container {
+/* 2. ??& ?낅젰李?*/
+.findaccount-page .form-container{
     padding: 0 20px;
     display: flex;
     flex-direction: column;
     gap: 24px;
 }
 
-.input-label {
+.findaccount-page .input-label{
     display: block;
     font-size: 13px;
     font-weight: 700;
@@ -92,7 +92,7 @@
     margin-left: 4px;
 }
 
-.input-field-styled {
+.findaccount-page .input-field-styled{
     width: 100%;
     padding: 16px;
     border-radius: 16px;
@@ -105,12 +105,12 @@
     box-sizing: border-box;
 }
 
-.input-field-styled::placeholder {
+.findaccount-page .input-field-styled::placeholder{
     color: #ccc;
 }
 
-/* 3. 버튼 스타일 */
-.btn-primary {
+/* 3. 踰꾪듉 ?ㅽ???*/
+.findaccount-page .btn-primary{
     width: 100%;
     padding: 16px;
     border-radius: 16px;
@@ -125,31 +125,31 @@
     margin-top: 10px;
 }
 
-.btn-primary:active {
+.findaccount-page .btn-primary:active{
     transform: scale(0.98);
 }
 
-/* 비활성화 버튼 (회색) */
-.btn-disabled {
+/* 鍮꾪솢?깊솕 踰꾪듉 (?뚯깋) */
+.findaccount-page .btn-disabled{
     background: #E0E0E0 !important;
     color: #999 !important;
     box-shadow: none !important;
     cursor: default !important;
 }
 
-/* 4. 타이머 & 재전송 버튼 변신 로직 */
-.auth-row {
+/* 4. ??대㉧ & ?ъ쟾??踰꾪듉 蹂??濡쒖쭅 */
+.findaccount-page .auth-row{
     margin-top: 5px;
     animation: slideDown 0.3s ease-out;
 }
 
-.input-with-timer {
+.findaccount-page .input-with-timer{
     position: relative;
     width: 100%;
 }
 
-/* 타이머 텍스트 (기본 상태) */
-.timer-text {
+/* ??대㉧ ?띿뒪??(湲곕낯 ?곹깭) */
+.findaccount-page .timer-text{
     position: absolute;
     right: 15px;
     top: 50%;
@@ -158,30 +158,30 @@
     color: #FF6B6B;
     font-weight: 700;
     pointer-events: none;
-    /* 시간일 땐 클릭 불가 */
+    /* ?쒓컙?????대┃ 遺덇? */
     transition: 0.2s;
 }
 
-/* ✅ 재전송 버튼 상태 (시간 초과 시 변신) */
-.timer-text.is-resend {
+/* ???ъ쟾??踰꾪듉 ?곹깭 (?쒓컙 珥덇낵 ??蹂?? */
+.findaccount-page .timer-text.is-resend{
     pointer-events: auto;
-    /* 클릭 가능해짐 */
+    /* ?대┃ 媛?ν빐吏?*/
     cursor: pointer;
     background: #F3F0FF;
-    /* 연한 보라 배경 */
+    /* ?고븳 蹂대씪 諛곌꼍 */
     color: #b2a4ff;
-    /* 보라색 글씨 */
+    /* 蹂대씪??湲??*/
     padding: 6px 10px;
     border-radius: 8px;
     font-size: 12px;
 }
 
-.timer-text.is-resend:hover {
+.findaccount-page .timer-text.is-resend:hover{
     background: #EBE5FF;
 }
 
-/* 5. 유틸 */
-.result-box {
+/* 5. ?좏떥 */
+.findaccount-page .result-box{
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -189,14 +189,14 @@
     text-align: center;
 }
 
-.result-text {
+.findaccount-page .result-text{
     font-size: 15px;
     color: #333;
     font-weight: 600;
     margin-bottom: 20px;
 }
 
-.id-display-card {
+.findaccount-page .id-display-card{
     width: 100%;
     /* background: #f5f5f5; */
     padding: 40px 0;
@@ -208,17 +208,17 @@
     margin-bottom: 30px;
 }
 
-.hidden {
+.findaccount-page .hidden{
     display: none !important;
 }
 
 @keyframes slideDown {
-    from {
+    .findaccount-page from{
         opacity: 0;
         transform: translateY(-10px);
     }
 
-    to {
+    .findaccount-page to{
         opacity: 1;
         transform: translateY(0);
     }
