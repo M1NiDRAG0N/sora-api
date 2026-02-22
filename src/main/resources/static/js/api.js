@@ -68,6 +68,28 @@ const API = {
     },
 
     /**
+     * PATCH 요청
+     * @param {string} url - 요청 URL
+     * @param {Object} data - 요청 데이터
+     * @returns {Promise} 응답 데이터
+     */
+    patch: async (url, data = {}) => {
+        try {
+            const response = await fetch(url, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            return await API.handleResponse(response);
+        } catch (error) {
+            console.error(`PATCH 요청 실패: ${error.message}`);
+            throw new Error(`${error.message}`);
+        }
+    },
+
+    /**
      * DELETE 요청
      * @param {string} url - 요청 URL
      * @returns {Promise} 응답 데이터

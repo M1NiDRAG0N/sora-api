@@ -34,7 +34,8 @@ public record UsedDetailRes(
     LocalDateTime updatedAt
 ) {
     public static UsedDetailRes from(Used used, List<String> images, Integer likeCount,
-                                      Boolean isLiked, Boolean isOwner, Users seller, Integer chatCount) {
+                                      Boolean isLiked, Boolean isOwner, Users seller,
+                                      Integer chatCount, Integer viewCount) {
         return new UsedDetailRes(
                 used.getUsedIdx(),
                 used.getUsedTitle(),
@@ -44,7 +45,7 @@ public record UsedDetailRes(
                 used.getTradingLat(),
                 used.getTradingLng(),
                 used.getUsedState(),
-                used.getViewCount() + 1,
+                viewCount,
                 likeCount,
                 chatCount,
                 isLiked,
