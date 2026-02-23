@@ -9,7 +9,9 @@
             <img src="/images/logo.png" class="ai-chat-logo">
             <span>마법의 소라고동</span>
         </div>
-        <div class="ai-chat-header-spacer"></div>
+        <button type="button" class="ai-chat-clear-btn" id="aiChatClearBtn" title="대화 초기화">
+            <ion-icon name="refresh-outline"></ion-icon>
+        </button>
     </div>
 
     <!-- 채팅 내용 -->
@@ -39,12 +41,28 @@
                     document.getElementById('chatLayer').classList.remove('active');
                 });
                 document.getElementById('aiChatSendBtn').addEventListener('click', () => this.send());
+                document.getElementById('aiChatClearBtn').addEventListener('click', () => this.clearHistory());
                 document.getElementById('aiChatInput').addEventListener('keydown', (e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
                         this.send();
                     }
                 });
+            },
+
+            async clearHistory() {
+                if (this.isStreaming) return;
+                try {
+                    await fetch('/ai/chat/history', { method: 'DELETE' });
+                } catch (e) { /* 서버 오류 무시 */ }
+
+                // 화면 초기화
+                const container = document.getElementById('chatContainer');
+                container.innerHTML = `
+                    <div class="bubble-row">
+                        <img src="/images/logo.png" class="chat-profile">
+                        <div class="bubble ai">대화 기록을 초기화했어요. 무엇을 도와줄까요? 🐚</div>
+                    </div>`;
             },
 
             send() {
