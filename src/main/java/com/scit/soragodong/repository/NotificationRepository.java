@@ -1,11 +1,10 @@
 package com.scit.soragodong.repository;
 
-import java.util.List;
-
+import com.scit.soragodong.domain.entity.Notification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.scit.soragodong.domain.entity.Notification;
+import java.util.List;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Integer> {
