@@ -187,6 +187,7 @@ public class CommunityService {
                 .boardIdx(savedBoard.getBoardIdx())
                 .userIdx(savedBoard.getUser().getUserIdx())
                 .userNickname(savedBoard.getUser().getUserNickname())
+                .profileIdx(savedBoard.getUser().getProfileIdx())
                 .boardCategory(savedBoard.getBoardCategory())
                 .boardTitle(savedBoard.getBoardTitle())
                 .boardContent(savedBoard.getBoardContent())
@@ -212,6 +213,7 @@ public class CommunityService {
                 .boardIdx(entity.getBoardIdx())
                 .userIdx(entity.getUser().getUserIdx())
                 .userNickname(entity.getUser().getUserNickname())
+                .profileIdx(entity.getUser().getProfileIdx())
                 .boardCategory(entity.getBoardCategory())
                 .boardTitle(entity.getBoardTitle())
                 .boardContent(entity.getBoardContent())
@@ -257,6 +259,7 @@ public class CommunityService {
                     .boardIdx(boardReply.getBoard().getBoardIdx())
                     .userNickname(boardReply.getUser().getUserNickname())
                     .userIdx(boardReply.getUser().getUserIdx())
+                    .profileIdx(boardReply.getUser().getProfileIdx())
                     .replyContent(boardReply.getReplyContent())
                     .createdAt((boardReply.getCreatedAt()))
                     .build();
@@ -285,8 +288,10 @@ public class CommunityService {
             brr.save(baordReplyEntity);
 
             BoardReplyDto boardReplyDto2 = BoardReplyDto.builder()
+                    .replyIdx(baordReplyEntity.getReplyIdx())
                     .boardIdx(baordReplyEntity.getBoard().getBoardIdx())
                     .userIdx(baordReplyEntity.getUser().getUserIdx())
+                    .profileIdx(baordReplyEntity.getUser().getProfileIdx())
                     .userNickname(
                             baordReplyEntity.getUser().getUserNickname())
                     .replyContent(baordReplyEntity.getReplyContent())
@@ -312,6 +317,7 @@ public class CommunityService {
                 .boardIdx(replyEntity.getBoard().getBoardIdx())
                 .userNickname(replyEntity.getUser().getUserNickname())
                 .userIdx(replyEntity.getUser().getUserIdx())
+                .profileIdx(replyEntity.getUser().getProfileIdx())
                 .createdAt((replyEntity.getCreatedAt()))
                 .replyContent(replyEntity.getReplyContent())
                 .build();
