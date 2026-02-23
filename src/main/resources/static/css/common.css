@@ -12,7 +12,7 @@
     --bg-start: #F3F5FF;
     --bg-end: #EAE8FF;
 
-     /* 상태 컬러 */
+    /* 상태 컬러 */
     --danger-red: #FF4B4B;
     /* 출금 (빨강) */
     --success-green: #00C46B;
@@ -492,7 +492,7 @@ input[type="checkbox"] {
 }
 
 .nav-item.active {
-    color: var(--text-main);
+    color: #745cfa;
     font-weight: 700;
 }
 
@@ -853,6 +853,7 @@ input[type="checkbox"] {
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -878,7 +879,8 @@ input[type="checkbox"] {
     z-index: 100;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.fab-write:active{
+
+.fab-write:active {
     transform: scale(0.92);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
@@ -937,6 +939,7 @@ input[type="checkbox"] {
         opacity: 0;
         transform: translateY(-5px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
