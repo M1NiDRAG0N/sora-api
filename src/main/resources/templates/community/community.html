@@ -97,7 +97,7 @@
             </div>
         </div>
 
-        <div class="modal-overlay" id="deleteConfirmModal">
+        <div class="community-page modal-overlay" id="deleteConfirmModal">
             <div class="custom-modal">
                 <div class="modal-title">게시글 삭제</div>
                 <div class="modal-desc">
@@ -223,6 +223,16 @@
         // ==========================================
         //  1. Event Handler (모든 이벤트 리스너 모음)
         // ==========================================
+
+        // 디바운스 함수 (타이핑 멈추면 실행)
+        const debounce = (func, wait) => {
+            let timeout;
+            return (...args) => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        };
+
         const EventHandler = {
             init: () => {
                 // ------------------------------ 메인 (Main) ------------------------------
@@ -233,10 +243,23 @@
                 });
                 // 검색 버튼
                 document.querySelector('.search-btn').addEventListener('click', CommunityMain.toggleSearchMode);
-                // 검색 엔터키
-                document.getElementById('searchInput').addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') CommunityMain.search();
+
+                // 검색 입력 (실시간 검색 + 엔터)
+                const searchInput = document.getElementById('searchInput');
+
+                // 1. 엔터키 입력 시 즉시 검색
+                searchInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault(); // 폼 제출 방지 등
+                        CommunityMain.search();
+                    }
                 });
+
+                // 2. 타이핑 중 실시간 검색 (디바운스 500ms 적용)
+                searchInput.addEventListener('input', debounce((e) => {
+                    CommunityMain.search();
+                }, 500));
+
                 // 무한 스크롤 (스크롤 내리면 다음 스크롤 불러오기)
                 const scrollBox = document.querySelector('.community-scroll-area');
                 if (scrollBox) {
@@ -322,9 +345,26 @@
                 viewForm.querySelector('.btn-back').addEventListener('click', CommunityView.closeView);
 
                 // 메뉴 버튼 (점 3개)
-                viewForm.querySelector('.btn-menu').addEventListener('click', CommunityView.toggleBoardMenu);
+                viewForm.querySelector('.btn-menu').addEventListener('click', (e) => {
+                    e.stopPropagation(); // 이벤트 전파 중단 (document click 방지)
+                    CommunityView.toggleBoardMenu();
+                });
 
-                // 메뉴 아이템 (수정/삭제/신고)
+                // 드롭다운 메뉴 닫기 (외부 클릭 감지)
+                document.addEventListener('click', (e) => {
+                    const ownerMenu = document.getElementById('board-owner-menu');
+                    const visitorMenu = document.getElementById('board-visitor-menu');
+
+                    // 주의: btn-menu는 viewForm 내부에 있어서 쿼리 셀렉터로 다시 찾거나, 위에서 클릭 시 stopPropagation 처리했으므로
+                    // 여기서는 메뉴 영역이 아닌지만 체크하면 됨.
+
+                    if (ownerMenu && ownerMenu.classList.contains('active') && !ownerMenu.contains(e.target)) {
+                        ownerMenu.classList.remove('active');
+                    }
+                    if (visitorMenu && visitorMenu.classList.contains('active') && !visitorMenu.contains(e.target)) {
+                        visitorMenu.classList.remove('active');
+                    }
+                });
                 document.getElementById('btn-edit-board').addEventListener('click', CommunityView.editBoard);
                 document.getElementById('btn-delete-confirm').addEventListener('click', CommunityView.confirmDelete);
                 document.getElementById('btn-report-board').addEventListener('click', CommunityView.reportBoard);
@@ -421,7 +461,7 @@
         const Renderer = {
             // ------------------------------ 게시글 메인화면 글카드 ------------------------------
             createFeedCardHTML: (dto) => {
-                const profileImg = dto.profileIdx != null ? `/images/profiles/${dto.profileIdx}.png` : '/images/default-profile.png';
+                const profileImg = dto.profileIdx != null ? `/img/${dto.profileIdx}` : '/images/default-profile.png';
                 const heartIconName = dto.isLiked ? 'heart' : 'heart-outline';
                 const heartColorClass = dto.isLiked ? 'heart-active' : '';
 
@@ -463,7 +503,7 @@
             createReplyCardHTML: (dto) => {
                 const loginUserIdx = document.querySelector('#loginUserIdxMain').value;
                 const isOwner = (String(loginUserIdx) === String(dto.userIdx));
-                const profileImg = dto.profileIdx != null ? `/images/profiles/${dto.profileIdx}.png` : '/images/default-profile.png';
+                const profileImg = dto.profileIdx != null ? `/img/${dto.profileIdx}` : '/images/default-profile.png';
 
                 return `
                 <div class="comment-item" id="reply-item-${dto.replyIdx}" data-reply-idx="${dto.replyIdx}">
@@ -606,7 +646,18 @@
 
             search: () => {
                 const input = document.querySelector('#searchInput');
-                CommunityMain.state.keyword = input.value;
+                const keyword = input.value.trim();
+                CommunityMain.state.keyword = keyword;
+
+                // 검색어가 있으면 카테고리 '전체'로 강제 변경 (UI 및 상태)
+                if (keyword) {
+                    CommunityMain.state.category = '전체';
+                    document.querySelectorAll('.cat-chip').forEach(chip => {
+                        if (chip.dataset.cate === '전체') chip.classList.add('active');
+                        else chip.classList.remove('active');
+                    });
+                }
+
                 CommunityMain.loadPost(true);
             },
 
@@ -937,6 +988,13 @@
 
                     document.querySelector('#reply-count').innerText = board.replyCount;
                     document.querySelector('#view-writer').innerText = board.userNickname;
+
+                    // 작성자 프로필 이미지 설정
+                    const writerImg = document.querySelector('.writer-img');
+                    if (writerImg) {
+                        writerImg.src = board.profileIdx ? `/img/${board.profileIdx}` : '/images/default-profile.png';
+                    }
+
                     document.querySelector('#view-time').innerText = Utils.timeAgo(board.createdAt);
                     document.querySelector('#view-category').innerText = board.boardCategory;
                     document.querySelector('#view-content').innerText = board.boardContent;

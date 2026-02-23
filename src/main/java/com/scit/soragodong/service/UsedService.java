@@ -24,6 +24,7 @@ import com.scit.soragodong.domain.entity.UsedKeyword;
 import com.scit.soragodong.domain.entity.UsedLike;
 import com.scit.soragodong.domain.entity.Users;
 import com.scit.soragodong.domain.enums.FileRefType;
+import com.scit.soragodong.domain.enums.NotificationType;
 import com.scit.soragodong.domain.enums.UsedState;
 import com.scit.soragodong.domain.response.PageResponse;
 import com.scit.soragodong.exception.CustomException;
@@ -248,6 +249,20 @@ public class UsedService {
         }
         used.updateState(state);
         log.info("[중고] 상태 변경 - ID: {}, 상태: {}", usedIdx, state);
+
+        // 찜한 사용자들에게 상태 변경 알림 (판매자 본인 제외)
+        String stateName = switch (state) {
+            case TRADING -> "거래중";
+            case SALE -> "판매중";
+            case RESERVED -> "예약중";
+            case SOLD -> "판매완료";
+        };
+        String msg = String.format("찜한 '%s' 상품이 '%s' 상태로 변경되었습니다.", used.getUsedTitle(), stateName);
+        usedLikeRepository.findByUsedIdx(usedIdx).forEach(like -> {
+            if (!like.getUserIdx().equals(userIdx)) {
+                notificationService.send(like.getUserIdx(), NotificationType.USED_STATE_CHANGE, usedIdx, msg);
+            }
+        });
     }
 
     /**
@@ -255,7 +270,7 @@ public class UsedService {
      * @return true: 찜 추가, false: 찜 취소
      */
     public boolean toggleLike(Integer usedIdx, Integer userIdx) {
-        usedRepository.findByUsedIdxAndIsUseTrue(usedIdx)
+        Used used = usedRepository.findByUsedIdxAndIsUseTrue(usedIdx)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
 
         if (usedLikeRepository.existsByUsedIdxAndUserIdx(usedIdx, userIdx)) {
@@ -263,6 +278,14 @@ public class UsedService {
             return false;
         }
         usedLikeRepository.save(UsedLike.builder().usedIdx(usedIdx).userIdx(userIdx).build());
+
+        // 판매자에게 찜 알림 (본인 상품 제외)
+        if (!used.getCreatedUser().equals(userIdx)) {
+            Users liker = userRepository.findById(userIdx).orElse(null);
+            String likerNick = liker != null ? liker.getUserNickname() : "누군가";
+            String msg = String.format("'%s'님이 '%s' 상품을 찜했습니다.", likerNick, used.getUsedTitle());
+            notificationService.send(used.getCreatedUser(), NotificationType.USED_LIKE, usedIdx, msg);
+        }
         return true;
     }
 

@@ -8,6 +8,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class BudgetUpdateDto {
-    private Integer amount;
+    private Long amount;
     private String yearMonth; // 프론트에서 보낸 "2026-02" 를 받을 변수 추가
 }

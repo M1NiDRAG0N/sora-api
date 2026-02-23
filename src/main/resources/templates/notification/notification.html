@@ -1,0 +1,287 @@
+<div th:fragment="div" id="notiModal" class="modal-container page-wrapper">
+
+    <!-- 헤더 -->
+    <div class="modal-view-header">
+        <button type="button" class="modal-close-btn" id="notiCloseBtn">
+            <ion-icon name="chevron-back"></ion-icon>
+        </button>
+        <div class="modal-write-title">내 알림</div>
+        <button type="button" class="noti-read-all-btn" id="notiReadAllBtn">모두 읽기</button>
+    </div>
+
+    <!-- 알림 목록 -->
+    <div class="scroll-flex-1 noti-list-container" id="notiListContainer">
+        <div class="noti-loading" id="notiLoading">
+            <div class="noti-spinner"></div>
+        </div>
+        <div class="noti-empty" id="notiEmpty" style="display:none;">
+            <ion-icon name="notifications-off-outline"></ion-icon>
+            <p>알림이 없습니다</p>
+        </div>
+    </div>
+
+
+    <script>
+        const NotificationUI = {
+            swipeState: null,
+
+            init: function() {
+                this.bindModalEvents();
+                this.bindSwipe();
+                window.addEventListener('sse-notification', () => this.loadNotifications());
+            },
+
+            bindModalEvents: function() {
+                document.getElementById('notiCloseBtn')?.addEventListener('click', () => this.close());
+                document.querySelector('.open-noti-modal')?.addEventListener('click', () => this.open());
+                document.getElementById('notiReadAllBtn')?.addEventListener('click', () => this.markAllRead());
+            },
+
+            open: function() {
+                document.getElementById('notiModal')?.classList.add('active');
+                this.loadNotifications();
+            },
+
+            close: function() {
+                document.getElementById('notiModal')?.classList.remove('active');
+                // 배지 카운트 갱신
+                fetch('/notifications/unread-count')
+                    .then(r => r.json())
+                    .then(res => {
+                        const badge = document.getElementById('notiUnreadBadge');
+                        if (!badge) return;
+                        const count = res?.data ?? 0;
+                        badge.textContent = count > 99 ? '99+' : count;
+                        badge.style.display = count > 0 ? 'flex' : 'none';
+                    }).catch(() => {});
+            },
+
+            loadNotifications: async function() {
+                const container = document.getElementById('notiListContainer');
+                const loading = document.getElementById('notiLoading');
+                const empty = document.getElementById('notiEmpty');
+
+                loading.style.display = 'flex';
+                empty.style.display = 'none';
+                // 기존 아이템 제거
+                container.querySelectorAll('.noti-wrap').forEach(el => el.remove());
+
+                try {
+                    const res = await fetch('/notifications');
+                    const json = await res.json();
+                    const items = json?.data ?? [];
+
+                    loading.style.display = 'none';
+                    if (items.length === 0) {
+                        empty.style.display = 'flex';
+                        return;
+                    }
+                    items.forEach(item => container.appendChild(this.createItem(item)));
+                } catch(e) {
+                    loading.style.display = 'none';
+                    empty.style.display = 'flex';
+                }
+            },
+
+            createItem: function(item) {
+                const cfg = this.typeConfig(item.notiType);
+                const wrap = document.createElement('div');
+                wrap.className = 'noti-wrap' + (item.isRead ? '' : ' unread');
+                wrap.dataset.idx = item.notiIdx;
+                wrap.dataset.type = item.notiType;
+                wrap.dataset.ref = item.refId;
+                wrap.dataset.read = item.isRead;
+
+                wrap.innerHTML = `
+                    <div class="noti-item">
+                        <div class="noti-icon" style="background:${cfg.bg}; color:${cfg.color};">
+                            <ion-icon name="${cfg.icon}"></ion-icon>
+                        </div>
+                        <div class="noti-content">
+                            <div class="noti-text">${this.escapeHtml(item.message)}</div>
+                            <div class="noti-time">${Utils.timeAgo(item.createdAt)}</div>
+                        </div>
+                        ${item.isRead ? '' : '<div class="noti-unread-dot"></div>'}
+                    </div>
+                    <div class="noti-delete-btn">
+                        <ion-icon name="trash-outline"></ion-icon>삭제
+                    </div>
+                `;
+
+                // 클릭: wrap 전체에서 이벤트 위임 (setPointerCapture 호환성)
+                wrap.addEventListener('click', (e) => {
+                    if (e.target.closest('.noti-delete-btn')) return;
+                    this.handleClick(wrap);
+                });
+                // 삭제 버튼
+                wrap.querySelector('.noti-delete-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.deleteItem(wrap);
+                });
+
+                return wrap;
+            },
+
+            handleClick: async function(wrap) {
+                const notiIdx = wrap.dataset.idx;
+                const type = wrap.dataset.type;
+                const refId = wrap.dataset.ref;
+
+                // 읽음 처리
+                if (wrap.dataset.read === 'false') {
+                    try {
+                        await fetch(`/notifications/${notiIdx}/read`, { method: 'PATCH' });
+                        wrap.classList.remove('unread');
+                        wrap.dataset.read = 'true';
+                        const dot = wrap.querySelector('.noti-unread-dot');
+                        if (dot) dot.remove();
+                    } catch(e) {}
+                }
+
+                // 이동
+                const usedTypes = ['USED_KEYWORD_MATCH', 'USED_LIKE', 'USED_STATE_CHANGE'];
+                const communityTypes = ['LIKE', 'COMMUNITY_LIKE', 'COMMENT'];
+                const validRefId = refId && refId !== 'null' && refId !== 'undefined';
+
+                if (usedTypes.includes(type) && validRefId) {
+                    this.close();
+                    location.href = `/used-market?openDetail=${refId}`;
+                } else if (communityTypes.includes(type) && validRefId) {
+                    this.close();
+                    location.href = `/community?detail=${refId}`;
+                }
+            },
+
+            deleteItem: async function(wrap) {
+                const notiIdx = wrap.dataset.idx;
+                try {
+                    await fetch(`/notifications/${notiIdx}`, { method: 'DELETE' });
+                    wrap.classList.add('removing');
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => wrap.classList.add('removed'));
+                    });
+                    wrap.addEventListener('transitionend', () => {
+                        wrap.remove();
+                        if (!document.querySelector('.noti-wrap')) {
+                            document.getElementById('notiEmpty').style.display = 'flex';
+                        }
+                    }, { once: true });
+                } catch(e) {
+                    if (typeof Utils !== 'undefined') Utils.notify('삭제에 실패했습니다.', 'error');
+                }
+            },
+
+            markAllRead: async function() {
+                const unreads = document.querySelectorAll('.noti-wrap.unread');
+                if (unreads.length === 0) return;
+                await Promise.all([...unreads].map(wrap =>
+                    fetch(`/notifications/${wrap.dataset.idx}/read`, { method: 'PATCH' })
+                        .then(() => {
+                            wrap.classList.remove('unread');
+                            wrap.dataset.read = 'true';
+                            const dot = wrap.querySelector('.noti-unread-dot');
+                            if (dot) dot.remove();
+                        }).catch(() => {})
+                ));
+            },
+
+            // ===== 스와이프 to 삭제 =====
+            bindSwipe: function() {
+                const container = document.getElementById('notiListContainer');
+                if (!container) return;
+
+                let startX = 0, startY = 0, target = null, isDragging = false;
+
+                container.addEventListener('pointerdown', (e) => {
+                    const wrap = e.target.closest('.noti-wrap');
+                    if (!wrap) return;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    target = wrap;
+                    isDragging = false;
+                    wrap.setPointerCapture(e.pointerId);
+                });
+
+                container.addEventListener('pointermove', (e) => {
+                    if (!target) return;
+                    const dx = e.clientX - startX;
+                    const dy = e.clientY - startY;
+
+                    if (!isDragging && Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+                    isDragging = true;
+
+                    // 좌우 스와이프일 때만 처리
+                    if (Math.abs(dx) > Math.abs(dy)) {
+                        e.preventDefault();
+                        const item = target.querySelector('.noti-item');
+                        if (dx < 0) {
+                            const tx = Math.max(dx, -80);
+                            item.style.transition = 'none';
+                            item.style.transform = `translateX(${tx}px)`;
+                            const del = target.querySelector('.noti-delete-btn');
+                            del.style.transition = 'none';
+                            del.style.transform = `translateX(${100 + tx}%)`;
+                        }
+                    }
+                }, { passive: false });
+
+                container.addEventListener('pointerup', (e) => {
+                    if (!target) return;
+                    const dx = e.clientX - startX;
+                    const item = target.querySelector('.noti-item');
+                    const del = target.querySelector('.noti-delete-btn');
+
+                    item.style.transition = '';
+                    del.style.transition = '';
+
+                    if (isDragging && dx < -50) {
+                        // 닫힌 상태에서 열기
+                        target.classList.add('swiped');
+                        item.style.transform = '';
+                        del.style.transform = '';
+                        // 다른 열린 항목 닫기
+                        document.querySelectorAll('.noti-wrap.swiped').forEach(w => {
+                            if (w !== target) {
+                                w.classList.remove('swiped');
+                            }
+                        });
+                    } else {
+                        target.classList.remove('swiped');
+                        item.style.transform = '';
+                        del.style.transform = '';
+                    }
+                    target = null;
+                });
+
+                // 다른 곳 클릭 시 모두 닫기
+                container.addEventListener('click', (e) => {
+                    if (!e.target.closest('.noti-wrap.swiped')) {
+                        document.querySelectorAll('.noti-wrap.swiped').forEach(w => w.classList.remove('swiped'));
+                    }
+                });
+            },
+
+            typeConfig: function(type) {
+                const map = {
+                    USED_KEYWORD_MATCH: { icon: 'pricetag',        bg: '#e6fcf5', color: '#0ca678' },
+                    USED_LIKE:          { icon: 'heart',            bg: '#fff0f0', color: '#fa5252' },
+                    USED_STATE_CHANGE:  { icon: 'swap-horizontal',  bg: '#fff4e6', color: '#fd7e14' },
+                    LIKE:               { icon: 'heart',            bg: '#fff0f0', color: '#fa5252' },
+                    COMMUNITY_LIKE:     { icon: 'heart',            bg: '#fff0f0', color: '#fa5252' },
+                    COMMENT:            { icon: 'chatbubbles',      bg: '#e8f4fd', color: '#0095f6' },
+                    CHAT:               { icon: 'chatbubbles',      bg: '#e8f4fd', color: '#0095f6' },
+                    KEYWORD:            { icon: 'pricetag',         bg: '#e6fcf5', color: '#0ca678' },
+                };
+                return map[type] ?? { icon: 'notifications', bg: '#f0f0f0', color: '#888' };
+            },
+
+            escapeHtml: function(str) {
+                const d = document.createElement('div');
+                d.textContent = str;
+                return d.innerHTML;
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => NotificationUI.init());
+    </script>
+</div>

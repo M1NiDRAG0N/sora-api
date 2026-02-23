@@ -39,7 +39,7 @@
             <div class="profile-manner-card">
                 <div class="profile-manner-header">
                     <span>매너 점수</span>
-                    <span class="profile-manner-score" id="profile-manner-val">0°C</span>
+                    <span class="profile-manner-score" id="profile-manner-val">50점</span>
                 </div>
                 <div class="profile-progress-bg">
                     <div class="profile-progress-bar" id="profile-manner-bar" style="width: 0%;"></div>
@@ -98,7 +98,7 @@
                 <div class="input-group">
                     <label class="label">주소</label>
                     <div style="display:flex; gap: 8px;">
-                        <input type="text" id="edit-address" class="input-field" placeholder="주소 입력" readonly>
+                        <input type="text" id="edit-address" class="input-field" placeholder="주소 입력">
                         <button type="button" class="geocode_btn" id="btn-search-addr">찾기</button>
                     </div>
                     <input type="hidden" id="edit-lat">
@@ -368,7 +368,7 @@
                 document.getElementById('profile-user-name').innerText = '';
                 document.getElementById('profile-user-desc').innerText = '';
                 document.getElementById('profile-user-img').src = '/images/default-profile.png';
-                document.getElementById('profile-manner-val').innerText = '0°C';
+                document.getElementById('profile-manner-val').innerText = '50점';
                 document.getElementById('profile-manner-bar').style.width = '0%';
                 document.getElementById('profile-stats-box').innerHTML = '';
                 document.getElementById('profile-dynamic-area').innerHTML = '<div class="profile-empty-state">로딩 중...</div>';
@@ -419,7 +419,7 @@
                 document.getElementById('profile-user-img').src = data.profileImg || "/images/default-profile.png";
 
                 const score = data.mannerScore || 36;
-                document.getElementById('profile-manner-val').innerText = score + "°C";
+                document.getElementById('profile-manner-val').innerText = score + "점";
                 document.getElementById('profile-manner-bar').style.width = Math.min(score, 100) + "%";
 
                 const rightIcon = document.getElementById('profile-header-right-icon');
@@ -579,56 +579,29 @@
 
             searchAddress: () => {
                 const addrInput = document.getElementById('edit-address');
-                const address = addrInput.value; // 현재 입력된 값 (있다면)
+                const address = addrInput.value.trim();
 
-                // Google Geocoding API (signup.js 참고)
-                // 만약 Daum Postcode를 쓰고 싶다면 스크립트 추가 필요. 
-                // 여기선 signup.js에 있던 Google Geocode 로직을 재사용하거나,
-                // 만약 signup.js가 로드되어 있지 않다면 직접 구현해야 함.
-                // profile.html에는 google maps script가 없으므로 동적 로드 혹은 부모 페이지 의존.
-                // common.html에 google maps가 있다고 가정하거나, signup 처럼 동작해야 함.
-
-                // [주의] profile.html은 fragment로 로드되므로, <head>의 script가 실행되지 않을 수 있음.
-                // 메인 페이지(common.html 등)에 google maps script가 있어야 함.
+                if (!address) {
+                    Utils.notify('주소를 입력해주세요.', 'warning');
+                    return;
+                }
 
                 if (typeof google === 'undefined' || !google.maps || !google.maps.Geocoder) {
                     Utils.notify('지도 API가 로드되지 않았습니다.', 'error');
                     return;
                 }
 
-                new google.maps.Geocoder().geocode({ address: address || 'Seoul' }, (results, status) => {
+                new google.maps.Geocoder().geocode({ address: address }, (results, status) => {
                     if (status === 'OK') {
-                        // 정확한 검색을 위해선 주소 입력 팝업이 좋지만, 
-                        // 여기선 signup.js 로직(입력된 텍스트로 좌표찾기)을 따름.
-                        // 하지만 "찾기" 버튼이므로 우편번호 찾기 팝업이 더 자연스러움.
-                        // 일단은 텍스트 입력 후 -> 좌표 변환 로직으로 구현.
-                        // (사용자가 직접 주소를 치고 찾기를 누르는 방식)
+                        const lat = results[0].geometry.location.lat();
+                        const lng = results[0].geometry.location.lng();
+                        const formattedAddress = results[0].formatted_address;
 
-                        // 사용자가 입력할 수 있게 readonly 제거 필요? 
-                        // -> 요구사항엔 "주소변경"이라고만 되어있음.
-                        // signup.html 에서는 geocode_btn 클릭 시 input value로 검색함.
-
-                        // 여기선 readonly를 풀어서 입력하게 하거나, 별도 팝업 필요.
-                        // 간단하게: prompt로 주소 입력 받고 검색
-
-                        const newAddr = prompt("검색할 주소를 입력하세요:", address);
-                        if (!newAddr) return;
-
-                        new google.maps.Geocoder().geocode({ address: newAddr }, (results, status) => {
-                            if (status === 'OK') {
-                                const lat = results[0].geometry.location.lat();
-                                const lng = results[0].geometry.location.lng();
-
-                                document.getElementById('edit-address').value = results[0].formatted_address;
-                                document.getElementById('edit-lat').value = lat;
-                                document.getElementById('edit-lng').value = lng;
-                            } else {
-                                Utils.notify('주소를 찾을 수 없습니다.', 'error');
-                            }
-                        });
-
+                        document.getElementById('edit-address').value = formattedAddress;
+                        document.getElementById('edit-lat').value = lat;
+                        document.getElementById('edit-lng').value = lng;
                     } else {
-                        Utils.notify('API 오류: ' + status, 'error');
+                        Utils.notify('주소를 찾을 수 없습니다.', 'error');
                     }
                 });
             },
