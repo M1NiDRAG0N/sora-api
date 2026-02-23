@@ -9,6 +9,7 @@ public record BoardReplyDto(
                 Integer replyIdx,
                 Integer boardIdx,
                 Integer userIdx,
+                Integer profileIdx,
                 String userNickname,
                 String replyContent,
                 Boolean isUse,
