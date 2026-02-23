@@ -25,10 +25,10 @@ public class MonthlyBudget {
     private String yearMonth;
 
     @Column(name = "BUDGET_AMOUNT", nullable = false)
-    private Integer budgetAmount;
+    private Long budgetAmount;
 
     // 업데이트용 메서드
-    public void updateAmount(Integer amount) {
+    public void updateAmount(Long amount) {
         this.budgetAmount = amount;
     }
 }

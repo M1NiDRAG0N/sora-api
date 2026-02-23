@@ -119,7 +119,7 @@ public class FinanceService {
     /**
      * [추가/수정] 특정 월의 예산 설정/업데이트
      */
-    public void updateBudget(Integer userIdx, String yearMonth, Integer amount) {
+    public void updateBudget(Integer userIdx, String yearMonth, Long amount) { // ★ Integer -> Long
         Users user = userRepository.findById(userIdx)
                 .orElseThrow(() -> new IllegalArgumentException("해당 유저가 없습니다."));
 
@@ -146,14 +146,13 @@ public class FinanceService {
      * [조회] 특정 월의 예산 가져오기
      */
     @Transactional(readOnly = true)
-    public Integer getBudget(Integer userIdx, String yearMonth) {
+    public Long getBudget(Integer userIdx, String yearMonth) { // ★ Integer -> Long
         Users user = userRepository.findById(userIdx)
                 .orElseThrow(() -> new IllegalArgumentException("해당 유저가 없습니다."));
 
-        // DB에서 해당 월의 예산을 찾아서 리턴, 없으면 기본값 0 리턴
+        // DB에서 해당 월의 예산을 찾아서 리턴, 없으면 기본값 0L 리턴
         return monthlyBudgetRepository.findByUserAndYearMonth(user, yearMonth)
                 .map(MonthlyBudget::getBudgetAmount)
-                .orElse(0);
+                .orElse(0L); // ★ 0 -> 0L (Long 타입 0)
     }
-
 }
