@@ -3,7 +3,6 @@ package com.scit.soragodong.controller;
 import com.scit.soragodong.domain.dto.BudgetUpdateDto;
 import com.scit.soragodong.domain.dto.FinanceDto;
 import com.scit.soragodong.service.FinanceService;
-// ▼ [팀원 코드에서 확인한 클래스 import]
 import com.scit.soragodong.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +34,6 @@ public class FinanceController {
 
     /**
      * [API] 가계부 작성 (저장)
-     * 로그인한 유저 정보(CustomUserDetails)를 받아옵니다.
      */
     @PostMapping("/finance/write")
     @ResponseBody
@@ -49,7 +47,7 @@ public class FinanceController {
 
         log.info("가계부 작성 요청: {}", dto);
 
-        // 2. 세션에서 유저 ID 꺼내기 (CommunityController 참고함)
+        // 2. 세션에서 유저 ID 꺼내기
         Integer userIdx = userDetails.getUserIdx();
         log.info("작성자 ID: {}", userIdx);
 
@@ -66,7 +64,7 @@ public class FinanceController {
     @ResponseBody
     public ResponseEntity<?> getFinanceList(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestParam(required = false) String yearMonth) { // [추가] 프론트에서 넘어온 연-월 받기
+            @RequestParam(name = "yearMonth", required = false) String yearMonth) {
 
         if (userDetails == null) {
             return ResponseEntity.status(401).build();
@@ -78,7 +76,8 @@ public class FinanceController {
         List<FinanceDto> list = financeService.findAll(userIdx);
 
         // 2. [변경됨] 해당 월(yearMonth)의 예산만 DB에서 가져오기
-        Integer budget = financeService.getBudget(userIdx, yearMonth);
+        // ★ 여기서 Integer를 Long으로 수정
+        Long budget = financeService.getBudget(userIdx, yearMonth);
 
         // 3. 리스트와 예산을 Map에 담아서 한 번에 응답
         java.util.Map<String, Object> response = new java.util.HashMap<>();
@@ -87,7 +86,6 @@ public class FinanceController {
 
         return ResponseEntity.ok(response);
     }
-    // FinanceController.java 에 추가
 
     @PostMapping("/finance/delete")
     public ResponseEntity<?> deleteFinance(@RequestBody FinanceDto dto) {
@@ -98,8 +96,6 @@ public class FinanceController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
-    // 상단 import 영역에 아래 줄 추가 (경로는 본인 프로젝트에 맞게 확인)
-    // import com.scit.soragodong.domain.dto.BudgetUpdateDto;
 
     /**
      * [API] 한 달 예산 설정 (월별 예산 적용)
@@ -120,7 +116,7 @@ public class FinanceController {
             Integer userIdx = userDetails.getUserIdx();
             log.info("예산 설정 요청 - 유저 ID: {}, 월: {}, 금액: {}", userIdx, dto.getYearMonth(), dto.getAmount());
 
-            // 3. [변경됨] 서비스 실행 시 yearMonth(어느 달인지)도 같이 넘겨줌
+            // 3. 서비스 실행 시 yearMonth(어느 달인지)도 같이 넘겨줌
             financeService.updateBudget(userIdx, dto.getYearMonth(), dto.getAmount());
 
             return ResponseEntity.ok("예산이 설정되었습니다.");

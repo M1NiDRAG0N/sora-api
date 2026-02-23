@@ -11,12 +11,12 @@ import com.scit.soragodong.domain.entity.Notification;
 public interface NotificationRepository extends JpaRepository<Notification, Integer> {
     
     /**
-     * 사용자의 알림 조회
+     * 사용자의 유효한 알림 목록 (논리삭제 제외, 최신순)
      */
-    List<Notification> findByUserIdxOrderByCreatedAtDesc(Integer userIdx);
-    
+    List<Notification> findByUserIdxAndIsUseTrueOrderByCreatedAtDesc(Integer userIdx);
+
     /**
-     * 사용자의 읽지 않은 알림 조회
+     * 읽지 않은 알림 수
      */
-    List<Notification> findByUserIdxAndIsReadFalseOrderByCreatedAtDesc(Integer userIdx);
+    long countByUserIdxAndIsReadFalseAndIsUseTrue(Integer userIdx);
 }
