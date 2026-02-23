@@ -1,0 +1,171 @@
+<div th:fragment="div" id="chatLayer">
+
+    <!-- 헤더 -->
+    <div class="ai-chat-header">
+        <button type="button" class="ai-chat-close-btn" id="aiChatCloseBtn">
+            <ion-icon name="chevron-back"></ion-icon>
+        </button>
+        <div class="ai-chat-title">
+            <img src="/images/logo.png" class="ai-chat-logo">
+            <span>마법의 소라고동</span>
+        </div>
+        <div class="ai-chat-header-spacer"></div>
+    </div>
+
+    <!-- 채팅 내용 -->
+    <div class="ai-chat-body no-scrollbar" id="chatContainer">
+        <div class="bubble-row">
+            <img src="/images/logo.png" class="chat-profile">
+            <div class="bubble ai">무엇을 도와줄까? 🐚</div>
+        </div>
+    </div>
+
+    <!-- 입력창 -->
+    <div class="ai-chat-input-area">
+        <div class="chat-input-box">
+            <input type="text" class="chat-input" id="aiChatInput" placeholder="메시지를 입력하세요...">
+            <button class="btn-send-circle" id="aiChatSendBtn">
+                <ion-icon name="paper-plane"></ion-icon>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const AiChat = {
+            isStreaming: false,
+
+            init() {
+                document.getElementById('aiChatCloseBtn').addEventListener('click', () => {
+                    document.getElementById('chatLayer').classList.remove('active');
+                });
+                document.getElementById('aiChatSendBtn').addEventListener('click', () => this.send());
+                document.getElementById('aiChatInput').addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.send();
+                    }
+                });
+            },
+
+            send() {
+                if (this.isStreaming) return;
+                const input = document.getElementById('aiChatInput');
+                const message = input.value.trim();
+                if (!message) return;
+
+                input.value = '';
+                this.appendUserMessage(message);
+                this.showTyping();
+                this.streamResponse(message);
+            },
+
+            appendUserMessage(text) {
+                const container = document.getElementById('chatContainer');
+                const row = document.createElement('div');
+                row.className = 'bubble-row me';
+                row.innerHTML = `<div class="bubble me">${this.escapeHtml(text)}</div>`;
+                container.appendChild(row);
+                this.scrollToBottom();
+            },
+
+            showTyping() {
+                const container = document.getElementById('chatContainer');
+                const indicator = document.createElement('div');
+                indicator.id = 'aiTypingIndicator';
+                indicator.className = 'ai-typing-indicator';
+                indicator.innerHTML = `
+                    <img src="/images/logo.png" class="chat-profile">
+                    <div class="ai-typing-dots">
+                        <span></span><span></span><span></span>
+                    </div>`;
+                container.appendChild(indicator);
+                this.scrollToBottom();
+            },
+
+            hideTyping() {
+                document.getElementById('aiTypingIndicator')?.remove();
+            },
+
+            async streamResponse(message) {
+                this.isStreaming = true;
+                const sendBtn = document.getElementById('aiChatSendBtn');
+                sendBtn.style.opacity = '0.5';
+
+                try {
+                    const response = await fetch('/ai/chat/stream', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message })
+                    });
+
+                    if (!response.ok) throw new Error('서버 오류');
+
+                    this.hideTyping();
+
+                    // AI 말풍선 생성
+                    const container = document.getElementById('chatContainer');
+                    const row = document.createElement('div');
+                    row.className = 'bubble-row';
+                    row.innerHTML = `
+                        <img src="/images/logo.png" class="chat-profile">
+                        <div class="bubble ai"></div>`;
+                    container.appendChild(row);
+                    const bubble = row.querySelector('.bubble.ai');
+
+                    // SSE 스트리밍 수신
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '';
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+
+                        // 청크를 buffer에 누적 후 완성된 라인만 처리
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop(); // 마지막 불완전한 라인 보존
+
+                        for (const line of lines) {
+                            if (line.startsWith('data:')) {
+                                // 'data: ' 또는 'data:' 이후 내용 추출
+                                // trim() 금지 — 공백 토큰이 소실되어 글자 붙음 현상 발생
+                                const text = line.startsWith('data: ') ? line.slice(6) : line.slice(5);
+                                if (text && text !== '[DONE]') {
+                                    bubble.textContent += text;
+                                    this.scrollToBottom();
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {
+                    this.hideTyping();
+                    const container = document.getElementById('chatContainer');
+                    const row = document.createElement('div');
+                    row.className = 'bubble-row';
+                    row.innerHTML = `
+                        <img src="/images/logo.png" class="chat-profile">
+                        <div class="bubble ai">죄송해요, 오류가 발생했어요. 다시 시도해주세요. 🐚</div>`;
+                    container.appendChild(row);
+                    this.scrollToBottom();
+                } finally {
+                    this.isStreaming = false;
+                    sendBtn.style.opacity = '1';
+                }
+            },
+
+            scrollToBottom() {
+                const container = document.getElementById('chatContainer');
+                container.scrollTop = container.scrollHeight;
+            },
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => AiChat.init());
+    </script>
+</div>

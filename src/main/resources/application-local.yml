@@ -1,4 +1,10 @@
 spring:
+  devtools:    
+    # Auto Restart
+      restart:
+        enabled: true
+      livereload:
+        enabled: true
   datasource:
     url: jdbc:mysql://158.180.77.160:3306/soragodong?allowPublicKeyRetrieval=true&useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&autoReconnect=true&characterEncoding=utf8&allowMultiQueries=true
     username: sora
@@ -35,6 +41,17 @@ spring:
 
   thymeleaf:
     cache: false
+
+  ai:
+    openai:
+      api-key: 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
+      base-url: https://api.groq.com/openai
+      chat:
+        options:
+          model: llama-3.3-70b-versatile
+    ollama:
+      chat:
+        enabled: false
 
 logging:
   level:
