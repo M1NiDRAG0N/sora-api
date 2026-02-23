@@ -138,7 +138,7 @@ public class UsedMarketController {
     @DeleteMapping("/{usedIdx}")
     @ResponseBody
     public ApiResponse<?> deleteUsedItem(
-            @PathVariable Integer usedIdx,
+            @PathVariable(name = "usedIdx") Integer usedIdx,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         log.info("[중고거래] 상품 삭제 요청 - ID: {}, 사용자: {}", usedIdx, userDetails.getUserIdx());
@@ -153,7 +153,7 @@ public class UsedMarketController {
     @PutMapping("/{usedIdx}")
     @ResponseBody
     public ApiResponse<?> updateUsedItem(
-            @PathVariable Integer usedIdx,
+            @PathVariable(name = "usedIdx") Integer usedIdx,
             @ModelAttribute UsedUpdateReq req,
             @RequestParam(required = false) List<MultipartFile> newFiles,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -179,7 +179,7 @@ public class UsedMarketController {
     @GetMapping("/{usedIdx}/files")
     @ResponseBody
     public ApiResponse<List<FileRes>> getUsedFiles(
-            @PathVariable Integer usedIdx) {
+            @PathVariable(name = "usedIdx") Integer usedIdx) {
 
         return ApiResponse.success(usedService.getUsedFiles(usedIdx));
     }
@@ -191,7 +191,7 @@ public class UsedMarketController {
     @PatchMapping("/{usedIdx}/status")
     @ResponseBody
     public ApiResponse<?> updateStatus(
-            @PathVariable Integer usedIdx,
+            @PathVariable(name = "usedIdx") Integer usedIdx,
             @RequestParam UsedState state,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
@@ -206,7 +206,7 @@ public class UsedMarketController {
     @PostMapping("/{usedIdx}/like")
     @ResponseBody
     public ApiResponse<Boolean> toggleLike(
-            @PathVariable Integer usedIdx,
+            @PathVariable(name = "usedIdx") Integer usedIdx,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         boolean isLiked = usedService.toggleLike(usedIdx, userDetails.getUserIdx());
