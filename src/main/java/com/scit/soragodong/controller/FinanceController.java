@@ -66,7 +66,7 @@ public class FinanceController {
     @ResponseBody
     public ResponseEntity<?> getFinanceList(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestParam(required = false) String yearMonth) { // [추가] 프론트에서 넘어온 연-월 받기
+            @RequestParam(name = "yearMonth", required = false) String yearMonth) { // [추가] 프론트에서 넘어온 연-월 받기
 
         if (userDetails == null) {
             return ResponseEntity.status(401).build();

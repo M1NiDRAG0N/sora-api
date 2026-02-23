@@ -48,6 +48,10 @@ public class Notification {
     @Column(name = "IS_READ")
     private Boolean isRead;
 
+    @Builder.Default
+    @Column(name = "IS_USE")
+    private Boolean isUse = true;
+
     @Column(name = "CREATED_AT")
     private LocalDateTime createdAt;
 
@@ -55,9 +59,14 @@ public class Notification {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.isRead = this.isRead == null ? false : this.isRead;
+        this.isUse = this.isUse == null ? true : this.isUse;
     }
 
     public void markAsRead() {
         this.isRead = true;
+    }
+
+    public void delete() {
+        this.isUse = false;
     }
 }

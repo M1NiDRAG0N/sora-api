@@ -1,6 +1,6 @@
 <!-- 통일된 구조: 중고거래 페이지 -->
 <div class="page-wrapper usedmarket-page" th:fragment="div">
-    
+
     <!-- [1] 헤더 (고정) - 검색 영역 -->
     <div class="page-header">
         <div class="header-row">
@@ -32,10 +32,10 @@
 
     <!-- [3] 모달 레이어 (고정) -->
     <div class="modal-layers">
-        
+
         <!-- 공용 오버레이 (배경) -->
         <div class="modal-overlay"></div>
-        
+
         <!-- 글쓰기 모달 -->
         <div class="modal-container" id="writeModal" style="z-index: 1001;">
             <div class="modal-content modal-write">
@@ -67,8 +67,10 @@
 
                     <label class="input-label">거래 희망 장소</label>
                     <!-- 지도 영역 -->
-                    <div id="writeLocationMap" style="width: 100%; height: 300px; border-radius: 8px; overflow: hidden; margin: 10px 0; background: #e0e0e0;"></div>
-                    
+                    <div id="writeLocationMap"
+                        style="width: 100%; height: 300px; border-radius: 8px; overflow: hidden; margin: 10px 0; background: #e0e0e0;">
+                    </div>
+
                     <!-- 위치 정보 저장 필드 (숨김) -->
                     <input type="hidden" id="selectedLocationAddress" value="">
                     <input type="hidden" id="selectedLocationLat" value="">
@@ -120,7 +122,7 @@
                                 <div class="seller-location" id="view-location">어디동</div>
                             </div>
                         </div>
-                        <div class="temp-badge" id="view-temp">36.5°C 😊</div>
+                        <div class="temp-badge" id="view-temp">50점 😊</div>
                     </div>
 
                     <div class="content">
@@ -131,7 +133,8 @@
                         <div class="detail-stats" id="view-stats"></div>
 
                         <div class="map-area">
-                            <div class="map-title">거래 희망 장소 <span class="map-loc-name" id="view-location-name"></span></div>
+                            <div class="map-title">거래 희망 장소 <span class="map-loc-name" id="view-location-name"></span>
+                            </div>
                             <div id="detailMap"></div>
                         </div>
                     </div>
@@ -199,8 +202,8 @@
                     </p>
 
                     <div class="keyword-input-row">
-                        <input type="text" id="keywordInput" class="input-box-styled"
-                               placeholder="키워드 입력 (최대 20자)" maxlength="20">
+                        <input type="text" id="keywordInput" class="input-box-styled" placeholder="키워드 입력 (최대 20자)"
+                            maxlength="20">
                         <button id="addKeywordBtn" class="btn-primary">추가</button>
                     </div>
 
@@ -254,11 +257,11 @@
             hasMore: true,
             searchKeyword: '',
 
-            init: function() {
+            init: function () {
                 this.geocoder = new google.maps.Geocoder();
                 this.bindEvents();
                 this.loadList();
-                
+
                 // URL 파라미터 체크하여 상세 모달 열기
                 const urlParams = new URLSearchParams(window.location.search);
                 const openDetailId = urlParams.get('openDetail');
@@ -268,13 +271,13 @@
                     window.history.replaceState({}, document.title, window.location.pathname);
                 }
             },
-            
-            bindEvents: function() {
+
+            bindEvents: function () {
                 // 상품 클릭 시 상세보기 열기
                 document.querySelectorAll('.market-item').forEach(item => {
                     item.addEventListener('click', () => this.openViewModal());
                 });
-                
+
                 // 카메라 버튼 - 파일 선택
                 const cameraBtn = document.getElementById('cameraBtn');
                 if (cameraBtn) {
@@ -282,13 +285,13 @@
                         document.getElementById('imgUpload').click();
                     });
                 }
-                
+
                 // 이미지 업로드
                 const imgUpload = document.getElementById('imgUpload');
                 if (imgUpload) {
                     imgUpload.addEventListener('change', (e) => this.handleFileSelect(e.target));
                 }
-                
+
                 // 오버레이 클릭 시 모달 닫기
                 const overlay = document.querySelector('.modal-overlay');
                 if (overlay) {
@@ -425,11 +428,11 @@
                 const sentinel = document.querySelector('.scroll-sentinel');
                 if (sentinel) observer.observe(sentinel);
             },
-            
+
             /**
              * 목록 로드
              */
-            loadList: async function() {
+            loadList: async function () {
                 if (this.isLoading || !this.hasMore) return;
 
                 this.isLoading = true;
@@ -469,7 +472,7 @@
             /**
              * 아이템 렌더링
              */
-            renderItems: function(items) {
+            renderItems: function (items) {
                 const container = document.getElementById('contentList');
 
                 items.forEach(item => {
@@ -490,7 +493,7 @@
             /**
              * 아이템 HTML 생성
              */
-            createItemHtml: function(item) {
+            createItemHtml: function (item) {
                 const thumbnail = item.thumbnailPath || '';
                 const price = item.usedPrice ? item.usedPrice.toLocaleString() + '원' : '가격 미정';
                 const location = item.tradingLoc ? this.extractDong(item.tradingLoc) : '위치 미정';
@@ -519,35 +522,35 @@
                 `;
             },
 
-            extractDong: function(address) {
+            extractDong: function (address) {
                 if (!address) return '위치 미정';
                 // "서울특별시 강남구 역삼1동" -> "역삼1동"
                 const match = address.match(/(\S+동)/);
                 return match ? match[1] : address.split(' ').pop();
             },
 
-            escapeHtml: function(str) {
+            escapeHtml: function (str) {
                 if (!str) return '';
                 const div = document.createElement('div');
                 div.textContent = str;
                 return div.innerHTML;
             },
 
-            showStatus: function(show) {
+            showStatus: function (show) {
                 const el = document.getElementById('statusContainer');
                 if (el) el.classList.toggle('hide', !show);
             },
 
-            showEmpty: function(show) {
+            showEmpty: function (show) {
                 const el = document.getElementById('emptyContainer');
                 if (el) el.classList.toggle('hide', !show);
             },
 
-            getOverlay: function() {
+            getOverlay: function () {
                 return document.querySelector('.modal-overlay');
             },
-            
-            updateOverlay: function() {
+
+            updateOverlay: function () {
                 const overlay = this.getOverlay();
                 const hasActiveModal = document.querySelector('.modal-container.active');
                 if (overlay) {
@@ -559,7 +562,7 @@
                 }
             },
 
-            openWriteModal: function() {
+            openWriteModal: function () {
                 this.resetWriteForm();
                 this.isEditMode = false;
                 document.querySelector('.modal-write-title').innerText = '내 물건 팔기';
@@ -569,13 +572,13 @@
                 // 지도 초기화
                 setTimeout(() => this.initWriteMap(), 100);
             },
-            
-            closeWriteModal: function() { 
+
+            closeWriteModal: function () {
                 document.getElementById('writeModal').classList.remove('active');
                 this.updateOverlay();
             },
-            
-            openViewModal: async function(usedIdx) {
+
+            openViewModal: async function (usedIdx) {
                 if (!usedIdx) return;
 
                 try {
@@ -603,7 +606,7 @@
                 }
             },
 
-            renderDetail: function(data) {
+            renderDetail: function (data) {
                 // 이미지 슬라이드
                 const swiperWrapper = document.querySelector('.product-swiper .swiper-wrapper');
                 if (swiperWrapper) {
@@ -682,8 +685,8 @@
                 this.currentIsOwner = data.isOwner || false;
                 this.currentDetailData = data;
             },
-            
-            closeViewModal: function() {
+
+            closeViewModal: function () {
                 // 모달 닫을 때 리스트 카드 최신 데이터로 동기화
                 this.updateListCard(this.currentDetailData);
                 document.getElementById('viewModal').classList.remove('active');
@@ -693,7 +696,7 @@
             /**
              * 상세에서 변경된 값(조회수, 찜수, 상태)을 리스트 카드에 반영
              */
-            updateListCard: function(data) {
+            updateListCard: function (data) {
                 if (!data) return;
                 const card = document.querySelector(`.market-item[data-id="${data.usedIdx}"]`);
                 if (!card) return;
@@ -717,7 +720,7 @@
 
             // ==================== 수정 ====================
 
-            openEditMode: async function() {
+            openEditMode: async function () {
                 const data = this.currentDetailData;
                 if (!data) return;
 
@@ -764,7 +767,7 @@
                 }, 100);
             },
 
-            renderExistingFiles: function(files) {
+            renderExistingFiles: function (files) {
                 const cameraBtn = document.getElementById('cameraBtn');
                 files.forEach(file => {
                     const html = `
@@ -779,7 +782,7 @@
                 this.updateImageCount();
             },
 
-            removeExistingFile: function(btn, fileIdx) {
+            removeExistingFile: function (btn, fileIdx) {
                 btn.closest('.preview-box').remove();
                 this.deletedFileIdxs.push(fileIdx);
                 this.updateImageCount();
@@ -787,15 +790,15 @@
 
             // ==================== 삭제 ====================
 
-            confirmDelete: function() {
+            confirmDelete: function () {
                 document.getElementById('deleteConfirmModal').classList.add('show');
             },
 
-            closeDeleteModal: function() {
+            closeDeleteModal: function () {
                 document.getElementById('deleteConfirmModal').classList.remove('show');
             },
 
-            deleteUsedItem: async function() {
+            deleteUsedItem: async function () {
                 try {
                     const response = await API.delete(`/used-market/${this.currentUsedIdx}`);
                     if (response.status === 200) {
@@ -815,18 +818,18 @@
 
             // ==================== 키워드 관리 ====================
 
-            openKeywordModal: function() {
+            openKeywordModal: function () {
                 document.getElementById('keywordModal').classList.add('active');
                 this.updateOverlay();
                 this.loadKeywords();
             },
 
-            closeKeywordModal: function() {
+            closeKeywordModal: function () {
                 document.getElementById('keywordModal').classList.remove('active');
                 this.updateOverlay();
             },
 
-            loadKeywords: async function() {
+            loadKeywords: async function () {
                 try {
                     const response = await API.get('/used-market/keywords');
                     if (response.status === 200 && response.data) {
@@ -837,7 +840,7 @@
                 }
             },
 
-            renderKeywords: function(keywords) {
+            renderKeywords: function (keywords) {
                 const container = document.getElementById('keywordList');
                 const countEl = document.getElementById('keywordCount');
 
@@ -856,7 +859,7 @@
                 `).join('');
             },
 
-            addKeyword: async function() {
+            addKeyword: async function () {
                 const input = document.getElementById('keywordInput');
                 const keyword = input.value.trim();
 
@@ -883,7 +886,7 @@
                 }
             },
 
-            deleteKeyword: async function(keywordIdx) {
+            deleteKeyword: async function (keywordIdx) {
                 try {
                     const response = await API.delete(`/used-market/keywords/${keywordIdx}`);
                     if (response.status === 200) {
@@ -895,11 +898,11 @@
                     Utils.notify('키워드 삭제에 실패했습니다', 'error');
                 }
             },
-            
+
             /**
              * 상태 배지 HTML 반환
              */
-            getStatusBadge: function(state) {
+            getStatusBadge: function (state) {
                 const badges = {
                     RESERVED: '<span class="used-state-badge badge-reserved">[예약중]</span> ',
                     SOLD: '<span class="used-state-badge badge-sold">[판매완료]</span> '
@@ -910,7 +913,7 @@
             /**
              * 찜(좋아요) 토글 - 구매자 전용
              */
-            toggleLike: async function() {
+            toggleLike: async function () {
                 const data = this.currentDetailData;
                 if (!data || data.isOwner) return;
                 try {
@@ -936,7 +939,7 @@
             /**
              * 상세보기 stats (조회수/채팅/찜) 재렌더링
              */
-            refreshDetailStats: function() {
+            refreshDetailStats: function () {
                 const data = this.currentDetailData;
                 if (!data) return;
                 const statsEl = document.getElementById('view-stats');
@@ -952,7 +955,7 @@
             /**
              * 하트 버스트 파티클 효과
              */
-            burstHeart: function(el) {
+            burstHeart: function (el) {
                 const rect = el.getBoundingClientRect();
                 const cx = rect.left + rect.width / 2;
                 const cy = rect.top + rect.height / 2;
@@ -1003,7 +1006,7 @@
             /**
              * 상품 상태 변경 - 판매자 전용
              */
-            updateStatus: async function(state) {
+            updateStatus: async function (state) {
                 const data = this.currentDetailData;
                 if (!data) return;
                 try {
@@ -1017,17 +1020,17 @@
             },
 
             /** 상태 드롭다운 열기/닫기 */
-            toggleStatusDropdown: function() {
+            toggleStatusDropdown: function () {
                 const dropdown = document.getElementById('status-dropdown');
                 dropdown?.classList.toggle('open');
             },
 
-            closeStatusDropdown: function() {
+            closeStatusDropdown: function () {
                 document.getElementById('status-dropdown')?.classList.remove('open');
             },
 
             /** 드롭다운 값 설정 (라벨 + active 클래스) */
-            setStatusDropdownValue: function(state) {
+            setStatusDropdownValue: function (state) {
                 const labels = { TRADING: '거래중', RESERVED: '예약중', SOLD: '판매완료' };
                 const label = document.getElementById('status-dropdown-label');
                 if (label) label.textContent = labels[state] ?? state;
@@ -1037,13 +1040,13 @@
             },
 
             /** 드롭다운 항목 선택 → 상태 변경 API 호출 */
-            selectStatus: function(state) {
+            selectStatus: function (state) {
                 this.closeStatusDropdown();
                 this.setStatusDropdownValue(state);
                 this.updateStatus(state);
             },
 
-            closeAllModals: function() {
+            closeAllModals: function () {
                 // 상세 모달이 열려 있었으면 리스트 카드 동기화
                 if (document.getElementById('viewModal')?.classList.contains('active')) {
                     this.updateListCard(this.currentDetailData);
@@ -1064,7 +1067,7 @@
             /**
              * 상세보기 지도 초기화
              */
-            initDetailMap: function(lat, lng) {
+            initDetailMap: function (lat, lng) {
                 const mapDiv = document.getElementById('detailMap');
                 const mapArea = document.querySelector('.map-area');
 
@@ -1095,7 +1098,7 @@
             /**
              * 글쓰기 모달의 지도 초기화
              */
-            initWriteMap: function() {
+            initWriteMap: function () {
                 const mapDiv = document.getElementById('writeLocationMap');
                 if (!mapDiv) {
                     console.error('[글쓰기지도] 지도 컨테이너를 찾을 수 없습니다');
@@ -1130,7 +1133,7 @@
             /**
              * 글쓰기 지도의 현재 위치 가져오기
              */
-            getWriteMapCurrentLocation: function() {
+            getWriteMapCurrentLocation: function () {
                 if (!navigator.geolocation) {
                     console.log('[글쓰기지도] Geolocation을 지원하지 않습니다');
                     return;
@@ -1145,7 +1148,7 @@
                         console.log(`[글쓰기지도] 현재 위치: ${lat}, ${lng}`);
 
                         const location = { lat: lat, lng: lng };
-                        
+
                         // 지도 중심을 사용자 위치로 이동
                         if (this.writeMap) {
                             this.writeMap.setCenter(location);
@@ -1174,7 +1177,7 @@
             /**
              * 글쓰기 지도 클릭 시 처리
              */
-            onWriteMapClick: function(latLng) {
+            onWriteMapClick: function (latLng) {
                 this.selectedLat = latLng.lat();
                 this.selectedLng = latLng.lng();
 
@@ -1190,7 +1193,7 @@
             /**
              * 좌표로부터 주소 가져오기
              */
-            getAddressFromCoordinates: function(latLng) {
+            getAddressFromCoordinates: function (latLng) {
                 const lat = typeof latLng.lat === 'function' ? latLng.lat() : latLng.lat;
                 const lng = typeof latLng.lng === 'function' ? latLng.lng() : latLng.lng;
 
@@ -1213,7 +1216,7 @@
             /**
              * 글쓰기 지도 마커 업데이트
              */
-            updateWriteMarker: function(latLng) {
+            updateWriteMarker: function (latLng) {
                 if (this.writeMarker) {
                     this.writeMarker.setMap(null);
                 }
@@ -1225,7 +1228,7 @@
                 });
             },
 
-            submitProduct: async function() {
+            submitProduct: async function () {
                 const title = document.getElementById('productTitle').value.trim();
                 const content = document.getElementById('productDesc').value.trim();
                 const price = document.getElementById('productPrice').value;
@@ -1310,7 +1313,7 @@
                 }
             },
 
-            handleFileSelect: function(input) {
+            handleFileSelect: function (input) {
                 const cameraBtn = document.getElementById('cameraBtn');
                 Array.from(input.files).forEach(file => {
                     if (!file.type.startsWith('image/')) return;
@@ -1334,12 +1337,12 @@
                 input.value = '';
             },
 
-            removeFile: function(index) {
+            removeFile: function (index) {
                 this.selectedFiles[index] = null; // null로 표시 (배열 인덱스 유지)
                 this.updateImageCount();
             },
 
-            updateImageCount: function() {
+            updateImageCount: function () {
                 // 새 파일: 배열에서 null 제외하여 카운트 (DOM 제거 타이밍 이슈 방지)
                 const newCount = this.selectedFiles.filter(f => f !== null).length;
                 // 기존 파일(수정 모드): DOM 기준
@@ -1347,7 +1350,7 @@
                 document.getElementById('imgCount').innerText = `${newCount + existingCount}/10`;
             },
 
-            resetWriteForm: function() {
+            resetWriteForm: function () {
                 document.getElementById('productTitle').value = '';
                 document.getElementById('productDesc').value = '';
                 document.getElementById('productPrice').value = '';

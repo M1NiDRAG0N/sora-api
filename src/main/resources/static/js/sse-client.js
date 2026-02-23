@@ -89,6 +89,9 @@ const SSEClient = {
                     console.warn('[SSE] 알 수 없는 알림 타입:', data.type);
             }
             
+            // 전역 이벤트 발행 (헤더 배지, 알림 목록 등에서 구독)
+            window.dispatchEvent(new CustomEvent('sse-notification', { detail: data }));
+
             // 사용자에게 UI 피드백 제공
             this.showNotificationUI(data);
             

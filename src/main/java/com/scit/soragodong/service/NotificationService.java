@@ -1,9 +1,12 @@
 package com.scit.soragodong.service;
 
+import com.scit.soragodong.domain.dto.NotificationRes;
 import com.scit.soragodong.domain.entity.Notification;
 import com.scit.soragodong.domain.entity.Used;
 import com.scit.soragodong.domain.entity.UsedKeyword;
 import com.scit.soragodong.domain.enums.NotificationType;
+import com.scit.soragodong.exception.CustomException;
+import com.scit.soragodong.exception.ErrorCode;
 import com.scit.soragodong.repository.NotificationRepository;
 import com.scit.soragodong.repository.UsedKeywordRepository;
 import com.scit.soragodong.repository.UsedRepository;
@@ -114,5 +117,62 @@ public class NotificationService {
         }
 
         log.info("[알림] 키워드 매칭 완료 - 알림 발송 사용자: {}", matchedUserIdxs.size());
+    }
+
+    // ===== 알림 조회/관리 =====
+
+    /**
+     * 사용자 알림 목록 조회 (논리삭제 제외)
+     */
+    @Transactional(readOnly = true)
+    public List<NotificationRes> getNotifications(Integer userIdx) {
+		
+		List<Notification> notifications = notificationRepository.findActiveNotifications(userIdx);
+		
+  
+		return notifications.stream()
+				.sorted((n1, n2) -> {
+					// n1이 공지(0)면 앞으로 (-1), n2가 공지(0)면 뒤로 (1)
+					if (n1.getUserIdx() == 0 && n2.getUserIdx() != 0) return -1;
+					if (n1.getUserIdx() != 0 && n2.getUserIdx() == 0) return 1;
+					// 둘 다 공지거나 둘 다 일반이면 최신순 정렬
+					return n2.getCreatedAt().compareTo(n1.getCreatedAt());
+				})
+				.map(NotificationRes::from)
+				.toList();
+    }
+
+    /**
+     * 읽지 않은 알림 수
+     */
+    @Transactional(readOnly = true)
+    public long getUnreadCount(Integer userIdx) {
+        return notificationRepository.countByUserIdxAndIsReadFalseAndIsUseTrue(userIdx);
+    }
+
+    /**
+     * 알림 읽음 처리
+     */
+    @Transactional
+    public void markAsRead(Integer notiIdx, Integer userIdx) {
+        Notification notification = notificationRepository.findById(notiIdx)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+        if (!notification.getUserIdx().equals(userIdx)) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+        notification.markAsRead();
+    }
+
+    /**
+     * 알림 논리 삭제
+     */
+    @Transactional
+    public void deleteNotification(Integer notiIdx, Integer userIdx) {
+        Notification notification = notificationRepository.findById(notiIdx)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+        if (!notification.getUserIdx().equals(userIdx)) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+        notification.delete();
     }
 }

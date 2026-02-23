@@ -1,15 +1,14 @@
 package com.scit.soragodong.service;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * SSE(Server-Sent Events)를 이용한 실시간 알림 서비스
@@ -166,4 +165,6 @@ public class SseService {
         emitters.clear();
         log.info("[SSE] 모든 연결 종료 완료");
     }
+	
+	
 }
