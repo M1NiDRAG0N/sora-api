@@ -52,6 +52,7 @@
                 targetType: null,
                 targetId: null,
                 selectedReason: null,
+                isSubmitting: false,
                 reasons: ["스팸/홍보", "부적절한 콘텐츠", "혐오 표현/괴롭힘", "개인정보 노출", "사기 의심", "기타"]
             },
 
@@ -118,25 +119,50 @@
             },
 
             submit: async () => {
+                if (ReportModal.state.isSubmitting) return;
+
                 if (!ReportModal.state.selectedReason) {
                     Utils.notify("신고 사유를 선택해주세요.", "warning");
                     return;
                 }
 
+                const description = document.getElementById('report-description').value.trim();
+                
                 const data = {
                     targetType: ReportModal.state.targetType,
                     targetId: ReportModal.state.targetId,
                     reason: ReportModal.state.selectedReason,
-                    description: document.getElementById('report-description').value
+                    description: description
                 };
 
+                // 제출 버튼 상태 변경 (중복 클릭 방지)
+                const submitBtn = document.querySelector('.submit-btn');
+                const originalText = submitBtn.innerText;
+                
                 try {
-                    await API.post('/report/submit', data);
-                    Utils.notify("신고가 정상적으로 접수되었습니다.", "success");
-                    ReportModal.close();
+                    ReportModal.state.isSubmitting = true;
+                    submitBtn.innerText = "제출 중...";
+                    submitBtn.style.opacity = "0.7";
+                    submitBtn.disabled = true;
+
+                    const response = await API.post('/report/submit', data);
+                    
+                    Utils.notify("신고가 정상적으로 접수되었습니다. 검토 후 조치하겠습니다.", "success");
+                    
+                    // 성공 시 잠시 후 창 닫기
+                    setTimeout(() => {
+                        ReportModal.close();
+                    }, 500);
+
                 } catch (error) {
-                    console.error('신고 실패:', error);
-                    Utils.notify("오류가 발생했습니다.", "error");
+                    console.error('신고 제출 실패:', error);
+                    const errorMsg = error.response?.data?.message || "신고 제출 중 오류가 발생했습니다. 다시 시도해 주세요.";
+                    Utils.notify(errorMsg, "error");
+                } finally {
+                    ReportModal.state.isSubmitting = false;
+                    submitBtn.innerText = originalText;
+                    submitBtn.style.opacity = "1";
+                    submitBtn.disabled = false;
                 }
             }
         };
