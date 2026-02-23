@@ -1,13 +1,5 @@
 package com.scit.soragodong.service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.scit.soragodong.domain.entity.Notification;
 import com.scit.soragodong.domain.entity.Used;
 import com.scit.soragodong.domain.entity.UsedKeyword;
@@ -15,9 +7,15 @@ import com.scit.soragodong.domain.enums.NotificationType;
 import com.scit.soragodong.repository.NotificationRepository;
 import com.scit.soragodong.repository.UsedKeywordRepository;
 import com.scit.soragodong.repository.UsedRepository;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * 공통 알림 서비스
