@@ -2,11 +2,13 @@ package com.scit.soragodong.service;
 
 import com.scit.soragodong.ai.CommunityTool;
 import com.scit.soragodong.ai.FinanceTool;
+import com.scit.soragodong.ai.RedisChatMemory;
 import com.scit.soragodong.ai.TimesaleTool;
 import com.scit.soragodong.ai.UsedMarketTool;
 import com.scit.soragodong.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
@@ -22,8 +24,10 @@ public class AiChatService {
     private final UsedService usedService;
     private final CommunityService communityService;
     private final TimesaleService timesaleService;
+    private final RedisChatMemory chatMemory;
 
     public Flux<String> streamChat(String message, CustomUserDetails user) {
+        String conversationId = "user:" + user.getUserIdx();
         String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         String currentYearMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
 
@@ -52,6 +56,9 @@ public class AiChatService {
                 .prompt()
                 .system(systemPrompt)
                 .user(message)
+                .advisors(MessageChatMemoryAdvisor.builder(chatMemory)
+                        .conversationId(conversationId)
+                        .build())
                 .tools(
                         new FinanceTool(financeService, user.getUserIdx()),
                         new UsedMarketTool(usedService, user.getUserIdx(),
@@ -61,5 +68,9 @@ public class AiChatService {
                 )
                 .stream()
                 .content();
+    }
+
+    public void clearHistory(Integer userIdx) {
+        chatMemory.clear("user:" + userIdx);
     }
 }

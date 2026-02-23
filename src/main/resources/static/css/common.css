@@ -1095,6 +1095,27 @@ input[type="checkbox"] {
     width: 40px;
 }
 
+.ai-chat-clear-btn {
+    width: 36px;
+    height: 36px;
+    background: none;
+    border: none;
+    color: var(--text-sub);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.15s, color 0.15s;
+    flex-shrink: 0;
+}
+
+.ai-chat-clear-btn:hover {
+    background: rgba(143, 125, 245, 0.12);
+    color: var(--primary);
+}
+
 /* AI 채팅 바디 */
 .ai-chat-body {
     flex: 1;
