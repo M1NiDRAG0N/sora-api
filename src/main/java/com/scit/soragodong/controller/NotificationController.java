@@ -1,27 +1,20 @@
 package com.scit.soragodong.controller;
 
-import java.util.List;
-
+import com.scit.soragodong.domain.dto.NotificationRes;
+import com.scit.soragodong.domain.response.ApiResponse;
+import com.scit.soragodong.security.CustomUserDetails;
+import com.scit.soragodong.service.NotificationService;
+import com.scit.soragodong.service.SseService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import com.scit.soragodong.security.CustomUserDetails;
-import com.scit.soragodong.domain.dto.NotificationRes;
-import com.scit.soragodong.domain.response.ApiResponse;
-import com.scit.soragodong.service.NotificationService;
-import com.scit.soragodong.service.SseService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
 
 /**
  * 실시간 알림 관련 REST API
@@ -137,4 +130,6 @@ public class NotificationController {
         notificationService.deleteNotification(notiIdx, userDetails.getUserIdx());
         return ApiResponse.success("삭제되었습니다.");
     }
+	
+	
 }
