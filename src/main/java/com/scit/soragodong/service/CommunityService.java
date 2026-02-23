@@ -1,6 +1,7 @@
 package com.scit.soragodong.service;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +25,7 @@ import com.scit.soragodong.domain.entity.LikeCount;
 import com.scit.soragodong.domain.entity.LikeCountKey;
 import com.scit.soragodong.domain.entity.Users;
 import com.scit.soragodong.domain.enums.FileRefType;
+import com.scit.soragodong.domain.enums.NotificationType;
 import com.scit.soragodong.exception.CustomException;
 import com.scit.soragodong.exception.ErrorCode;
 import com.scit.soragodong.repository.BoardReplyRepository;
@@ -49,6 +51,7 @@ public class CommunityService {
     private final FileGrpRepository fileGrpRepository;
     private final FileRepository fileRepository;
     private final LikeCountRepository lcr;
+    private final NotificationService notificationService;
 
     /**
      * 게시글 10개씩 조회 분류, 무한스크롤
@@ -57,50 +60,58 @@ public class CommunityService {
      * @return
      */
     public List<BoardDto> getBoardList10Sorted(int page, String category, String keyword, Integer userIdx) {
-        // 1. 결과 담을 빈 리스트 준비 (원래 하시던 방식)
-        List<BoardDto> dtoList = new ArrayList<>();
-
-        // 2. 페이지 계산 (1페이지 -> 0번 인덱스)
+        // 1. 페이지 계산
         int pageNum = (page < 1) ? 0 : page - 1;
-
-        // 3. 정렬 설정 (최신순)
-        Pageable pageable = PageRequest.of(pageNum, 10, Sort.Direction.DESC, "createdAt");
-        log.info("검색창 키워드 확인 {}", keyword);
-        // 4. 검색 조건 유무 확인 (null이거나 빈 문자열 체크)
-        boolean hasCategory = category != null && !category.isEmpty() && !category.equals("전체");
-        boolean hasKeyword = keyword != null && !keyword.isEmpty();
-
+        Pageable pageable;
         Page<Board> boardPage;
 
-        // 5. 상황에 따라 다른 쿼리 호출 (if-else 분기)
-        if (hasCategory && hasKeyword) {
-            boardPage = br
-                    .findByIsUseTrueAndBoardCategoryAndBoardTitleContainingOrIsUseTrueAndBoardCategoryAndBoardContentContaining(
-                            category, keyword, category, keyword, pageable);
+        // 2. 검색 조건 유무 확인
+        // '인기글'은 별도 처리하므로 hasCategory 체크에서 제외
+        boolean isPopular = "인기글".equals(category);
+        boolean hasCategory = category != null && !category.isEmpty() && !category.equals("전체") && !isPopular;
+        boolean hasKeyword = keyword != null && !keyword.isEmpty();
 
-        } else if (hasCategory) {
-            boardPage = br.findByBoardCategoryAndIsUseTrue(category, pageable);
-
-        } else if (hasKeyword) {
-            boardPage = br.findByIsUseTrueAndBoardTitleContainingOrIsUseTrueAndBoardContentContaining(
-                    keyword, keyword, pageable);
+        // 3. 쿼리 실행 분기
+        if (isPopular) {
+            // [인기글] 최근 7일 + 좋아요 10개 이상 + 좋아요 순
+            pageable = PageRequest.of(pageNum, 10);
+            LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+            boardPage = br.findByCreatedAtAfterAndLikeCountGreaterThanEqualAndIsUseTrueOrderByLikeCountDesc(
+                    sevenDaysAgo, 10, pageable);
 
         } else {
-            boardPage = br.findByIsUseTrue(pageable);
+            // [일반글] 최신순 정렬
+            pageable = PageRequest.of(pageNum, 10, Sort.Direction.DESC, "createdAt");
+
+            if (hasCategory && hasKeyword) {
+                boardPage = br.findByIsUseTrueAndBoardCategoryAndBoardTitleContainingOrIsUseTrueAndBoardCategoryAndBoardContentContaining(
+                        category, keyword, category, keyword, pageable);
+            } else if (hasCategory) {
+                boardPage = br.findByBoardCategoryAndIsUseTrue(category, pageable);
+            } else if (hasKeyword) {
+                boardPage = br.findByIsUseTrueAndBoardTitleContainingOrIsUseTrueAndBoardContentContaining(
+                        keyword, keyword, pageable);
+            } else {
+                boardPage = br.findByIsUseTrue(pageable);
+            }
         }
 
-        List<Board> boardEntityList = boardPage.getContent();
-        for (Board board : boardEntityList) {
+        // 4. Entity -> DTO 변환 (공통 로직)
+        List<BoardDto> dtoList = new ArrayList<>();
+        for (Board board : boardPage.getContent()) {
             boolean isLiked = false;
-            LikeCountKey likeCountKey = new LikeCountKey(userIdx, board.getBoardIdx());
-            isLiked = lcr.existsById(likeCountKey);
+            // 로그인한 경우 좋아요 여부 확인
+            if (userIdx != null) {
+                LikeCountKey likeCountKey = new LikeCountKey(userIdx, board.getBoardIdx());
+                isLiked = lcr.existsById(likeCountKey);
+            }
+            
             BoardDto dto = BoardDto.builder()
                     .boardIdx(board.getBoardIdx())
                     .userIdx(board.getUser().getUserIdx())
                     .userNickname(board.getUser().getUserNickname())
                     .boardCategory(board.getBoardCategory())
-                    .profileIdx(board.getUser()
-                            .getProfileIdx())
+                    .profileIdx(board.getUser().getProfileIdx())
                     .boardTitle(board.getBoardTitle())
                     .boardContent(board.getBoardContent())
                     .isUse(board.getIsUse())
@@ -287,6 +298,15 @@ public class CommunityService {
 
             brr.save(baordReplyEntity);
 
+            // 알림 발송 (본인 글에 쓴 댓글 제외)
+            if (!board.getUser().getUserIdx().equals(user.getUserIdx())) {
+                notificationService.send(
+                        board.getUser().getUserIdx(),
+                        NotificationType.COMMENT,
+                        board.getBoardIdx(),
+                        "내 게시글에 새 댓글이 달렸습니다.");
+            }
+
             BoardReplyDto boardReplyDto2 = BoardReplyDto.builder()
                     .replyIdx(baordReplyEntity.getReplyIdx())
                     .boardIdx(baordReplyEntity.getBoard().getBoardIdx())
@@ -400,7 +420,7 @@ public class CommunityService {
     public boolean toggleLike(Integer boardIdx, Integer userIdx) {
         LikeCountKey key = new LikeCountKey(userIdx, boardIdx);
         boolean exists = lcr.existsById(key);
-        
+
         Board board = br.findById(boardIdx)
                 .orElseThrow(() -> new CustomException(ErrorCode.BOARD_NOT_FOUND));
 

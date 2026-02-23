@@ -65,4 +65,14 @@ public class ProfileController {
         profileService.updateProfile(userDetails.getUserIdx(), data, profileImage);
         return ResponseEntity.ok("Profile updated successfully");
     }
+
+    // 내가 찜한 중고 물품 목록 조회
+    @GetMapping("/api/likes/used")
+    @ResponseBody
+    public ResponseEntity<java.util.List<com.scit.soragodong.domain.dto.UsedListRes>> getMyLikedUsedItems(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        
+        java.util.List<com.scit.soragodong.domain.dto.UsedListRes> list = profileService.getMyLikedUsedItems(userDetails.getUserIdx());
+        return ResponseEntity.ok(list);
+    }
 }
