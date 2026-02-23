@@ -1,6 +1,7 @@
 package com.scit.soragodong.controller;
 
 import com.scit.soragodong.domain.dto.ProfileDto;
+import com.scit.soragodong.domain.dto.ProfileUpdateDto;
 import com.scit.soragodong.security.CustomUserDetails;
 import com.scit.soragodong.service.ProfileService;
 import lombok.RequiredArgsConstructor;
@@ -10,8 +11,11 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 
 @Controller
 @RequestMapping("/profile")
@@ -49,5 +53,16 @@ public class ProfileController {
         ProfileDto profileDto = profileService.getProfile(loginUserIdx, loginUserIdx);
         
         return ResponseEntity.ok(profileDto);
+    }
+
+    @PutMapping("/update")
+    @ResponseBody
+    public ResponseEntity<String> updateProfile(
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
+            @RequestPart("data") ProfileUpdateDto data,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        
+        profileService.updateProfile(userDetails.getUserIdx(), data, profileImage);
+        return ResponseEntity.ok("Profile updated successfully");
     }
 }

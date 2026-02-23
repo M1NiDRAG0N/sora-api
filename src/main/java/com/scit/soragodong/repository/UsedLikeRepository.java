@@ -24,4 +24,9 @@ public interface UsedLikeRepository extends JpaRepository<UsedLike, Integer> {
      * 사용자의 좋아요 조회
      */
     Optional<UsedLike> findByUsedIdxAndUserIdx(Integer usedIdx, Integer userIdx);
+
+    /**
+     * 사용자의 좋아요 삭제
+     */
+    void deleteByUsedIdxAndUserIdx(Integer usedIdx, Integer userIdx);
 }

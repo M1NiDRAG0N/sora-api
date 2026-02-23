@@ -11,7 +11,8 @@
     <link rel="stylesheet" href="/css/finance.css">
     <link rel="stylesheet" href="/css/chat.css">
     <link rel="stylesheet" href="/css/community.css">
-    <link rel="stylesheet" href="/css/findAccount.css">
+    <link rel="stylesheet" href="/css/findAccount.css"> 
+    <link rel="stylesheet" href="/css/profile.css">
     <link rel="stylesheet" href="/css/timesale.css">
     <link rel="stylesheet" href="/css/usedmarket.css">
 
@@ -23,7 +24,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script defer th:src="@{https://maps.googleapis.com/maps/api/js(key=${googleMapsApiKey},libraries='places,geocoding')}"></script>
-
     <script src="/js/utils.js"></script>
     <script src="/js/api.js"></script>
     <script src="/js/validation.js"></script>
@@ -41,6 +41,8 @@
         <th:block th:if="${currentUri == '/timesale'}" th:insert="~{timesale/timesale :: div}"></th:block>
         <th:block th:if="${currentUri == '/timesale/detail'}" th:insert="~{timesale/timesaledetail :: div}"></th:block>
         <th:block th:if="${currentUri == '/used-market'}" th:insert="~{usedmarket/usedmarket :: div}"></th:block>
+        <th:block th:if="${currentUri == '/chatList'}" th:insert="~{chat/chatList :: div}"></th:block>
+        <th:block th:if="${currentUri == '/report'}" th:insert="~{report/report :: div}"></th:block>
 
         <div th:replace="~{layout/nav :: nav}"></div>
 
@@ -69,7 +71,5 @@
             </div>
         </div>
 
-    </div>
-</body>
 
 </html>

@@ -40,7 +40,8 @@ public record ProfileDto(
             String timeAgo,
             String price, // null for community
             String thumbnail, // file path
-            String type // 'market', 'community', 'reply'
+            String type, // 'market', 'community', 'reply'
+            java.time.LocalDateTime createdAt
     ) {
     }
 }

@@ -1,13 +1,11 @@
 package com.scit.soragodong.service;
 
 import java.lang.reflect.Field;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
@@ -34,7 +32,6 @@ import com.scit.soragodong.repository.FileGrpRepository;
 import com.scit.soragodong.repository.FileRepository;
 import com.scit.soragodong.repository.LikeCountRepository;
 import com.scit.soragodong.repository.UserRepository;
-import com.scit.soragodong.util.DateTimeUtil;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -95,7 +92,7 @@ public class CommunityService {
         List<Board> boardEntityList = boardPage.getContent();
         for (Board board : boardEntityList) {
             boolean isLiked = false;
-            LikeCountKey likeCountKey = new LikeCountKey(board.getBoardIdx(), userIdx);
+            LikeCountKey likeCountKey = new LikeCountKey(userIdx, board.getBoardIdx());
             isLiked = lcr.existsById(likeCountKey);
             BoardDto dto = BoardDto.builder()
                     .boardIdx(board.getBoardIdx())
@@ -208,7 +205,7 @@ public class CommunityService {
         Board entity = br.findById(boardIdx)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        LikeCountKey key = new LikeCountKey(boardIdx, userIdx);
+        LikeCountKey key = new LikeCountKey(userIdx, boardIdx);
         boolean isLiked = lcr.existsById(key);
 
         BoardDto boardDto = BoardDto.builder()
@@ -394,26 +391,24 @@ public class CommunityService {
     }
 
     @Transactional
-    public void addLike(Integer boardIdx, Integer userIdx) {
-        LikeCountKey key = new LikeCountKey(boardIdx, userIdx);
+    public boolean toggleLike(Integer boardIdx, Integer userIdx) {
+        LikeCountKey key = new LikeCountKey(userIdx, boardIdx);
         boolean exists = lcr.existsById(key);
-        log.info("존재 확인 {}", exists);
+        
+        Board board = br.findById(boardIdx)
+                .orElseThrow(() -> new CustomException(ErrorCode.BOARD_NOT_FOUND));
+
         if (exists) {
-            throw new CustomException(ErrorCode.EXITS_LIKE_ALREADY);
+            // 이미 좋아요 상태 -> 취소 (삭제)
+            lcr.deleteById(key);
+            board.decreaseLike();
+            return false; // 이제 좋아요 아님
+        } else {
+            // 좋아요 안 누른 상태 -> 등록 (추가)
+            lcr.save(LikeCount.builder().id(key).build());
+            board.increaseLike();
+            return true; // 이제 좋아요 상태임
         }
-
-        LikeCount likeCount = LikeCount.builder()
-                .id(key)
-                .build();
-        lcr.save(likeCount);
-
-        Board board = br.findById(
-                boardIdx)
-                .orElseThrow(
-                        () -> new RuntimeException("글을 찾을 수 없습니다."));
-
-        log.info("야발로그 {}", board);
-        board.increaseLike();
     }
 
     @Transactional

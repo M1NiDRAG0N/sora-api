@@ -21,12 +21,12 @@ gradlew.bat clean build        # Windows
 
 ## Required Environment Variables
 
-The application requires these environment variables (set in IDE or `.env`):
 - `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD` - MySQL connection
 - `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` - Redis for session/cache
 - `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` - Email (Gmail SMTP)
 - `JWT_SECRET` - JWT signing key (min 32 characters)
-- `GOOGLE_MAPS_API_KEY` - Google Maps API
+- `GOOGLE_MAPS_API_KEY` - Google Maps API (used on signup page)
+- `UPLOAD_PATH` - File upload directory (default: `/upload`)
 - `SPRING_PROFILES_ACTIVE` - Profile selection (`local`, `prod`, `test`)
 
 ## Architecture Overview
@@ -46,12 +46,16 @@ ApiResponse.success(message, data)  // 200 with custom message
 ApiResponse.error(ErrorCode.XXX)    // Error with ErrorCode enum
 ```
 
-**Exception Handling**: Throw `CustomException` with `ErrorCode` enum - handled globally by `GlobalExceptionHandler`:
+**Exception Handling**: Throw `CustomException` with `ErrorCode` enum — handled globally by `GlobalExceptionHandler`:
 ```java
 throw new CustomException(ErrorCode.USER_NOT_FOUND);
 ```
 
-**Entity Base Class**: Entities extend `BaseEntity` for automatic `createdAt`/`updatedAt` timestamps.
+**Entity Base Class**: All entities extend `BaseEntity` for automatic `createdAt`/`updatedAt` timestamps via JPA auditing.
+
+**JPA Naming Strategy**: Uses `PhysicalNamingStrategyStandardImpl` — DB column names must match Java field names exactly (no automatic camelCase→snake_case conversion).
+
+**`open-in-view: false`**: Lazy-loaded associations must be fetched within the service transaction; avoid accessing uninitialized collections in controllers.
 
 ### Module Structure
 
@@ -59,32 +63,56 @@ throw new CustomException(ErrorCode.USER_NOT_FOUND);
 |--------|-------------|
 | `auth/` | Login, signup, email verification, password reset |
 | `community/` | Board posts, replies, likes |
-| `finance/` | Financial records management |
+| `finance/` | Financial records and monthly budget tracking |
 | `usedmarket/` | Used goods marketplace with keyword notifications |
 | `timesale/` | Store products, orders, stock history |
 
+### Domain Enums
+
+| Enum | Values |
+|------|--------|
+| `UserRole` | `USER`, `ADMIN` |
+| `BoardCategory` | Post categories for community board |
+| `UsedState` | `SELLING`, `RESERVED`, `SOLD` |
+| `FileRefType` | `BOARD`, `PROFILE`, `USED` |
+| `NotificationType` | `KEYWORD`, `ORDER`, `COMMENT` |
+
 ### Security Configuration
 
-- Spring Security with form login (`/auth/login-proc`)
-- Session storage in Redis
+- Spring Security with form login to `/auth/login-proc`
+- Login parameter name: `userEmail` (not `username`)
+- Session stored in Redis (`spring-session-data-redis`)
 - BCrypt password encoding
-- Login parameter: `userEmail` (not `username`)
 - Public paths: `/`, `/landing`, `/auth/**`, static resources
+- Custom `CustomAuthenticationSuccessHandler` / `CustomAuthenticationFailureHandler`
 
 ### Real-time Features
 
-- **WebSocket**: Real-time chat messaging
-- **SSE (Server-Sent Events)**: Push notifications via `SseService`
+- **WebSocket** (`/ws`): Real-time chat messaging
+- **SSE** (`/notifications/subscribe/{userId}`): Push notifications via `SseService`; 1-hour connection timeout
 
 ### Database
 
 - **Production**: MySQL 8.0 with `ddl-auto: validate`
-- **Tests**: H2 in-memory with `ddl-auto: create-drop`
-- Test profile activated via `@ActiveProfiles("test")`
+- **Local (`application-local.yml`)**: `ddl-auto: update`, Thymeleaf caching disabled
+- **Tests**: H2 in-memory with `ddl-auto: create-drop`, activated via `@ActiveProfiles("test")`
+
+### AI Integration
+
+Spring AI with Ollama (`spring-ai-starter-model-ollama`) is included as a dependency. Configure the Ollama endpoint as needed via Spring AI properties.
+
+### File Uploads
+
+Max 10MB per file, 20MB per request. Files are stored via `FileService`/`FileUploadUtil` and referenced by `FileGrp` + `File` entities with a `FileRefType` enum linking files to their owner entity.
+
+### Cross-cutting Concerns
+
+**AOP Logging** (`LoggingAspect`): Automatically logs method entry/exit and execution time for all controllers (INFO) and services (DEBUG). No manual logging boilerplate needed in these layers.
 
 ## Code Conventions
 
-- Lombok annotations for boilerplate (`@RequiredArgsConstructor`, `@Getter`, `@Builder`)
-- DTOs use Java records (e.g., `UserDto`)
-- Async operations with `@Async` (enabled in main class)
-- Korean language for user-facing messages in `ErrorCode` enum
+- Lombok: `@RequiredArgsConstructor`, `@Getter`, `@Builder`, `@Slf4j`
+- DTOs are Java records (immutable)
+- `@Async` is enabled on the main class; use for email sending and background tasks
+- `ErrorCode` enum messages are in Korean (user-facing)
+- Pagination uses `PageResponse<T>` wrapper
