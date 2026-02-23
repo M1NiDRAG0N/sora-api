@@ -1,6 +1,12 @@
-<!-- 통일된 구조: 가계부 페이지 -->
-<div class="page-wrapper finance-page" th:fragment="div">
-        <div class="dashboard-card">
+<link rel="stylesheet" href="/css/finance.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+
+<div class="detail-content no-scrollbar" th:fragment="div">
+
+    <div class="dashboard-card">
         <div class="charts-row">
             <div class="chart-col">
                 <div class="chart-title">Last Month</div>
@@ -21,23 +27,6 @@
                 </div>
             </div>
         </div>
-        <div class="content-inner">
-            <!-- 대시보드 -->
-            <div class="dashboard-card">
-                <div class="charts-row">
-                    <div class="chart-col">
-                        <div class="chart-title">Last Month</div>
-                        <div class="chart-box"><canvas id="chartLast"></canvas>
-                            <div class="chart-center-text"><span class="chart-center-value">Total</span></div>
-                        </div>
-                    </div>
-                    <div class="chart-col">
-                        <div class="chart-title">This Month</div>
-                        <div class="chart-box"><canvas id="chartThis"></canvas>
-                            <div class="chart-center-text"><span class="chart-center-value">Total</span></div>
-                        </div>
-                    </div>
-                </div>
 
         <div class="budget-header">한 달 지출 목표 금액</div>
         <div class="budget-bar-wrap">
@@ -180,6 +169,10 @@
     </div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            finance.init();
+        });
+
         const finance = {
             currentDate: new Date(),
             selectedDay: null,
@@ -733,18 +726,5 @@
                     });
             }
         };
-
-        // 오버레이 클릭 시 모달 닫기
-        document.addEventListener('DOMContentLoaded', () => {
-            const overlay = document.querySelector('.modal-overlay');
-            if (overlay) {
-                overlay.addEventListener('click', (e) => {
-                    if (e.target === overlay) {
-                        finance.closeModal();
-                    }
-                });
-            }
-            finance.init();
-        });
     </script>
 </div>
