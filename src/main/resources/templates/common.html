@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="/css/timesale.css">
     <link rel="stylesheet" href="/css/usedmarket.css">
     <link rel="stylesheet" href="/css/notification.css">
+    <link rel="stylesheet" href="/css/report.css">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 
@@ -43,6 +44,7 @@
         <th:block th:if="${currentUri == '/timesale/detail'}" th:insert="~{timesale/timesaledetail :: div}"></th:block>
         <th:block th:if="${currentUri == '/used-market'}" th:insert="~{usedmarket/usedmarket :: div}"></th:block>
         <th:block th:if="${currentUri == '/chatList'}" th:insert="~{chat/chatList :: div}"></th:block>
+        <th:block th:if="${currentUri == '/report'}" th:insert="~{report/report :: div}"></th:block>
 
         <div th:replace="~{layout/nav :: nav}"></div>
 
@@ -51,6 +53,9 @@
 
         <!-- Global Notification Modal -->
         <th:block th:replace="~{notification/notification :: div}"></th:block>
+
+        <!-- Global Report Modal (only if not on report page) -->
+        <th:block th:replace="~{report/report :: div}"></th:block>
 
         <!-- ================================================ -->
 
