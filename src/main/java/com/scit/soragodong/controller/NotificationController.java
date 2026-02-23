@@ -1,15 +1,23 @@
 package com.scit.soragodong.controller;
 
+import java.util.List;
+
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import com.scit.soragodong.security.CustomUserDetails;
+import com.scit.soragodong.domain.dto.NotificationRes;
+import com.scit.soragodong.domain.response.ApiResponse;
+import com.scit.soragodong.service.NotificationService;
 import com.scit.soragodong.service.SseService;
 
 import lombok.RequiredArgsConstructor;
@@ -23,7 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class NotificationController {
-    
+
+    private final NotificationService notificationService;
     private final SseService sseService;
     
     /**
@@ -71,7 +80,7 @@ public class NotificationController {
     
     /**
      * 연결 해제
-     * POST /notifications/disconnect/{userId}
+     * GET /notifications/disconnect/{userId}
      */
     @GetMapping("/disconnect/{userId}")
     public ResponseEntity<?> disconnect(@PathVariable(name = "userId") Integer userId) {
@@ -81,5 +90,51 @@ public class NotificationController {
                     put("success", true);
                     put("message", "연결이 해제되었습니다.");
                 }});
+    }
+
+    // ===== 알림 CRUD =====
+
+    /**
+     * 알림 목록 조회
+     * GET /notifications
+     */
+    @GetMapping
+    public ApiResponse<List<NotificationRes>> getNotifications(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ApiResponse.success(notificationService.getNotifications(userDetails.getUserIdx()));
+    }
+
+    /**
+     * 읽지 않은 알림 수
+     * GET /notifications/unread-count
+     */
+    @GetMapping("/unread-count")
+    public ApiResponse<Long> getUnreadCount(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ApiResponse.success(notificationService.getUnreadCount(userDetails.getUserIdx()));
+    }
+
+    /**
+     * 알림 읽음 처리
+     * PATCH /notifications/{notiIdx}/read
+     */
+    @PatchMapping("/{notiIdx}/read")
+    public ApiResponse<?> markAsRead(
+            @PathVariable(name = "notiIdx") Integer notiIdx,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        notificationService.markAsRead(notiIdx, userDetails.getUserIdx());
+        return ApiResponse.success("읽음 처리되었습니다.");
+    }
+
+    /**
+     * 알림 삭제 (논리 삭제)
+     * DELETE /notifications/{notiIdx}
+     */
+    @DeleteMapping("/{notiIdx}")
+    public ApiResponse<?> deleteNotification(
+            @PathVariable(name = "notiIdx") Integer notiIdx,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        notificationService.deleteNotification(notiIdx, userDetails.getUserIdx());
+        return ApiResponse.success("삭제되었습니다.");
     }
 }

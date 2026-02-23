@@ -1,10 +1,10 @@
 <div th:fragment="nav" class="bottom-nav">
-    <div class="nav-item" onclick="location.href='/finance'">
+    <div class="nav-item" id="finance-nav" onclick="location.href='/finance'" data-path="/finance">
         <ion-icon name="wallet-outline"></ion-icon>
         <span>가계부</span>
     </div>
 
-    <div class="nav-item" onclick="location.href='/timesale'">
+    <div class="nav-item" id="timesale-nav" onclick="location.href='/timesale'" data-path="/timesale">
         <ion-icon name="time-outline"></ion-icon>
         <span>타임세일</span>
     </div>
@@ -15,13 +15,42 @@
         <ion-icon name="chatbubbles"></ion-icon>
     </div>
 
-    <div class="nav-item" onclick="location.href='/used-market'">
+    <div class="nav-item" id="usedmarket-nav" onclick="location.href='/used-market'" data-path="/used-market">
         <ion-icon name="cube-outline"></ion-icon>
         <span>중고거래</span>
     </div>
 
-    <div class="nav-item" onclick="location.href='/community'">
+    <div class="nav-item" id="community-nav" onclick="location.href='/community'" data-path="/community">
         <ion-icon name="people-outline"></ion-icon>
         <span>커뮤니티</span>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            nav.init();
+        });
+
+        const nav = {
+            init: () => {
+                const path = window.location.pathname;
+                console.log(path);
+                nav.changeBtnEffect(path);
+            },
+            changeBtnEffect: (path) => {
+                console.log(path);
+                const getBtn = document.querySelectorAll('.nav-item');
+                // console.log("네비게이션 메뉴 출력 : ", getBtn);
+                getBtn.forEach(menu => {
+                    const getDataPath = menu.getAttribute("data-path")
+                    console.log(menu);
+                    console.log("네비게이션 메뉴 출력 : ", getDataPath);
+                    if (path === getDataPath) {
+                        menu.classList.add('active');
+                    }
+                })
+
+            }
+
+        }
+    </script>
 </div>
