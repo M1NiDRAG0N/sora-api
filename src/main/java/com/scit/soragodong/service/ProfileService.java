@@ -54,6 +54,43 @@ public class ProfileService {
     private final com.scit.soragodong.repository.FileGrpRepository fileGrpRepository; // 파일 그룹 리포지토리 추가
     private final PasswordEncoder passwordEncoder;
     private final FileService fileService;
+    private final com.scit.soragodong.repository.FileRepository fileRepository; // 파일 리포지토리 추가
+    private final com.scit.soragodong.repository.UsedLikeRepository usedLikeRepository; // 의존성 추가
+
+    // ... (기존 코드)
+
+    /**
+     * 내가 찜한 중고 물품 목록 조회
+     */
+    public List<com.scit.soragodong.domain.dto.UsedListRes> getMyLikedUsedItems(Integer userIdx) {
+        // 1. 찜한 중고 물품 목록 조회 (Used 엔티티 직접 반환)
+        List<com.scit.soragodong.domain.entity.Used> likedItems = usedLikeRepository.findLikedUsedByUser(userIdx);
+
+        // 2. DTO 변환
+        return likedItems.stream()
+                .map(used -> {
+                    String thumbnailPath = null;
+
+                    // 썸네일 조회 (FileGrp -> File)
+                    java.util.Optional<com.scit.soragodong.domain.entity.FileGrp> grp = fileGrpRepository
+                            .findByRefTypeAndRefId(com.scit.soragodong.domain.enums.FileRefType.USED,
+                                    used.getUsedIdx());
+
+                    if (grp.isPresent()) {
+                        java.util.List<com.scit.soragodong.domain.entity.File> files = fileRepository
+                                .findByFileGroupAndIsUseTrueOrderByFileOrder(grp.get());
+                        if (!files.isEmpty()) {
+                            thumbnailPath = files.get(0).getFilePath(); // 첫 번째 파일 경로
+                        }
+                    }
+
+                    // 좋아요 수 조회
+                    int likeCount = usedLikeRepository.countByUsedIdx(used.getUsedIdx());
+
+                    return com.scit.soragodong.domain.dto.UsedListRes.from(used, thumbnailPath, likeCount, 0);
+                })
+                .collect(Collectors.toList());
+    }
 
     public ProfileDto getProfile(Integer targetUserIdx, Integer loginUserIdx) {
         Users user = userRepository.findById(targetUserIdx)
@@ -63,52 +100,70 @@ public class ProfileService {
 
         // 1. 작성한 글 (커뮤니티)
         List<ProfileDto.ProfileItemDto> posts = new ArrayList<>();
-        
+
         List<Board> myBoards = boardRepository.findByUser_UserIdxAndIsUseTrue(targetUserIdx);
         posts.addAll(myBoards.stream().map(this::convertToItem).collect(Collectors.toList()));
 
         // 2. 작성한 글 (중고거래) - 중고거래 게시글 추가
-        List<com.scit.soragodong.domain.entity.Used> myUsedItems = usedRepository.findByCreatedUserAndIsUseTrueOrderByCreatedAtDesc(
-                targetUserIdx, org.springframework.data.domain.PageRequest.of(0, 100)).getContent();
-        
+        List<com.scit.soragodong.domain.entity.Used> myUsedItems = usedRepository
+                .findByCreatedUserAndIsUseTrueOrderByCreatedAtDesc(
+                        targetUserIdx, org.springframework.data.domain.PageRequest.of(0, 100))
+                .getContent();
+
         posts.addAll(myUsedItems.stream().map(this::convertUsedToItem).collect(Collectors.toList()));
 
         // 최신순 정렬
         posts.sort((a, b) -> {
-            if (a.createdAt() == null) return 1;
-            if (b.createdAt() == null) return -1;
+            if (a.createdAt() == null)
+                return 1;
+            if (b.createdAt() == null)
+                return -1;
             return b.createdAt().compareTo(a.createdAt());
         });
-        
+
         // 3. 작성한 댓글
         List<BoardReply> myReplies = boardReplyRepository.findByUser_UserIdxAndIsUseTrue(targetUserIdx).stream()
                 .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
                 .collect(Collectors.toList());
 
-        // 4. 좋아요한 글
+        // 4. 좋아요한 글 (커뮤니티 + 중고거래)
+        List<ProfileDto.ProfileItemDto> allLikes = new ArrayList<>();
+
+        // 4-1. 커뮤니티 좋아요
         List<LikeCount> myLikes = likeCountRepository.findByUserId(targetUserIdx);
-        List<Board> likedBoards = new ArrayList<>();
         for (LikeCount like : myLikes) {
             boardRepository.findById(like.getId().getBoardIdx()).ifPresent(board -> {
-                if (board.getIsUse()) likedBoards.add(board);
+                if (board.getIsUse()) {
+                    allLikes.add(convertToItem(board)); // type: community
+                }
             });
         }
-        likedBoards.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt())); // 최신순
+
+        // 4-2. 중고거래 찜
+        List<com.scit.soragodong.domain.entity.Used> likedUsedItems = usedLikeRepository.findLikedUsedByUser(targetUserIdx);
+        allLikes.addAll(likedUsedItems.stream().map(this::convertUsedToItem).collect(Collectors.toList())); // type: market
+
+        // 최신순 정렬 (Null safe)
+        allLikes.sort((a, b) -> {
+            if (a.createdAt() == null) return 1;
+            if (b.createdAt() == null) return -1;
+            return b.createdAt().compareTo(a.createdAt());
+        });
 
         // DTO 변환
         return ProfileDto.builder()
                 .userIdx(user.getUserIdx())
                 .nickname(user.getUserNickname())
-                .description(user.getUserAddress()) // 주소로 대체
+                .description(user.getUserAddress())
                 .profileImg(user.getProfileIdx() != null ? "/img/" + user.getProfileIdx() : null)
-                .mannerScore(user.getMannerScore() != null ? user.getMannerScore() : 36) // 기본 36.5도
+                .mannerScore(user.getMannerScore() != null ? user.getMannerScore() : 36)
                 .postCount(posts.size())
                 .commentCount(myReplies.size())
-                .likeCount(myLikes.size())
+                .likeCount(allLikes.size()) // 전체 합산
                 .myProfile(isMyProfile)
                 .posts(posts)
                 .comments(myReplies.stream().map(this::convertToReplyItem).collect(Collectors.toList()))
-                .likes(likedBoards.stream().map(this::convertToItem).collect(Collectors.toList()))
+                .likes(allLikes) // 합친 리스트 반환
                 .build();
     }
 
@@ -120,7 +175,7 @@ public class ProfileService {
         // 1. 비밀번호 변경 시에만 현재 비밀번호 확인
         if (dto.newPassword() != null && !dto.newPassword().isEmpty()) {
             if (dto.currentPassword() == null || !passwordEncoder.matches(dto.currentPassword(), user.getPassword())) {
-                throw new CustomException(ErrorCode.INVALID_PASSWORD); 
+                throw new CustomException(ErrorCode.INVALID_PASSWORD);
             }
             user.updatePassword(passwordEncoder.encode(dto.newPassword()));
         }
@@ -133,8 +188,9 @@ public class ProfileService {
             try {
                 // FileRefType.USER_PROFILE 사용 (User 엔티티와 연결된 파일 그룹)
                 // userIdx를 refId로 사용하여 파일 그룹 생성/조회 및 파일 업로드
-                List<FileRes> uploadedFiles = fileService.upload(FileRefType.USER_PROFILE, userIdx, Collections.singletonList(profileImage));
-                
+                List<FileRes> uploadedFiles = fileService.upload(FileRefType.USER_PROFILE, userIdx,
+                        Collections.singletonList(profileImage));
+
                 if (!uploadedFiles.isEmpty()) {
                     // 첫 번째 업로드된 파일의 ID를 프로필 이미지 ID로 설정
                     // 주의: User 엔티티의 profileIdx가 Integer 타입이고, FileRes의 fileIdx도 Integer여야 함
@@ -150,8 +206,8 @@ public class ProfileService {
     private ProfileDto.ProfileItemDto convertToItem(Board board) {
         String thumb = null;
         if (board.getFileGrp() != null) {
-             // 썸네일 로직은 복잡하므로 여기서는 fileGrpIdx가 있으면 있다고 가정
-             thumb = "/img/group/" + board.getFileGrp().getFileGrpIdx(); 
+            // 썸네일 로직은 복잡하므로 여기서는 fileGrpIdx가 있으면 있다고 가정
+            thumb = "/img/group/" + board.getFileGrp().getFileGrpIdx();
         }
 
         return ProfileDto.ProfileItemDto.builder()
@@ -160,7 +216,7 @@ public class ProfileService {
                 .category(board.getBoardCategory())
                 .contentPreview(board.getBoardContent()) // 길이 제한 필요할 수 있음
                 // DateTimeUtil이 있다고 가정 (없으면 toString)
-                .timeAgo(board.getCreatedAt().toString()) 
+                .timeAgo(board.getCreatedAt().toString())
                 .type("community")
                 .thumbnail(thumb)
                 .createdAt(board.getCreatedAt())
@@ -169,13 +225,13 @@ public class ProfileService {
 
     private ProfileDto.ProfileItemDto convertUsedToItem(com.scit.soragodong.domain.entity.Used used) {
         String thumb = null;
-        
+
         // FILE_GRP 테이블에서 refType='USED'이고 refId=usedIdx 인 데이터 조회
-        java.util.Optional<com.scit.soragodong.domain.entity.FileGrp> fileGrp = 
-            fileGrpRepository.findByRefTypeAndRefId(com.scit.soragodong.domain.enums.FileRefType.USED, used.getUsedIdx());
-            
+        java.util.Optional<com.scit.soragodong.domain.entity.FileGrp> fileGrp = fileGrpRepository
+                .findByRefTypeAndRefId(com.scit.soragodong.domain.enums.FileRefType.USED, used.getUsedIdx());
+
         if (fileGrp.isPresent()) {
-             thumb = "/img/group/" + fileGrp.get().getFileGrpIdx(); 
+            thumb = "/img/group/" + fileGrp.get().getFileGrpIdx();
         }
 
         return ProfileDto.ProfileItemDto.builder()

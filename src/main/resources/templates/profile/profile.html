@@ -251,7 +251,6 @@
                 if (showSubTabs) {
                     const mkActive = subTab === 'market' ? 'active' : '';
                     const cmActive = subTab === 'community' ? 'active' : '';
-                    // onclick 제거하고 data-sub-key 추가
                     html += `
                         <div class="profile-sub-tabs">
                             <button class="profile-sub-tab-btn ${mkActive}" data-sub-key="market">중고거래</button>
@@ -262,29 +261,51 @@
 
                 if (items.length > 0) {
                     items.forEach(item => {
-                        const thumb = item.thumbnail
-                            ? `<img src="${item.thumbnail}" class="profile-list-thumb">`
+                        // 썸네일 처리 (usedListRes는 thumbnailPath, profileItemDto는 thumbnail)
+                        const thumbSrc = item.thumbnailPath || item.thumbnail;
+                        const thumb = thumbSrc
+                            ? `<img src="${thumbSrc}" class="profile-list-thumb">`
                             : "";
 
-                        const timeStr = (typeof Utils !== 'undefined') ? Utils.timeAgo(item.timeAgo) : item.timeAgo;
-                        let badgeText = (currentTab === 'comments') ? "댓글" : item.category;
+                        // 시간 처리
+                        const timeVal = item.createdAt || item.timeAgo; // DTO 차이 대응
+                        const timeStr = (typeof Utils !== 'undefined') ? Utils.timeAgo(timeVal) : timeVal;
+
+                        // 뱃지 및 가격 처리
+                        let badgeHtml = '';
+                        let priceHtml = '';
+                        let type = item.type || (subTab === 'market' ? 'market' : 'community');
+                        let id = item.id || item.usedIdx || item.boardIdx; // DTO 필드명 차이 대응
+
+                        // 중고거래 아이템 (UsedListRes)
+                        if (subTab === 'market' || type === 'market') {
+                            const state = item.usedState === 'SALES' ? '판매중' : (item.usedState === 'RESERVED' ? '예약중' : '판매완료');
+                            const stateClass = item.usedState === 'SALES' ? 'market' : 'comm'; // 색상 구분용
+                            badgeHtml = `<span class="profile-badge ${stateClass}">${state}</span>`;
+                            priceHtml = `<div class="profile-list-price">${(item.usedPrice || item.price || 0).toLocaleString()}원</div>`;
+                        } else {
+                            // 커뮤니티 아이템
+                            let catName = (currentTab === 'comments') ? "댓글" : (item.category || item.boardCategory);
+                            badgeHtml = `<span class="profile-badge comm">${catName}</span>`;
+                        }
 
                         // onclick 제거하고 data-id와 data-type 추가
                         html += `
-                            <div class="profile-list-item" data-id="${item.id}" data-type="${item.type}">
+                            <div class="profile-list-item" data-id="${id}" data-type="${type}">
                                 <div class="profile-list-info">
                                     <div class="profile-list-meta">
-                                        <span class="profile-badge comm">${badgeText}</span>   ${timeStr}
+                                        ${badgeHtml} ${timeStr}
                                     </div>
-                                    <div class="profile-list-title">${item.title}</div>
-                                    <div class="profile-feed-preview">${item.contentPreview || ''}</div>
+                                    <div class="profile-list-title">${item.title || item.usedTitle || item.boardTitle || item.replyContent}</div>
+                                    ${priceHtml} 
+                                    <div class="profile-feed-preview">${item.contentPreview || item.usedContent || ''}</div>
                                 </div>
                                 ${thumb}
                             </div>
                         `;
                     });
                 } else {
-                    const msg = (subTab === 'market') ? "중고거래 기능은 준비중입니다." : "내역이 없습니다.";
+                    const msg = (subTab === 'market') ? "내역이 없습니다." : "내역이 없습니다.";
                     html += `<div class="profile-empty-state">${msg}</div>`;
                 }
                 return html;
@@ -385,10 +406,7 @@
                     ProfileApp.state.isLoading = true;
                     const url = userIdx ? `/profile/api/${userIdx}` : '/profile/api/me';
 
-                    const response = await fetch(url);
-                    if (!response.ok) throw new Error("Failed to load profile");
-
-                    const data = await response.json();
+                    const data = await API.get(url);
                     ProfileApp.state.data = data;
 
                     ProfileApp.render();
@@ -447,57 +465,53 @@
                 ];
 
                 if (isMe) {
-                    tabs.push({ key: 'likes', label: '누른 좋아요', value: data.likeCount, active: true });
+                    tabs.push({ key: 'likes', label: '관심 목록', value: data.likeCount, active: true });
                 }
 
                 statsBox.innerHTML = ProfileRenderer.createStatsHTML(tabs, currentTab);
             },
 
-            switchTab: (key) => {
-                ProfileApp.state.currentTab = key;
-                ProfileApp.state.subTab = 'community';
-                ProfileApp.renderStats();
-                ProfileApp.renderList();
-            },
-
-            switchSubTab: (key) => {
-                ProfileApp.state.subTab = key;
-                ProfileApp.renderList();
-            },
-
-            renderList: () => {
-                const { data, currentTab, subTab } = ProfileApp.state;
-                const container = document.getElementById('profile-dynamic-area');
-
-                let items = [];
-                let title = "";
-                let showSubTabs = false;
-
-                if (currentTab === 'posts') {
-                    title = "작성한 글 목록";
-                    showSubTabs = true;
-                    // Filter posts by type based on subTab
-                    if (data.posts && Array.isArray(data.posts)) {
-                        items = data.posts.filter(p => p.type === subTab);
-                    }
-                } else if (currentTab === 'comments') {
-                    title = "내가 쓴 댓글";
-                    items = data.comments || [];
-                } else if (currentTab === 'likes') {
-                    title = "관심 목록";
-                    showSubTabs = true;
-                    // Assuming likes also have types, otherwise default to community or show all?
-                    // Original code showed likes only for community subTab.
-                    // Let's filter if type exists, otherwise show all if subTab is community (legacy behavior)
-                    if (data.likes && Array.isArray(data.likes)) {
-                        items = data.likes.filter(p => p.type === subTab);
-                    }
-                }
-
-                container.innerHTML = ProfileRenderer.createListHTML(title, showSubTabs, subTab, items, currentTab);
-            },
-
-            goToDetail: (id, type) => {
+                                    switchTab: (key) => {
+                                        ProfileApp.state.currentTab = key;
+                                        ProfileApp.state.subTab = 'community'; // 기본 탭
+                                        ProfileApp.renderStats();
+                                        ProfileApp.renderList();
+                                    },
+                        
+                                    switchSubTab: (key) => {
+                                        ProfileApp.state.subTab = key;
+                                        ProfileApp.renderList();
+                                    },
+                        
+                                    renderList: () => {
+                                        const { data, currentTab, subTab } = ProfileApp.state;
+                                        const container = document.getElementById('profile-dynamic-area');
+                        
+                                        let items = [];
+                                        let title = "";
+                                        let showSubTabs = false;
+                        
+                                        if (currentTab === 'posts') {
+                                            title = "작성한 글 목록";
+                                            showSubTabs = true;
+                                            if (data.posts && Array.isArray(data.posts)) {
+                                                items = data.posts.filter(p => p.type === subTab);
+                                            }
+                                        } else if (currentTab === 'comments') {
+                                            title = "내가 쓴 댓글";
+                                            items = data.comments || [];
+                                        } else if (currentTab === 'likes') {
+                                            title = "관심 목록";
+                                            showSubTabs = true;
+                                            
+                                            // 이미 백엔드에서 합쳐서 내려주므로 필터링만 하면 됨
+                                            if (data.likes && Array.isArray(data.likes)) {
+                                                items = data.likes.filter(p => p.type === subTab);
+                                            }
+                                        }
+                        
+                                        container.innerHTML = ProfileRenderer.createListHTML(title, showSubTabs, subTab, items, currentTab);
+                                    },            goToDetail: (id, type) => {
                 if (type === 'market') {
                     // 중고거래 목록 페이지로 이동
                     location.href = `/used-market?openDetail=${id}`;
