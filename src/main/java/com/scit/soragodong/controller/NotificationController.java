@@ -120,7 +120,7 @@ public class NotificationController {
      */
     @PatchMapping("/{notiIdx}/read")
     public ApiResponse<?> markAsRead(
-            @PathVariable Integer notiIdx,
+            @PathVariable(name = "notiIdx") Integer notiIdx,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         notificationService.markAsRead(notiIdx, userDetails.getUserIdx());
         return ApiResponse.success("읽음 처리되었습니다.");
@@ -132,7 +132,7 @@ public class NotificationController {
      */
     @DeleteMapping("/{notiIdx}")
     public ApiResponse<?> deleteNotification(
-            @PathVariable Integer notiIdx,
+            @PathVariable(name = "notiIdx") Integer notiIdx,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         notificationService.deleteNotification(notiIdx, userDetails.getUserIdx());
         return ApiResponse.success("삭제되었습니다.");
