@@ -1,5 +1,6 @@
 package com.scit.soragodong.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,6 +25,11 @@ public interface UsedLikeRepository extends JpaRepository<UsedLike, Integer> {
      * 사용자의 좋아요 조회
      */
     Optional<UsedLike> findByUsedIdxAndUserIdx(Integer usedIdx, Integer userIdx);
+
+    /**
+     * 특정 물품의 모든 찜 목록 (상태 변경 알림용)
+     */
+    List<UsedLike> findByUsedIdx(Integer usedIdx);
 
     /**
      * 사용자의 좋아요 삭제
