@@ -134,8 +134,12 @@
             // 데이터 캐시
             cache: {
                 food: null,
-                store: null
+                store: null,
+                _storeLoc: null  // 음식 정렬용 가게 좌표 (가게탭 캐시와 분리)
             },
+
+            // 유저 위치 (거리 정렬용)
+            userLocation: null,
 
             // 무한 스크롤 설정
             scroll: {
@@ -149,10 +153,11 @@
             /**
              * 초기화
              */
-            init: function () {
+            init: async function () {
                 console.log('[TimeSale] 초기화 시작');
                 this.bindEvents();
-                this.loadData('food'); // 초기 로딩 - observer는 첫 렌더 후 설정
+                await this.loadUserLocation();
+                this.loadData('food');
                 console.log('[TimeSale] 초기화 완료');
             },
 
@@ -247,10 +252,30 @@
             },
 
             /**
-             * 데이터 로드 (캐시 우선)
+             * 유저 위치 로드 (거리 정렬용)
+             */
+            loadUserLocation: async function () {
+                try {
+                    const userIdxEl = document.getElementById('loginUserIdx');
+                    if (!userIdxEl || !userIdxEl.value) return;
+                    const res = await fetch(`/timesale/map/user/${userIdxEl.value}`);
+                    if (!res.ok) return;
+                    const user = await res.json();
+                    const lat = user.userLat ?? user.user_lat ?? user.lat ?? null;
+                    const lng = user.userLng ?? user.user_lng ?? user.lng ?? null;
+                    if (lat != null && lng != null) {
+                        this.userLocation = { lat: parseFloat(lat), lng: parseFloat(lng) };
+                        console.log('[정렬] 유저 위치:', this.userLocation);
+                    }
+                } catch (e) {
+                    console.error('[정렬] 유저 위치 로드 실패:', e);
+                }
+            },
+
+            /**
+             * 데이터 로드 + 거리순 정렬 (음식/가게 공통)
              */
             loadData: async function (tab) {
-                // 캐시된 데이터가 있으면 사용 (API 호출 안함)
                 if (this.cache[tab]) {
                     console.log(`[${tab}] 캐시된 데이터 사용`);
                     this.renderItems(tab, this.cache[tab]);
@@ -258,36 +283,93 @@
                     return;
                 }
 
-                // API 호출
                 try {
                     console.log(`[${tab}] API 호출 시작`);
                     this.showStatus('로딩 중...');
 
                     let data;
                     if (tab === 'food') {
-                        data = await API.get('/timesale/food/list');
+                        // 음식 + 가게 좌표 동시 로드 (_storeLoc: 음식 정렬 전용)
+                        const [foodData, storeData] = await Promise.all([
+                            API.get('/timesale/food/list'),
+                            this.cache._storeLoc ? Promise.resolve(this.cache._storeLoc) : API.get('/timesale/store/list')
+                        ]);
+                        if (!this.cache._storeLoc) this.cache._storeLoc = storeData;
+
+                        // storeIdx → {lat, lng} 맵
+                        const storeLocMap = {};
+                        storeData.forEach(s => {
+                            if (s.storeLat != null && s.storeLng != null) {
+                                storeLocMap[s.storeIdx] = { lat: s.storeLat, lng: s.storeLng };
+                            }
+                        });
+
+                        if (this.userLocation) {
+                            data = this.sortFoodByDistance(foodData, storeLocMap, this.userLocation);
+                        } else {
+                            data = foodData;
+                        }
                     } else {
                         data = await API.get('/timesale/store/list');
+                        if (this.userLocation) {
+                            data = this.sortStoreByDistance(data, this.userLocation);
+                        }
                     }
 
-                    console.log(`[${tab}] API 응답:`, data);
-
-                    // 캐시에 저장
+                    console.log(`[${tab}] 정렬 완료:`, data.length, '건');
                     this.cache[tab] = data;
-
-                    // 렌더링
                     this.renderItems(tab, data);
                     this.hideStatus();
-
-                    // 첫 렌더 완료 후 observer 설정 (sentinel이 뷰포트 밖으로 나간 후 등록)
-                    setTimeout(() => {
-                        this.setupIntersectionObserver();
-                    }, 100);
+                    setTimeout(() => { this.setupIntersectionObserver(); }, 100);
 
                 } catch (error) {
                     console.error(`[${tab}] API 호출 실패:`, error);
                     this.showStatus('데이터를 불러오는데 실패했습니다.');
                 }
+            },
+
+            /**
+             * 음식 거리순 정렬 (음식→소속 가게 좌표→유저 거리)
+             */
+            sortFoodByDistance: function (foodList, storeLocMap, userLoc) {
+                return [...foodList].sort((a, b) => {
+                    const locA = storeLocMap[a.storeIdx];
+                    const locB = storeLocMap[b.storeIdx];
+                    const distA = locA ? this.calcDistance(userLoc.lat, userLoc.lng, locA.lat, locA.lng) : null;
+                    const distB = locB ? this.calcDistance(userLoc.lat, userLoc.lng, locB.lat, locB.lng) : null;
+                    if (distA === null && distB === null) return 0;
+                    if (distA === null) return 1;
+                    if (distB === null) return -1;
+                    return distA - distB;
+                });
+            },
+
+            /**
+             * 가게 거리순 정렬
+             */
+            sortStoreByDistance: function (storeList, userLoc) {
+                return [...storeList].sort((a, b) => {
+                    const distA = this.calcDistance(userLoc.lat, userLoc.lng, a.storeLat, a.storeLng);
+                    const distB = this.calcDistance(userLoc.lat, userLoc.lng, b.storeLat, b.storeLng);
+                    if (distA === null && distB === null) return 0;
+                    if (distA === null) return 1;
+                    if (distB === null) return -1;
+                    return distA - distB;
+                });
+            },
+
+            /**
+             * Haversine - 두 좌표 간 거리 (km)
+             */
+            calcDistance: function (lat1, lng1, lat2, lng2) {
+                if (lat1 == null || lng1 == null || lat2 == null || lng2 == null) return null;
+                const R = 6371;
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLng = (lng2 - lng1) * Math.PI / 180;
+                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+                return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             },
 
             /**
