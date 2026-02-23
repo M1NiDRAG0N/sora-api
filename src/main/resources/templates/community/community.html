@@ -420,7 +420,7 @@
         const Renderer = {
             // ------------------------------ 게시글 메인화면 글카드 ------------------------------
             createFeedCardHTML: (dto) => {
-                const profileImg = dto.profileIdx != null ? `/images/profiles/${dto.profileIdx}.png` : '/images/default-profile.png';
+                const profileImg = dto.profileIdx != null ? `/img/${dto.profileIdx}` : '/images/default-profile.png';
                 const heartIconName = dto.isLiked ? 'heart' : 'heart-outline';
                 const heartColorClass = dto.isLiked ? 'heart-active' : '';
 
@@ -462,7 +462,7 @@
             createReplyCardHTML: (dto) => {
                 const loginUserIdx = document.querySelector('#loginUserIdxMain').value;
                 const isOwner = (String(loginUserIdx) === String(dto.userIdx));
-                const profileImg = dto.profileIdx != null ? `/images/profiles/${dto.profileIdx}.png` : '/images/default-profile.png';
+                const profileImg = dto.profileIdx != null ? `/img/${dto.profileIdx}` : '/images/default-profile.png';
 
                 return `
                 <div class="comment-item" id="reply-item-${dto.replyIdx}" data-reply-idx="${dto.replyIdx}">
@@ -936,6 +936,13 @@
 
                     document.querySelector('#reply-count').innerText = board.replyCount;
                     document.querySelector('#view-writer').innerText = board.userNickname;
+                    
+                    // 작성자 프로필 이미지 설정
+                    const writerImg = document.querySelector('.writer-img');
+                    if (writerImg) {
+                        writerImg.src = board.profileIdx ? `/img/${board.profileIdx}` : '/images/default-profile.png';
+                    }
+
                     document.querySelector('#view-time').innerText = Utils.timeAgo(board.createdAt);
                     document.querySelector('#view-category').innerText = board.boardCategory;
                     document.querySelector('#view-content').innerText = board.boardContent;
