@@ -288,6 +288,7 @@ public class CommunityService {
             brr.save(baordReplyEntity);
 
             BoardReplyDto boardReplyDto2 = BoardReplyDto.builder()
+                    .replyIdx(baordReplyEntity.getReplyIdx())
                     .boardIdx(baordReplyEntity.getBoard().getBoardIdx())
                     .userIdx(baordReplyEntity.getUser().getUserIdx())
                     .profileIdx(baordReplyEntity.getUser().getProfileIdx())
