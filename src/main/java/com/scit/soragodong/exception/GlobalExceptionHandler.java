@@ -30,12 +30,22 @@ public class GlobalExceptionHandler {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    /** 예외 발생 위치를 "ClassName.method():line" 형태로 반환 */
+    private String locate(Exception ex) {
+        StackTraceElement[] trace = ex.getStackTrace();
+        if (trace.length == 0) return "unknown";
+        StackTraceElement e = trace[0];
+        String cls = e.getClassName();
+        cls = cls.substring(cls.lastIndexOf('.') + 1);
+        return cls + "." + e.getMethodName() + "():" + e.getLineNumber();
+    }
+
     /**
      * 커스텀 예외 처리
      */
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ApiResponse<?>> handleCustomException(CustomException ex, WebRequest request) {
-        log.error("CustomException: {}", ex.getMessage());
+        log.error("[{}] CustomException: {}", locate(ex), ex.getMessage());
         ErrorCode errorCode = ex.getErrorCode();
         HttpStatus httpStatus = HttpStatus.valueOf(errorCode.getStatus());
         return ResponseEntity
@@ -49,7 +59,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ApiResponse<?>> handleAuthenticationException(AuthenticationException ex,
             WebRequest request) {
-        log.error("AuthenticationException: {}", ex.getMessage());
+        log.error("[{}] AuthenticationException: {}", locate(ex), ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error(ErrorCode.LOGIN_FAILED));
@@ -62,7 +72,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<?>> handleMethodArgumentNotValidException(
             MethodArgumentNotValidException ex, WebRequest request) {
-        log.error("MethodArgumentNotValidException: {}", ex.getMessage());
+        log.error("[{}] MethodArgumentNotValidException: {}", locate(ex), ex.getMessage());
         
         // 필드별 에러 메시지 추출
         Map<String, String> errors = new HashMap<>();
@@ -85,7 +95,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ApiResponse<?>> handleMissingServletRequestParameterException(
             MissingServletRequestParameterException ex, WebRequest request) {
-        log.error("MissingServletRequestParameterException: {}", ex.getMessage());
+        log.error("[{}] MissingServletRequestParameterException: {}", locate(ex), ex.getMessage());
         
         Map<String, String> errors = new HashMap<>();
         errors.put(ex.getParameterName(), "필수 파라미터입니다");
@@ -102,7 +112,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<?>> handleHttpMessageNotReadableException(
             HttpMessageNotReadableException ex, WebRequest request) {
-        log.error("HttpMessageNotReadableException: {}", ex.getMessage());
+        log.error("[{}] HttpMessageNotReadableException: {}", locate(ex), ex.getMessage());
         
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
@@ -116,7 +126,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ApiResponse<?>> handleConstraintViolationException(
             ConstraintViolationException ex, WebRequest request) {
-        log.error("ConstraintViolationException: {}", ex.getMessage());
+        log.error("[{}] ConstraintViolationException: {}", locate(ex), ex.getMessage());
         
         Map<String, String> errors = ex.getConstraintViolations().stream()
                 .collect(Collectors.toMap(
@@ -137,7 +147,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse<?>> handleDataIntegrityViolationException(
             DataIntegrityViolationException ex, WebRequest request) {
-        log.error("DataIntegrityViolationException: {}", ex.getMessage());
+        log.error("[{}] DataIntegrityViolationException: {}", locate(ex), ex.getMessage());
         
         String message = "데이터 무결성 위반 오류가 발생했습니다";
         if (ex.getMessage().contains("unique")) {
@@ -158,7 +168,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ApiResponse<?>> handleEntityNotFoundException(
             EntityNotFoundException ex, WebRequest request) {
-        log.error("EntityNotFoundException: {}", ex.getMessage());
+        log.error("[{}] EntityNotFoundException: {}", locate(ex), ex.getMessage());
         
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
@@ -171,7 +181,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IOException.class)
     public ResponseEntity<ApiResponse<?>> handleIOException(
             IOException ex, WebRequest request) {
-        log.error("IOException: {}", ex.getMessage());
+        log.error("[{}] IOException: {}", locate(ex), ex.getMessage());
         
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -185,7 +195,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<ApiResponse<?>> handleNoHandlerFoundException(
             NoHandlerFoundException ex, WebRequest request) {
-        log.error("NoHandlerFoundException: {}", ex.getRequestURL());
+        log.error("[{}] NoHandlerFoundException: {}", locate(ex), ex.getRequestURL());
         
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
@@ -199,7 +209,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<?>> handleIllegalArgumentException(IllegalArgumentException ex,
             WebRequest request) {
-        log.error("IllegalArgumentException: {}", ex.getMessage());
+        log.error("[{}] IllegalArgumentException: {}", locate(ex), ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(ErrorCode.INVALID_INPUT)
@@ -212,7 +222,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ApiResponse<?>> handleIllegalStateException(IllegalStateException ex,
             WebRequest request) {
-        log.error("IllegalStateException: {}", ex.getMessage());
+        log.error("[{}] IllegalStateException: {}", locate(ex), ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(ErrorCode.INVALID_INPUT)
@@ -225,7 +235,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<?>> handleRuntimeException(RuntimeException ex,
             WebRequest request) {
-        log.error("RuntimeException: {}", ex.getMessage(), ex);
+        log.error("[{}] RuntimeException: {}", locate(ex), ex.getMessage());
         
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -238,7 +248,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<?>> handleGeneralException(Exception ex, WebRequest request) {
-        log.error("Exception: {}", ex.getMessage(), ex);
+        log.error("[{}] Exception: {}", locate(ex), ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error(ErrorCode.INTERNAL_ERROR)

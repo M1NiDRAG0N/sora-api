@@ -67,11 +67,11 @@ public class UserService {
         String storedCode = redisTemplate.opsForValue().get(redisKey);
         
         if (storedCode == null) {
-            throw new CustomException(ErrorCode.INVALID_INPUT);
+            throw new CustomException(ErrorCode.VERIFICATION_EXPIRED);
         }
         
         if (!storedCode.equals(verificationCode)) {
-            throw new CustomException(ErrorCode.INVALID_INPUT);
+            throw new CustomException(ErrorCode.INVALID_VERIFICATION);
         }
         
         // 검증 완료 표시 (key 유지, value 변경)
@@ -91,7 +91,7 @@ public class UserService {
         }
         
         if (!"verified".equals(verificationStatus)) {
-            throw new CustomException(ErrorCode.INVALID_INPUT);
+            throw new CustomException(ErrorCode.INVALID_VERIFICATION);
         }
         
         // 이메일 중복 재확인
@@ -163,11 +163,11 @@ public class UserService {
         String storedCode = redisTemplate.opsForValue().get(redisKey);
         
         if (storedCode == null) {
-            throw new CustomException(ErrorCode.INVALID_INPUT);
+            throw new CustomException(ErrorCode.VERIFICATION_EXPIRED);
         }
         
         if (!storedCode.equals(verificationCode)) {
-            throw new CustomException(ErrorCode.INVALID_INPUT);
+            throw new CustomException(ErrorCode.INVALID_VERIFICATION);
         }
         
         // 검증 완료 표시
@@ -187,7 +187,7 @@ public class UserService {
         }
         
         if (!"verified".equals(verificationStatus)) {
-            throw new CustomException(ErrorCode.INVALID_INPUT);
+            throw new CustomException(ErrorCode.INVALID_VERIFICATION);
         }
         
         // 사용자 존재 확인
