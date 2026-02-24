@@ -1,13 +1,5 @@
 package com.scit.soragodong.service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.scit.soragodong.domain.dto.NotificationRes;
 import com.scit.soragodong.domain.entity.Notification;
 import com.scit.soragodong.domain.entity.Used;
@@ -18,9 +10,15 @@ import com.scit.soragodong.exception.ErrorCode;
 import com.scit.soragodong.repository.NotificationRepository;
 import com.scit.soragodong.repository.UsedKeywordRepository;
 import com.scit.soragodong.repository.UsedRepository;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * 공통 알림 서비스
@@ -128,8 +126,20 @@ public class NotificationService {
      */
     @Transactional(readOnly = true)
     public List<NotificationRes> getNotifications(Integer userIdx) {
-        return notificationRepository.findByUserIdxAndIsUseTrueOrderByCreatedAtDesc(userIdx)
-                .stream().map(NotificationRes::from).toList();
+		
+		List<Notification> notifications = notificationRepository.findActiveNotifications(userIdx);
+		
+  
+		return notifications.stream()
+				.sorted((n1, n2) -> {
+					// n1이 공지(0)면 앞으로 (-1), n2가 공지(0)면 뒤로 (1)
+					if (n1.getUserIdx() == 0 && n2.getUserIdx() != 0) return -1;
+					if (n1.getUserIdx() != 0 && n2.getUserIdx() == 0) return 1;
+					// 둘 다 공지거나 둘 다 일반이면 최신순 정렬
+					return n2.getCreatedAt().compareTo(n1.getCreatedAt());
+				})
+				.map(NotificationRes::from)
+				.toList();
     }
 
     /**
