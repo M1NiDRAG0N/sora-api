@@ -129,6 +129,26 @@ public class SseService {
                                Integer referenceId, String message) {
         userIds.forEach(userId -> notify(userId, eventType, referenceId, message));
     }
+
+    /**
+     * 특정 사용자에게 일반 메시지 전송
+     * @param userId 대상 사용자 ID
+     * @param refId 참조 ID (게시물 ID 등)
+     * @param message 메시지 내용
+     */
+    public void send(Integer userId, Integer refId, String message) {
+        notify(userId, "ADMIN_NOTICE", refId, message);
+    }
+
+    /**
+     * 모든 연결된 사용자에게 메시지 브로드캐스트
+     * @param refId 참조 ID (게시물 ID 등)
+     * @param message 메시지 내용
+     */
+    public void broadcast(Integer refId, String message) {
+        log.info("[SSE] 브로드캐스트 전송 - 메시지: {}", message);
+        emitters.keySet().forEach(userId -> send(userId, refId, message));
+    }
     
     /**
      * 특정 사용자의 연결 상태 확인
