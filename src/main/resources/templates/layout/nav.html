@@ -11,7 +11,7 @@
 
     <div style="width: 70px;"></div>
 
-    <div class="nav-center-btn" onclick="openChat()">
+    <div class="nav-center-btn">
         <ion-icon name="chatbubbles"></ion-icon>
     </div>
 
@@ -32,9 +32,11 @@
 
         const nav = {
             init: () => {
-                const path = window.location.pathname;
-                console.log(path);
-                nav.changeBtnEffect(path);
+                nav.evtHandler();                
+                nav.changeBtnEffect(window.location.pathname);
+            },
+            evtHandler: () => {
+                document.querySelector('.nav-center-btn').addEventListener('click', () => nav.openChat());
             },
             changeBtnEffect: (path) => {
                 console.log(path);
@@ -42,13 +44,16 @@
                 // console.log("네비게이션 메뉴 출력 : ", getBtn);
                 getBtn.forEach(menu => {
                     const getDataPath = menu.getAttribute("data-path")
-                    console.log(menu);
-                    console.log("네비게이션 메뉴 출력 : ", getDataPath);
                     if (path === getDataPath) {
                         menu.classList.add('active');
                     }
                 })
 
+            },
+            openChat: () => {
+                const layer = document.getElementById('chatLayer');
+                const container = document.getElementById('chatContainer');
+                layer.classList.add('active');
             }
 
         }

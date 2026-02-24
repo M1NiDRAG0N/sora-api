@@ -6,6 +6,7 @@
         <div class="category-bar2" id="categoryBar">
             <div class="cat-scroll">
                 <div class="cat-chip active" data-cate="전체">전체</div>
+                <div class="cat-chip" data-cate="인기글">🔥주간 인기글</div>
                 <div class="cat-chip" data-cate="소분/나눔">소분/나눔</div>
                 <div class="cat-chip" data-cate="꿀팁/정보">꿀팁/정보</div>
                 <div class="cat-chip" data-cate="자유/수다">자유/수다</div>
@@ -609,10 +610,13 @@
 
             checkUrlParams: () => {
                 const params = new URLSearchParams(window.location.search);
+                const openBoard = params.get('openBoard');
                 const from = params.get('from');
                 const profileUser = params.get('profileUser');
 
-                if (from === 'profile' && typeof ProfileApp !== 'undefined') {
+                if (openBoard) {
+                    CommunityView.openView(openBoard);
+                } else if (from === 'profile' && typeof ProfileApp !== 'undefined') {
                     if (profileUser) ProfileApp.open(profileUser);
                     else ProfileApp.open();
                 }
@@ -693,6 +697,16 @@
                         const loader = document.getElementById('loading-trigger');
                         if (loader) loader.innerText = "마지막 게시글입니다.";
                         return;
+                    }
+
+                    // 10개 미만이면 다음 페이지 없음
+                    if (response.length < 10) {
+                        CommunityMain.state.isLastPage = true;
+                        const loader = document.getElementById('loading-trigger');
+                        if (loader) loader.innerText = "마지막 게시글입니다.";
+                    } else if (response.length == 10) {
+                        const loader = document.getElementById('loading-trigger');
+                        if (loader) loader.innerText = "불러오는 중..";
                     }
 
                     const container = document.getElementById('feedListContainer');
@@ -968,6 +982,10 @@
                 window.modalZIndex++;
                 viewForm.style.zIndex = window.modalZIndex;
 
+                // [눈속임] 조회수 미리 올리기 (쿠키 확인)
+                const cookieName = "viewed_board_" + boardIdx + "=";
+                const isViewed = document.cookie.split('; ').some((item) => item.trim().startsWith(cookieName));
+
                 try {
                     const [board, boardReply] = await Promise.all([
                         API.get(`/community/view/${boardIdx}`),
@@ -1022,6 +1040,22 @@
                     }
 
                     viewForm.classList.add('active');
+
+                    if (!isViewed) {
+                        const feedCard = document.querySelector(`.feed-card[data-board-idx="${boardIdx}"]`);
+                        if (feedCard) {
+                            // eye-outline 아이콘 다음 형제 요소(span) 찾기
+                            const eyeIcon = feedCard.querySelector('ion-icon[name="eye-outline"]');
+                            if (eyeIcon) {
+                                const countSpan = eyeIcon.nextElementSibling;
+                                if (countSpan) {
+                                    let currentCount = parseInt(countSpan.innerText.replace(/,/g, '')) || 0;
+                                    countSpan.innerText = (currentCount + 1).toLocaleString();
+                                }
+                            }
+                        }
+                    }
+
 
                     history.pushState({ modal: 'communityView', boardIdx: boardIdx }, 'View', `?openBoard=${boardIdx}`);
                     window.onpopstate = function (event) {

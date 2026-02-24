@@ -10,8 +10,14 @@ import org.springframework.stereotype.Repository;
 import com.scit.soragodong.domain.entity.Board;
 
 
+import java.time.LocalDateTime;
+
 @Repository
 public interface BoardRepository extends JpaRepository<Board, Integer> {
+        // [인기글] 특정 시간 이후 + 좋아요 N개 이상인 글 조회
+        Page<Board> findByCreatedAtAfterAndLikeCountGreaterThanEqualAndIsUseTrueOrderByLikeCountDesc(
+                        LocalDateTime start, Integer minLikes, Pageable pageable);
+        
         // 1. [기본] 전체 조회 (삭제 안 된 것)
         Page<Board> findByIsUseTrue(Pageable pageable);
 

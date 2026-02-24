@@ -46,36 +46,14 @@
 
         <div th:replace="~{layout/nav :: nav}"></div>
 
-        <!-- Global Profile Layer -->
+        <!-- Global Profile Modal -->
         <th:block th:replace="~{profile/profile :: div}"></th:block>
 
         <!-- Global Notification Modal -->
         <th:block th:replace="~{notification/notification :: div}"></th:block>
 
-        <!-- ================================================ -->
-
-        <div id="chatLayer" class="page-layer">
-            <div class="chat-header">
-                <div class="chat-close-btn">
-                    <ion-icon name="chevron-down"></ion-icon>
-                </div>
-                <div class="header-title">소라고동 AI</div>
-                <div class="chat-header-spacer"></div>
-            </div>
-
-            <div class="chat-body no-scrollbar" id="chatContainer">
-            </div>
-
-            <div class="chat-input-area">
-                <input type="text" class="chat-input" placeholder="메시지를 입력하세요...">
-                <div class="btn-send">
-                    <ion-icon name="paper-plane"></ion-icon>
-                </div>
-            </div>
-        </div>
-
-
-
+        <!-- Global Ai chat modal -->
+        <th:block th:replace="~{chat/chat-ai :: div}"></th:block>
     </div>
 </body>
 
