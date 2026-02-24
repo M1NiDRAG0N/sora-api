@@ -1,0 +1,79 @@
+<div th:fragment="detailModal" id="noticeDetailLayer" class="page-layer">
+    <div class="chat-header">
+        <div class="chat-close-btn" onclick="NoticeModal.close()">
+            <ion-icon name="chevron-down"></ion-icon>
+        </div>
+        <div class="header-title" id="noticeDetailTitle">공지사항 상세</div>
+        <div class="chat-header-spacer"></div>
+    </div>
+    <div class="chat-body no-scrollbar">
+        <div class="notice-detail-content-card">
+            <div class="notice-detail-info">
+                <div class="notice-detail-date" id="noticeDetailDate"></div>
+            </div>
+            <div class="notice-content-body" id="noticeDetailContent">
+                <!-- 상세 내용 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const NoticeModal = {
+            init: function() {
+                // URL 파라미터 체크 (기존 딥링크 지원)
+                const params = new URLSearchParams(location.search);
+                const noticeIdx = params.get('noticeIdx');
+                if (noticeIdx) {
+                    this.open(noticeIdx);
+                }
+            },
+
+            open: async function(noticeIdx) {
+                if (!noticeIdx || noticeIdx === 'null' || noticeIdx === 'undefined') return;
+                
+                try {
+                    const res = await fetch(`/notice/${noticeIdx}`);
+                    const json = await res.json();
+                    const notice = json.data;
+                    
+                    if (notice) {
+                        document.getElementById('noticeDetailTitle').textContent = notice.title;
+                        document.getElementById('noticeDetailDate').textContent = '작성일: ' + new Date(notice.createAt).toLocaleString();
+                        
+                        // 텍스트 줄바꿈 처리
+                        const contentEl = document.getElementById('noticeDetailContent');
+                        contentEl.textContent = notice.content;
+                        contentEl.style.whiteSpace = 'pre-wrap';
+                        
+                        const layer = document.getElementById('noticeDetailLayer');
+                        layer.classList.add('active');
+                        
+                        // 뒤로가기 대응
+                        if (!history.state || history.state.modal !== 'notice') {
+                            history.pushState({ modal: 'notice' }, '', '');
+                        }
+                    }
+                } catch(e) {
+                    console.error('공지사항 로드 실패:', e);
+                    if (typeof Utils !== 'undefined') Utils.notify('공지사항을 불러오지 못했습니다.', 'error');
+                }
+            },
+
+            close: function() {
+                document.getElementById('noticeDetailLayer').classList.remove('active');
+            }
+        };
+
+        // 전역 접근 허용
+        window.openNoticeModal = NoticeModal.open;
+
+        window.addEventListener('popstate', (e) => {
+            const layer = document.getElementById('noticeDetailLayer');
+            if (layer && layer.classList.contains('active')) {
+                layer.classList.remove('active');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => NoticeModal.init());
+    </script>
+</div>

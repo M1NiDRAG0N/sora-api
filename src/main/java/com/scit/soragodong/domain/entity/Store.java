@@ -60,4 +60,6 @@ public class Store {
 
     @Column(name = "STORE_LNG")
     private Double storeLng;
+	
+	
 }
