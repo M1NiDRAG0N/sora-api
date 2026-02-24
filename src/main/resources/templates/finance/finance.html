@@ -170,12 +170,15 @@
         const finance = {
             currentDate: new Date(),
             selectedDay: null,
+            selectedYear: null,
+            selectedMonth: null,
+            currentDetailData: [], // 🚨 [핵심] 달력과 분리된 '상세내역 전용 독립 메모리'
             isGridView: false,
             editingIndex: null,
             editingId: null,
             pendingDeleteId: null,
             mockDB: {},
-            currentBudget: 0, // [추가된 부분] 예산 데이터를 담을 변수
+            currentBudget: 0,
 
             chartLast: null,
             chartThis: null,
@@ -204,22 +207,20 @@
             },
 
             loadData: () => {
-                // ▼▼▼ [여기서부터 덮어쓰시면 됩니다!] ▼▼▼
                 const yearMonth = `${finance.currentDate.getFullYear()}-${String(finance.currentDate.getMonth() + 1).padStart(2, '0')}`;
 
                 fetch(`/finance/list?yearMonth=${yearMonth}`, {
                     method: 'GET',
                     headers: { 'Content-Type': 'application/json' }
                 })
-                    // ▲▲▲ [여기까지!] ▲▲▲
                     .then(response => response.json())
-                    .then(data => { // [수정된 부분] DTO 리스트와 예산을 함께 받을 수 있도록 data로 변경
+                    .then(data => {
                         let list = [];
                         if (Array.isArray(data)) {
                             list = data;
                         } else {
                             list = data.list || [];
-                            finance.currentBudget = data.budget || 0; // 서버에서 준 예산 저장
+                            finance.currentBudget = data.budget || 0;
                         }
 
                         const newDB = {};
@@ -244,11 +245,14 @@
                             const isCurrentMonth = (startY === curYear && startM === curMonth);
                             let isValidFixed = false;
 
-                            if (dto.isFixed) {
+                            const fixedFlag = (dto.isFixed === true || dto.fixed === true || dto.isFixed === 'Y' || dto.isFixed === 1 || dto.isFixed === 'true');
+                            const durationVal = parseInt(dto.duration) || 0;
+
+                            if (fixedFlag) {
                                 const diffYear = curYear - startY;
                                 const diffMonth = curMonth - startM;
                                 const monthsPassed = (diffYear * 12) + diffMonth;
-                                let maxDuration = (dto.duration > 0) ? dto.duration : 999;
+                                let maxDuration = (durationVal > 0) ? durationVal : 999;
 
                                 if (monthsPassed >= 0 && monthsPassed < maxDuration) {
                                     isValidFixed = true;
@@ -265,8 +269,8 @@
                                     type: dto.type,
                                     memo: dto.memo,
                                     time: dto.time,
-                                    isFixed: dto.isFixed,
-                                    duration: dto.duration
+                                    isFixed: fixedFlag,
+                                    duration: durationVal
                                 });
 
                                 if (isPlus) {
@@ -287,55 +291,103 @@
                         const barRed = document.querySelector('.bar-segment.bg-red');
                         const barGreen = document.querySelector('.bar-segment.bg-green');
 
-                        // [수정된 부분] 수입이 아니라 '예산'을 화면에 표시
                         if (budgetAmtEl) budgetAmtEl.innerText = finance.currentBudget.toLocaleString();
-
                         if (expenseAmtEl) {
                             expenseAmtEl.innerText = thisMonthExpense > 0 ? `${thisMonthExpense.toLocaleString()}원` : "0원";
                             expenseAmtEl.classList.add('text-red');
                         }
 
-                        // [교체할 코드 - 예산 대비 퍼센트 계산]
-                        // ==========================================
-                        // [막대 그래프 예산 비례 계산 로직 - 최소 1% 보장]
-                        // ==========================================
                         let usagePercent = 0;
                         if (finance.currentBudget > 0) {
                             usagePercent = (thisMonthExpense / finance.currentBudget) * 100;
-                            // [핵심] 지출이 0원보다 큰데 1% 미만일 경우, 강제로 1%로 끌어올림
-                            if (thisMonthExpense > 0 && usagePercent < 1) {
-                                usagePercent = 1;
-                            }
+                            if (thisMonthExpense > 0 && usagePercent < 1) usagePercent = 1;
                         } else if (thisMonthExpense > 0) {
                             usagePercent = 100;
                         }
 
-                        if (usagePercent > 100) usagePercent = 100;
-                        const remainPercent = 100 - usagePercent;
+                        // 🚨 [핵심 변경] 수치 표기용 퍼센트와 화면 UI 막대용 퍼센트를 분리
+                        let displayPercent = Math.round(usagePercent); // 실제 퍼센트 (100%를 넘을 수 있음)
+                        let barWidthPercent = usagePercent > 100 ? 100 : usagePercent; // 막대 UI는 최대 100%까지만 (화면 깨짐 방지)
+                        let remainWidthPercent = 100 - barWidthPercent; // 예산 초과 시 초록색 막대는 0%
 
                         if (barRed) {
-                            barRed.style.width = `${usagePercent}%`;
-                            // 1% 이상일 때부터 바로 텍스트 표시
-                            barRed.innerText = usagePercent > 0 ? `${Math.round(usagePercent)}%` : '';
+                            barRed.style.width = `${barWidthPercent}%`;
+                            barRed.innerText = displayPercent > 0 ? `${displayPercent}%` : '';
                         }
                         if (barGreen) {
-                            barGreen.style.width = `${remainPercent}%`;
-                            // 남은 예산도 1% 이상이면 표시
-                            barGreen.innerText = remainPercent > 0 ? `${Math.round(remainPercent)}%` : '';
+                            barGreen.style.width = `${remainWidthPercent}%`;
+                            barGreen.innerText = remainWidthPercent > 0 ? `${remainWidthPercent}%` : '';
                         }
-                        // ==========================================
 
                         if (finance.isGridView) finance.renderGrid();
                         else finance.renderScroller();
 
-                        if (finance.selectedDay) finance.showDetails(finance.selectedDay);
+                        // 달력과 상세내역 달이 일치할 때만 정상 연동 (다를 땐 냅둠)
+                        if (finance.selectedDay &&
+                            finance.selectedYear === finance.currentDate.getFullYear() &&
+                            finance.selectedMonth === finance.currentDate.getMonth()) {
+                            finance.currentDetailData = finance.mockDB[finance.selectedDay] ? [...finance.mockDB[finance.selectedDay]] : [];
+                            finance.showDetails(null); // 인자 없이 화면 갱신만
+                        }
 
                         finance.updateCharts(list, thisMonthStats, thisMonthChartTotal);
                     })
                     .catch(error => console.error("에러:", error));
             },
 
-            // [교체] 팝업창 뜰 때 "2026년 2월 예산 설정" 이라고 월별로 다르게 뜨게 함
+            // 🚨 [추가된 핵심 함수] 달력이 어디에 있든, '상세내역의 달'을 찾아 백그라운드에서 조용히 데이터만 훔쳐옴
+            refreshDetailOnly: () => {
+                if (!finance.selectedDay) return;
+                const ym = `${finance.selectedYear}-${String(finance.selectedMonth + 1).padStart(2, '0')}`;
+
+                fetch(`/finance/list?yearMonth=${ym}`, { method: 'GET', headers: { 'Content-Type': 'application/json' } })
+                    .then(res => res.json())
+                    .then(data => {
+                        let list = Array.isArray(data) ? data : (data.list || []);
+                        const dayData = [];
+                        const targetDay = finance.selectedDay;
+
+                        list.forEach(dto => {
+                            const amt = Number(dto.amount);
+                            const dateObj = new Date(dto.date);
+                            if (isNaN(dateObj)) return;
+
+                            const startY = dateObj.getFullYear();
+                            const startM = dateObj.getMonth() + 1;
+                            const d = dateObj.getDate();
+                            const fixedFlag = (dto.isFixed === true || dto.fixed === true || dto.isFixed === 'Y' || dto.isFixed === 1 || dto.isFixed === 'true');
+
+                            let isTargetMonth = (startY === finance.selectedYear && startM === (finance.selectedMonth + 1));
+                            let isValidFixed = false;
+
+                            if (fixedFlag) {
+                                const diffYear = finance.selectedYear - startY;
+                                const diffMonth = (finance.selectedMonth + 1) - startM;
+                                const monthsPassed = (diffYear * 12) + diffMonth;
+                                let maxDur = (parseInt(dto.duration) > 0) ? parseInt(dto.duration) : 999;
+                                if (monthsPassed >= 0 && monthsPassed < maxDur) isValidFixed = true;
+                            }
+
+                            if ((isTargetMonth || isValidFixed) && d === targetDay) {
+                                dayData.push({
+                                    financeIdx: dto.financeIdx,
+                                    cat: dto.category,
+                                    amount: amt.toLocaleString(),
+                                    rawAmount: amt,
+                                    type: dto.type,
+                                    memo: dto.memo,
+                                    time: dto.time,
+                                    isFixed: fixedFlag,
+                                    duration: parseInt(dto.duration) || 0
+                                });
+                            }
+                        });
+
+                        finance.currentDetailData = dayData; // 독립 메모리에 덮어쓰기
+                        finance.showDetails(null); // 화면 갱신
+                    });
+            },
+
             openBudgetModal: () => {
                 const yearStr = finance.currentDate.getFullYear();
                 const monthStr = finance.currentDate.getMonth() + 1;
@@ -350,7 +402,6 @@
                 document.getElementById('budgetModal').classList.remove('active');
             },
 
-            // [교체할 saveBudget 함수 전체]
             saveBudget: () => {
                 const inpBudget = document.getElementById('inpBudget');
                 const rawVal = inpBudget.value.replace(/,/g, '');
@@ -360,28 +411,20 @@
                     finance.showToast("올바른 금액을 입력해주세요!");
                     return;
                 }
-
-                // [여기가 추가/수정된 부분입니다]
                 const yearMonth = `${finance.currentDate.getFullYear()}-${String(finance.currentDate.getMonth() + 1).padStart(2, '0')}`;
 
                 fetch('/finance/budget/update', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ amount: budgetVal, yearMonth: yearMonth })
-                })
-                    .then(res => {
-                        if (res.ok) {
-                            finance.showToast("예산이 설정되었습니다! 💰");
-                            finance.closeBudgetModal();
-                            finance.loadData();
-                        } else {
-                            finance.showToast("설정에 실패했습니다.");
-                        }
-                    })
-                    .catch(err => finance.showToast("서버 오류가 발생했습니다."));
+                }).then(res => {
+                    if (res.ok) { finance.showToast("예산이 설정되었습니다! 💰"); finance.closeBudgetModal(); finance.loadData(); }
+                    else finance.showToast("설정에 실패했습니다.");
+                }).catch(err => finance.showToast("서버 오류가 발생했습니다."));
             },
 
             updateCharts: (list, thisStats, thisTotal) => {
+
                 const curDate = finance.currentDate;
                 const lastDate = new Date(curDate.getFullYear(), curDate.getMonth() - 1, 1);
                 const lastYear = lastDate.getFullYear();
@@ -398,16 +441,15 @@
                     const startM = dObj.getMonth() + 1;
 
                     let isLastMonthTarget = (startY === lastYear && startM === lastMonth);
+                    const fixedFlag = (item.isFixed === true || item.fixed === true || item.isFixed === 'Y' || item.isFixed === 1 || item.isFixed === 'true');
+                    const durationVal = parseInt(item.duration) || 0;
 
-                    if (item.isFixed) {
+                    if (fixedFlag) {
                         const diffYear = lastYear - startY;
                         const diffMonth = lastMonth - startM;
                         const monthsPassedLast = (diffYear * 12) + diffMonth;
-                        let maxDuration = (item.duration > 0) ? item.duration : 999;
-
-                        if (monthsPassedLast >= 0 && monthsPassedLast < maxDuration) {
-                            isLastMonthTarget = true;
-                        }
+                        let maxDuration = (durationVal > 0) ? durationVal : 999;
+                        if (monthsPassedLast >= 0 && monthsPassedLast < maxDuration) isLastMonthTarget = true;
                     }
 
                     if (isLastMonthTarget) {
@@ -422,12 +464,9 @@
                     if (!chart) return;
                     const labels = Object.keys(stats);
                     const realData = Object.values(stats);
-
                     const displayData = realData.map(val => {
                         const percent = totalVal > 0 ? (val / totalVal) * 100 : 0;
-                        if (val > 0 && percent < 2) {
-                            return totalVal * 0.02;
-                        }
+                        if (val > 0 && percent < 2) return totalVal * 0.02;
                         return val;
                     });
 
@@ -436,10 +475,7 @@
                     const initialValue = totalVal > 0 ? `${totalVal.toLocaleString()}원` : "0원";
 
                     const renderCenterText = (label, value) => {
-                        box.innerHTML = `
-                            <span class="chart-center-label">${label}</span>
-                            <span class="chart-center-value">${value}</span>
-                        `;
+                        box.innerHTML = `<span class="chart-center-label">${label}</span><span class="chart-center-value">${value}</span>`;
                     };
 
                     renderCenterText(initialLabel, initialValue);
@@ -451,23 +487,14 @@
                         '월급': '#2ecc71', '식비': '#ff7675', '교통비': '#fdcb6e',
                         '쇼핑': '#a29bfe', '경조사': '#fab1a0', '저축': '#74b9ff', '기타': '#dfe6e9'
                     };
-                    chart.data.datasets[0].backgroundColor = labels.length > 0
-                        ? labels.map(label => colorMap[label] || '#C9CBCF')
-                        : ['#E5E5E5'];
-
+                    chart.data.datasets[0].backgroundColor = labels.length > 0 ? labels.map(label => colorMap[label] || '#C9CBCF') : ['#E5E5E5'];
                     chart.options.plugins.tooltip.enabled = false;
                     chart.options.onHover = (event, elements) => {
                         if (elements.length > 0) {
                             const index = elements[0].index;
                             const label = chart.data.labels[index];
-                            const value = realData[index];
-
-                            if (label !== '내역 없음') {
-                                renderCenterText(label, `${value.toLocaleString()}원`);
-                            }
-                        } else {
-                            renderCenterText(initialLabel, initialValue);
-                        }
+                            if (label !== '내역 없음') renderCenterText(label, `${realData[index].toLocaleString()}원`);
+                        } else renderCenterText(initialLabel, initialValue);
                     };
                     chart.update();
                 };
@@ -479,69 +506,43 @@
             initCharts: () => {
                 Chart.register(ChartDataLabels);
                 const getCommonOpts = () => ({
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '70%',
+                    responsive: true, maintainAspectRatio: false, cutout: '70%',
                     plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: { display: false } },
                     elements: { arc: { borderWidth: 0 } }
                 });
 
                 if (document.getElementById('chartLast')) {
-                    finance.chartLast = new Chart(document.getElementById('chartLast'), {
-                        type: 'doughnut',
-                        data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
-                        options: getCommonOpts()
-                    });
+                    finance.chartLast = new Chart(document.getElementById('chartLast'), { type: 'doughnut', data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] }, options: getCommonOpts() });
                 }
                 if (document.getElementById('chartThis')) {
-                    finance.chartThis = new Chart(document.getElementById('chartThis'), {
-                        type: 'doughnut',
-                        data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
-                        options: getCommonOpts()
-                    });
+                    finance.chartThis = new Chart(document.getElementById('chartThis'), { type: 'doughnut', data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] }, options: getCommonOpts() });
                 }
             },
 
             evtHandler: () => {
-                // [추가된 부분] 예산 설정 버튼 클릭 이벤트 연결
                 const budgetBtn = document.querySelector('.budget-amount');
-                if (budgetBtn) {
-                    budgetBtn.addEventListener('click', () => finance.openBudgetModal());
-                }
+                if (budgetBtn) budgetBtn.addEventListener('click', () => finance.openBudgetModal());
 
-                // [추가된 부분] 예산 입력 시 실시간 콤마 적용
                 const inpBudget = document.getElementById('inpBudget');
                 if (inpBudget) {
                     inpBudget.addEventListener('input', function () {
                         let val = this.value.replace(/[^0-9]/g, '');
-                        if (val) this.value = Number(val).toLocaleString();
-                        else this.value = '';
+                        if (val) this.value = Number(val).toLocaleString(); else this.value = '';
                     });
                 }
 
-                const chkFixed = document.getElementById('inpFixed');
-                const durationArea = document.getElementById('durationArea');
-                const amtInput = document.getElementById('inpAmount');
-
+                const chkFixed = document.getElementById('inpFixed'), durationArea = document.getElementById('durationArea'), amtInput = document.getElementById('inpAmount');
                 if (chkFixed && durationArea) {
                     chkFixed.addEventListener('change', function () {
-                        if (this.checked) {
-                            durationArea.style.display = 'flex';
-                            document.getElementById('inpDuration').value = 12;
-                        } else {
-                            durationArea.style.display = 'none';
-                        }
+                        if (this.checked) { durationArea.style.display = 'flex'; document.getElementById('inpDuration').value = 12; }
+                        else { durationArea.style.display = 'none'; }
                     });
                 }
 
                 if (amtInput) {
                     amtInput.addEventListener('input', function () {
                         let val = this.value.replace(/[^0-9]/g, '');
-                        if (val) {
-                            this.value = Number(val).toLocaleString();
-                        } else {
-                            this.value = '';
-                        }
+                        if (val) this.value = Number(val).toLocaleString(); else this.value = '';
                     });
                 }
 
@@ -553,25 +554,30 @@
                 document.getElementById('btnNextMonth').addEventListener('click', () => { finance.changeMonth(1); finance.loadData(); });
             },
 
-            changeMonth: (offset) => { finance.currentDate.setDate(1); finance.currentDate.setMonth(finance.currentDate.getMonth() + offset); finance.updateHeader(); },
+            changeMonth: (offset) => {
+                finance.currentDate.setDate(1);
+                finance.currentDate.setMonth(finance.currentDate.getMonth() + offset);
+                finance.updateHeader();
+            },
+
             updateHeader: () => { const options = { year: 'numeric', month: 'long' }; const dateStr = finance.currentDate.toLocaleDateString('en-US', options); document.getElementById('calTitle').innerText = dateStr; },
+
             calcDaySummary: (day) => {
                 if (!finance.mockDB[day]) return { inc: 0, exp: 0 };
                 let inc = 0, exp = 0;
                 finance.mockDB[day].forEach(item => {
                     const val = Number(String(item.amount).replace(/,/g, ''));
-                    if (item.type === 'plus' || item.type === '+') inc += val;
-                    else exp += val;
+                    if (item.type === 'plus' || item.type === '+') inc += val; else exp += val;
                 });
                 return { inc, exp };
             },
+
             renderScroller: () => {
                 const container = document.getElementById('calendarContainer');
                 const year = finance.currentDate.getFullYear(), month = finance.currentDate.getMonth();
                 const lastDay = new Date(year, month + 1, 0).getDate();
                 const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-                container.innerHTML = '';
-                container.className = 'date-scroller';
+                container.innerHTML = ''; container.className = 'date-scroller';
                 for (let i = 1; i <= lastDay; i++) {
                     const d = new Date(year, month, i), summary = finance.calcDaySummary(i);
                     let moneyTag = '';
@@ -591,6 +597,7 @@
                     if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
                 }, 100);
             },
+
             renderGrid: () => {
                 const container = document.getElementById('calendarContainer');
                 const year = finance.currentDate.getFullYear(), month = finance.currentDate.getMonth();
@@ -609,38 +616,51 @@
                 container.innerHTML = html + '</div>';
                 document.querySelectorAll('.grid-date-cell:not(.empty)').forEach(cell => cell.addEventListener('click', () => finance.showDetails(parseInt(cell.getAttribute('data-day')))));
             },
+
             toggleCalendarView: () => { finance.isGridView = !finance.isGridView; if (finance.isGridView) finance.renderGrid(); else finance.renderScroller(); },
+
             showDetails: (day) => {
-                finance.selectedDay = day; document.querySelectorAll('.date-card').forEach(e => e.classList.remove('active'));
+                // 달력 날짜를 명시적으로 클릭했을 때만 기준 정보 세팅
+                if (day !== null) {
+                    finance.selectedDay = day;
+                    finance.selectedYear = finance.currentDate.getFullYear();
+                    finance.selectedMonth = finance.currentDate.getMonth();
+                    finance.currentDetailData = finance.mockDB[day] ? [...finance.mockDB[day]] : [];
+                }
+
+                document.querySelectorAll('.date-card').forEach(e => e.classList.remove('active'));
                 const detailSection = document.getElementById('dayDetailSection'); detailSection.classList.add('active');
-                const dateStr = new Date(finance.currentDate.getFullYear(), finance.currentDate.getMonth(), day).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+                const dateStr = new Date(finance.selectedYear, finance.selectedMonth, finance.selectedDay).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
                 document.getElementById('ddDateTitle').innerText = dateStr;
-                const list = finance.mockDB[day] || []; document.getElementById('ddCount').innerText = `${list.length}건`;
+
                 const listContainer = document.getElementById('ddList'); listContainer.innerHTML = '';
-                if (list.length === 0) listContainer.innerHTML = '<div class="empty-msg">내역이 없습니다.</div>';
-                else list.forEach((item, index) => {
+                document.getElementById('ddCount').innerText = `${finance.currentDetailData.length}건`;
+
+                if (finance.currentDetailData.length === 0) listContainer.innerHTML = '<div class="empty-msg">내역이 없습니다.</div>';
+                else finance.currentDetailData.forEach((item, index) => {
                     const div = document.createElement('div'); div.className = 'dd-item';
                     const colorClass = item.type === 'plus' ? 'plus' : 'minus', sign = item.type === 'plus' ? '+' : '-';
                     div.innerHTML = `<div class="dd-item-top"><span class="dd-title">${item.cat}${item.isFixed ? '<span class="badge-fixed">고정</span>' : ''} <span class="btn-edit-small" onclick="finance.openModal(${index})"><ion-icon name="pencil" class="icon-sm"></ion-icon></span><span class="btn-delete-small" onclick="finance.deleteData(${item.financeIdx})"><ion-icon name="trash-outline" class="icon-sm"></ion-icon></span></span><span class="dd-amount ${colorClass}">${sign} ${item.amount}</span></div><div class="dd-memo-box">${item.memo}</div><div class="dd-time">${item.time}</div>`;
                     listContainer.appendChild(div);
                 });
-                detailSection.scrollIntoView({ behavior: 'smooth' });
+
+                if (day !== null) detailSection.scrollIntoView({ behavior: 'smooth' });
             },
+
             openModal: (editIndex) => {
-                if (!finance.selectedDay) {
-                    finance.showToast("날짜를 먼저 선택해주세요! 📅");
-                    return;
-                }
+                if (!finance.selectedDay) { finance.showToast("날짜를 먼저 선택해주세요! 📅"); return; }
+
                 finance.editingIndex = editIndex;
                 const chkFixed = document.getElementById('inpFixed'), durationArea = document.getElementById('durationArea'), inpDuration = document.getElementById('inpDuration');
+
                 if (editIndex !== null) {
-                    const item = finance.mockDB[finance.selectedDay][editIndex];
+                    // 🚨 [수정됨] 달력이 넘어가서 mockDB가 날아가도, 독립 메모리를 써서 정상적으로 수정 가능함!
+                    const item = finance.currentDetailData[editIndex];
                     finance.editingId = item.financeIdx;
                     document.getElementById('inpCategory').value = item.cat;
                     document.getElementById('inpType').value = item.type;
-
                     document.getElementById('inpAmount').value = Number(String(item.amount).replace(/,/g, '')).toLocaleString();
-
                     document.getElementById('inpMemo').value = item.memo;
                     chkFixed.checked = item.isFixed;
                     durationArea.style.display = item.isFixed ? 'flex' : 'none';
@@ -655,41 +675,50 @@
                 }
                 document.getElementById('writeModal').classList.add('active');
             },
+
             closeModal: () => { document.getElementById('writeModal').classList.remove('active'); },
 
             saveData: () => {
-                const cat = document.getElementById('inpCategory').value, type = document.getElementById('inpType').value, memo = document.getElementById('inpMemo').value, isFixed = document.getElementById('inpFixed').checked;
+                const cat = document.getElementById('inpCategory').value,
+                    type = document.getElementById('inpType').value,
+                    memo = document.getElementById('inpMemo').value,
+                    isFixed = document.getElementById('inpFixed').checked;
 
                 const rawAmtStr = document.getElementById('inpAmount').value.replace(/,/g, '');
                 const rawAmt = Number(rawAmtStr);
 
                 let duration = isFixed ? (parseInt(document.getElementById('inpDuration').value) || 12) : 0;
 
-                if (!rawAmtStr || rawAmt < 0) {
-                    finance.showToast("금액을 정확히 입력해주세요! 💸");
-                    return;
-                }
-                const dateStr = `${finance.currentDate.getFullYear()}-${String(finance.currentDate.getMonth() + 1).padStart(2, '0')}-${String(finance.selectedDay).padStart(2, '0')}`;
-                const now = new Date(), timeStr = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
+                if (!rawAmtStr || rawAmt < 0) { finance.showToast("금액을 정확히 입력해주세요! 💸"); return; }
+
+                // 항상 상세내역 창에 쓰여있는 날짜로 고정
+                const dateStr = `${finance.selectedYear}-${String(finance.selectedMonth + 1).padStart(2, '0')}-${String(finance.selectedDay).padStart(2, '0')}`;
+                const now = new Date();
+                const timeStr = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
 
                 fetch('/finance/write', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ financeIdx: finance.editingId, category: cat, amount: rawAmt, type: type, memo: memo, date: dateStr, time: timeStr, isFixed: isFixed, duration: duration })
+                    body: JSON.stringify({
+                        financeIdx: finance.editingId, category: cat, amount: rawAmt, type: type,
+                        memo: memo, date: dateStr, time: timeStr, isFixed: isFixed, duration: duration
+                    })
                 }).then(res => {
                     if (res.ok) {
                         finance.showToast('저장되었습니다! 🎉');
                         finance.closeModal();
-                        finance.loadData();
-                    } else {
-                        res.text().then(msg => finance.showToast('실패: ' + msg));
-                    }
+
+                        // 현재 화면 달력과, 내가 저장한 상세내역 달력이 일치하면 평소처럼 갱신
+                        if (finance.selectedYear === finance.currentDate.getFullYear() && finance.selectedMonth === finance.currentDate.getMonth()) {
+                            finance.loadData();
+                        } else {
+                            // 다르면? 눈에 보이는 달력은 그대로 두고, 상세내역 메모리만 따로 훔쳐와서 갱신함 (달력 안 돌아감!)
+                            finance.loadData();
+                            setTimeout(() => finance.refreshDetailOnly(), 200);
+                        }
+                    } else { res.text().then(msg => finance.showToast('실패: ' + msg)); }
                 }).catch(err => finance.showToast('서버 오류가 발생했습니다.'));
             },
-
-            // [삭제] 기존의 더미 알림 함수 제거 (팝업으로 대체되었으므로)
-            // showBudgetAlert: () => { finance.showToast('예산 설정 기능은 준비 중입니다 🚧'); },
-            showExpenseAlert: () => { finance.showToast('지출 상세 리포트는 준비 중입니다 📊'); },
 
             deleteData: (id) => {
                 finance.pendingDeleteId = id;
@@ -708,16 +737,19 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ financeIdx: finance.pendingDeleteId })
-                })
-                    .then(res => {
-                        if (res.ok) {
-                            finance.showToast("삭제되었습니다. 🗑️");
-                            finance.closeDeleteModal();
+                }).then(res => {
+                    if (res.ok) {
+                        finance.showToast("삭제되었습니다. 🗑️");
+                        finance.closeDeleteModal();
+
+                        if (finance.selectedYear === finance.currentDate.getFullYear() && finance.selectedMonth === finance.currentDate.getMonth()) {
                             finance.loadData();
                         } else {
-                            finance.showToast("삭제 실패!");
+                            finance.loadData();
+                            setTimeout(() => finance.refreshDetailOnly(), 200);
                         }
-                    });
+                    } else { finance.showToast("삭제 실패!"); }
+                });
             }
         };
     </script>
