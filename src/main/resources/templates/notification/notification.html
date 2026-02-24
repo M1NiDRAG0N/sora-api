@@ -141,6 +141,7 @@
                 // 이동
                 const usedTypes = ['USED_KEYWORD_MATCH', 'USED_LIKE', 'USED_STATE_CHANGE'];
                 const communityTypes = ['LIKE', 'COMMUNITY_LIKE', 'COMMENT'];
+                const noticeTypes = ['NOTICE', 'ADMIN_NOTICE'];
                 const validRefId = refId && refId !== 'null' && refId !== 'undefined';
 
                 if (usedTypes.includes(type) && validRefId) {
@@ -149,6 +150,15 @@
                 } else if (communityTypes.includes(type) && validRefId) {
                     this.close();
                     location.href = `/community?detail=${refId}`;
+                } else if (noticeTypes.includes(type)) {
+                    this.close();
+                    if (validRefId) {
+                        if (window.openNoticeModal) {
+                            window.openNoticeModal(refId);
+                        } else {
+                            console.error('NoticeModal is not initialized');
+                        }
+                    }
                 }
             },
 
