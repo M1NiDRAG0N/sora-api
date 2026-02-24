@@ -37,13 +37,51 @@
                     .then(data => {
                         chatList.data = data;
                         chatList.render();
-
-                        // 데이터 로드 후 사용자 ID 추출 (임시: 첫 번째 데이터가 있다면 거기서 유추하거나 별도 API 필요)
-                        // 실제로는 HTML에 userIdx를 hidden input으로 박아두거나, /api/me 호출 필요
-                        // 여기서는 생략하고 목록 렌더링에 집중
                     })
                     .catch(error => console.error('Error loading chat list:', error));
             },
+
+            render: () => {
+                const container = document.querySelector('.chat-list-content');
+                if (!container) return;
+                
+                let filtered = chatList.data;
+                if (chatList.currentFilter === 'USED') {
+                    filtered = chatList.data.filter(d => d.type === 'USED');
+                } else if (chatList.currentFilter === 'NORMAL') {
+                    filtered = chatList.data.filter(d => d.type === 'NORMAL');
+                }
+
+                if (filtered.length === 0) {
+                    container.innerHTML = '<div style="padding: 50px; text-align: center; color: #aaa;">채팅 내역이 없습니다.</div>';
+                    return;
+                }
+
+                container.innerHTML = filtered.map(dto => {
+                    if (dto.type === 'USED') return Renderer.createUsedCardHTML(dto);
+                    else return Renderer.createNormalCardHtml(dto);
+                }).join('');
+            },
+
+            bindEvents: () => {
+                const buttons = document.querySelectorAll('.filter-btn');
+                buttons.forEach((btn, idx) => {
+                    btn.addEventListener('click', () => {
+                        buttons.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        
+                        if (idx === 0) chatList.currentFilter = 'ALL';
+                        else if (idx === 1) chatList.currentFilter = 'USED';
+                        else chatList.currentFilter = 'NORMAL';
+                        
+                        chatList.render();
+                    });
+                });
+            },
+
+            connectWebSocket: () => {
+                // 목록 실시간 갱신이 필요할 경우 구현 (선택 사항)
+            }
         }
         const Renderer = {
             createUsedCardHTML: (dto) => {
