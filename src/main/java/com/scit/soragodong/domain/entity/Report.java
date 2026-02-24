@@ -35,5 +35,5 @@ public class Report extends BaseEntity {
 
     @Column(name = "STATUS")
     @Builder.Default
-    private String status = "PENDING"; // PENDING, REVIEWING, COMPLETED (enum 안씀)
+    private String status = "PROCESSING"; // PENDING, REVIEWING, COMPLETED (enum 안씀)
 }
