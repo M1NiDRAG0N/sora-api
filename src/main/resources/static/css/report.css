@@ -1,0 +1,166 @@
+        /* 신고 페이지 전용 스타일 */
+        #reportLayer {
+            display: none; /* 기본적으로 숨김 */
+            background-color: #F0F2FF;
+            flex: 1;
+            flex-direction: column;
+        }
+
+        /* 1. 독립 페이지(/report)로 접속했을 때 */
+        #reportLayer.standalone-mode {
+            display: flex;
+            position: relative;
+        }
+
+        /* 2. 모달 모드 (다른 페이지에서 호출될 때) */
+        #reportLayer.modal-mode {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            width: 100%;
+            max-width: 420px;
+            height: 100%;
+            z-index: 10000;
+            transform: translateX(100%);
+        }
+
+        /* 모달 활성화 시 애니메이션 */
+        #reportLayer.modal-mode.active {
+            display: flex;
+            animation: report-slideIn 0.3s forwards cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        @keyframes report-slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(-50%); }
+        }
+
+        .report-header-ui {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            background: transparent;
+            flex-shrink: 0;
+        }
+
+        .report-header-ui .header-title {
+            flex: 1;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 800;
+            color: #333;
+        }
+
+        .report-header-ui .back-btn {
+            width: 40px;
+            height: 40px;
+            font-size: 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .report-header-ui .header-spacer { width: 40px; }
+
+        .report-scroll-area {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .content-inner {
+            padding: 10px 20px 40px;
+        }
+
+        .info-card {
+            background: #fff;
+            padding: 18px;
+            border-radius: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(178, 164, 255, 0.1);
+            border: 1px solid rgba(178, 164, 255, 0.2);
+        }
+
+        .info-label { font-size: 12px; color: #8F7DF5; font-weight: 700; margin-bottom: 6px; }
+        .info-content { display: flex; align-items: baseline; gap: 10px; }
+        .target-type { font-size: 18px; font-weight: 800; color: #333; }
+        .target-id { font-size: 13px; color: #999; }
+
+        .section-group { margin-bottom: 24px; }
+        .section-label { display: block; font-size: 15px; font-weight: 700; color: #444; margin-bottom: 12px; padding-left: 4px; }
+
+        .reason-list { display: flex; flex-direction: column; gap: 10px; }
+        .reason-chip {
+            background: #fff;
+            padding: 16px;
+            border-radius: 16px;
+            border: 1.5px solid #eee;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .reason-chip.selected {
+            border-color: #B2A4FF;
+            background-color: #F8F7FF;
+            color: #8F7DF5;
+            box-shadow: 0 4px 10px rgba(178, 164, 255, 0.2);
+        }
+
+        .reason-chip .radio-dot {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            position: relative;
+        }
+        .reason-chip.selected .radio-dot { border-color: #B2A4FF; }
+        .reason-chip.selected .radio-dot::after {
+            content: '';
+            position: absolute;
+            top: 3px; left: 3px; width: 8px; height: 8px;
+            background: #B2A4FF;
+            border-radius: 50%;
+        }
+
+        .styled-textarea {
+            width: 100%;
+            height: 120px;
+            padding: 16px;
+            border-radius: 16px;
+            border: 1.5px solid #eee;
+            background: #fff;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .styled-textarea:focus { border-color: #B2A4FF; }
+
+        .bottom-action { margin-top: 10px; display: flex; flex-direction: column; gap: 16px; }
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            border-radius: 20px;
+            border: none;
+            background: #ff4757;
+            color: white;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 6px 15px rgba(255, 71, 87, 0.3);
+            transition: transform 0.2s;
+        }
+        .submit-btn:active { transform: scale(0.97); }
+        .cancel-link {
+            background: none; border: none; color: #999; font-size: 14px;
+            font-weight: 600; cursor: pointer; text-decoration: underline;
+        }

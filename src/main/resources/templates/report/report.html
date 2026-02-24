@@ -1,0 +1,184 @@
+<div th:fragment="div" id="reportLayer" class="page-wrapper report-page">
+    <!-- 헤더 (모달일 때만 표시되는 닫기 버튼 포함) -->
+    <div class="report-header-ui">
+        <button type="button" class="back-btn" onclick="ReportModal.close()">
+            <ion-icon name="chevron-back"></ion-icon>
+        </button>
+        <div class="header-title">🚨 신고하기</div>
+        <div class="header-spacer"></div>
+    </div>
+
+    <!-- 스크롤 가능한 컨텐츠 영역 -->
+    <div class="report-scroll-area no-scrollbar">
+        <div class="content-inner">
+            
+            <!-- 대상 정보 카드 -->
+            <div class="info-card">
+                <div class="info-label">신고 대상 정보</div>
+                <div class="info-content">
+                    <div class="target-type" id="report-target-type-text">일반 신고</div>
+                    <div class="target-id">ID: <span id="report-target-id-text">0</span></div>
+                </div>
+            </div>
+
+            <!-- 사유 선택 섹션 -->
+            <div class="section-group">
+                <label class="section-label">신고 사유를 선택해주세요</label>
+                <div id="report-reason-list" class="reason-list">
+                    <!-- JS에서 사유 목록 생성 -->
+                </div>
+            </div>
+
+            <!-- 상세 설명 섹션 -->
+            <div class="section-group">
+                <label for="report-description" class="section-label">상세 내용 (선택사항)</label>
+                <textarea id="report-description" class="styled-textarea" placeholder="정확한 사유를 입력해 주시면 운영진이 확인 후 조치하겠습니다."></textarea>
+            </div>
+
+            <div class="bottom-action">
+                <button type="button" class="submit-btn" onclick="ReportModal.submit()">신고하기</button>
+                <button type="button" class="cancel-link" onclick="ReportModal.close()">취소하고 돌아가기</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+
+    </style>
+
+    <script th:inline="javascript">
+        const ReportModal = {
+            state: {
+                targetType: null,
+                targetId: null,
+                selectedReason: null,
+                isSubmitting: false,
+                reasons: ["스팸/홍보", "부적절한 콘텐츠", "혐오 표현/괴롭힘", "개인정보 노출", "사기 의심", "기타"]
+            },
+
+            init: () => {
+                const currentUri = [[${currentUri}]];
+                const layer = document.getElementById('reportLayer');
+                
+                if (currentUri === '/report') {
+                    // 페이지로 접근했을 때: 바로 보이게 설정
+                    layer.classList.remove('modal-mode');
+                    layer.classList.add('standalone-mode');
+                    ReportModal.open('GENERAL', '0', '일반 문의 및 신고');
+                } else {
+                    // 모달로 접근했을 때: 숨겨진 모드 유지
+                    layer.classList.remove('standalone-mode');
+                    layer.classList.add('modal-mode');
+                }
+            },
+
+            open: (type, id, typeText) => {
+                ReportModal.state.targetType = type;
+                ReportModal.state.targetId = id;
+                ReportModal.state.selectedReason = null;
+
+                document.getElementById('report-target-type-text').innerText = typeText || type;
+                document.getElementById('report-target-id-text').innerText = id;
+                document.getElementById('report-description').value = '';
+
+                const reasonList = document.getElementById('report-reason-list');
+                reasonList.innerHTML = '';
+                ReportModal.state.reasons.forEach((reason) => {
+                    const chip = document.createElement('div');
+                    chip.className = 'reason-chip';
+                    chip.innerHTML = `<div class="radio-dot"></div><span>${reason}</span>`;
+                    chip.onclick = () => {
+                        document.querySelectorAll('.reason-chip').forEach(c => c.classList.remove('selected'));
+                        chip.classList.add('selected');
+                        ReportModal.state.selectedReason = reason;
+                    };
+                    reasonList.appendChild(chip);
+                });
+
+                const layer = document.getElementById('reportLayer');
+                if (layer.classList.contains('modal-mode')) {
+                    if (typeof window.modalZIndex === 'undefined') window.modalZIndex = 5000;
+                    window.modalZIndex++;
+                    layer.style.zIndex = window.modalZIndex;
+                    layer.classList.add('active');
+                    
+                    if (!history.state || history.state.modal !== 'report') {
+                        history.pushState({ modal: 'report' }, 'Report', '');
+                    }
+                }
+            },
+
+            close: () => {
+                const currentUri = [[${currentUri}]];
+                if (currentUri === '/report') {
+                    location.href = '/main';
+                    return;
+                }
+                const layer = document.getElementById('reportLayer');
+                layer.classList.remove('active');
+            },
+
+            submit: async () => {
+                if (ReportModal.state.isSubmitting) return;
+
+                if (!ReportModal.state.selectedReason) {
+                    Utils.notify("신고 사유를 선택해주세요.", "warning");
+                    return;
+                }
+
+                const description = document.getElementById('report-description').value.trim();
+                
+                const data = {
+                    targetType: ReportModal.state.targetType,
+                    targetId: ReportModal.state.targetId,
+                    reason: ReportModal.state.selectedReason,
+                    description: description
+                };
+
+                // 제출 버튼 상태 변경 (중복 클릭 방지)
+                const submitBtn = document.querySelector('.submit-btn');
+                const originalText = submitBtn.innerText;
+                
+                try {
+                    ReportModal.state.isSubmitting = true;
+                    submitBtn.innerText = "제출 중...";
+                    submitBtn.style.opacity = "0.7";
+                    submitBtn.disabled = true;
+
+                    const response = await API.post('/report/submit', data);
+                    
+                    Utils.notify("신고가 정상적으로 접수되었습니다. 검토 후 조치하겠습니다.", "success");
+                    
+                    // 성공 시 잠시 후 창 닫기
+                    setTimeout(() => {
+                        ReportModal.close();
+                    }, 500);
+
+                } catch (error) {
+                    console.error('신고 제출 실패:', error);
+                    const errorMsg = error.response?.data?.message || "신고 제출 중 오류가 발생했습니다. 다시 시도해 주세요.";
+                    Utils.notify(errorMsg, "error");
+                } finally {
+                    ReportModal.state.isSubmitting = false;
+                    submitBtn.innerText = originalText;
+                    submitBtn.style.opacity = "1";
+                    submitBtn.disabled = false;
+                }
+            }
+        };
+
+        window.openReportModal = ReportModal.open;
+        window.addEventListener('popstate', (e) => {
+            const layer = document.getElementById('reportLayer');
+            if (layer && layer.classList.contains('active')) {
+                layer.classList.remove('active');
+            }
+        });
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', ReportModal.init);
+        } else {
+            ReportModal.init();
+        }
+    </script>
+</div>

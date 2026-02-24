@@ -1,3 +1,4 @@
+
 <div class="page-wrapper community-page" th:fragment="div">
 
     <div class="community-scroll-area" id="communityMain">
@@ -1085,7 +1086,12 @@
 
             reportBoard: () => {
                 document.querySelector('#board-visitor-menu').classList.remove('active');
-                Utils.notify("신고 기능은 준비중입니다.", "warning");
+                const boardIdx = CommunityView.board_info.boardIdx;
+                if (typeof window.openReportModal === 'function') {
+                    window.openReportModal('BOARD', boardIdx, '커뮤니티 게시글');
+                } else {
+                    Utils.notify("신고 기능을 불러올 수 없습니다.", "error");
+                }
             },
 
             confirmDelete: () => {

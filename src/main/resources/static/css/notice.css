@@ -1,0 +1,121 @@
+@charset "UTF-8";
+
+/* 공지사항 페이지 컨테이너 */
+.notice-page {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* 공지사항 목록 컨테이너 */
+.notice-list-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px 20px;
+    padding-bottom: 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    scrollbar-width: none;
+}
+
+.notice-list-container::-webkit-scrollbar {
+    display: none;
+}
+
+/* 공지사항 아이템 */
+.notice-item {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 18px;
+    padding: 18px 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    animation: noticeFadeUp 0.4s ease forwards;
+}
+
+@keyframes noticeFadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.notice-item:active {
+    transform: scale(0.98);
+    background: rgba(255, 255, 255, 1);
+}
+
+.notice-item-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+    line-height: 1.4;
+}
+
+.notice-item-date {
+    font-size: 12px;
+    color: #aaa;
+    font-weight: 500;
+}
+
+/* 상세 레이어 오버라이드 (page-layer 공통 스타일 활용) */
+#noticeDetailLayer {
+    background: #f8f9fa;
+    left: 50% !important;
+    width: 100% !important;
+    max-width: 420px !important;
+    transform: translate(-50%, 100%) !important; /* 화면 아래로 완전히 숨김 & 중앙 정렬 유지 */
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), visibility 0.3s;
+    visibility: hidden;
+    pointer-events: none;
+    z-index: 10001; /* 다른 레이어보다 위에 오도록 */
+}
+
+#noticeDetailLayer.active {
+    transform: translate(-50%, 0) !important; /* 중앙 위치로 올라옴 */
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.notice-detail-content-card {
+    background: white;
+    margin: 20px;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    min-height: 300px;
+}
+
+.notice-detail-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.notice-detail-date {
+    font-size: 13px;
+    color: #888;
+}
+
+.notice-content-body {
+    font-size: 15px;
+    line-height: 1.7;
+    color: #444;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+/* 상단 헤더 커스텀 */
+.notice-header {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
