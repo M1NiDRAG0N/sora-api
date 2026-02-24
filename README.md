@@ -1,404 +1,276 @@
-# 🐚 소라고동 (Sora Godong)
+# 소라고동 (Sora Godong)
 
-> AI 기반 금융 커뮤니티 플랫폼
-
-## 📋 프로젝트 개요
-
-**소라고동**은 사용자들이 금융 정보를 공유하고, 실시간 채팅으로 소통하며, AI 어시스턴트의 도움을 받을 수 있는 통합 금융 커뮤니티 플랫폼입니다.
-
-### 주요 기능
-- 👤 **회원 관리**: 안전한 회원가입/로그인 (BCrypt 암호화)
-- 📧 **이메일 시스템**: 환영 이메일, 계정 인증, 비밀번호 재설정
-- 💬 **실시간 채팅**: WebSocket 기반 실시간 메시징
-- 🤖 **AI 어시스턴트**: OpenAI 기반 금융 상담
-- 💰 **금융 기능**: 계좌 관리, 시장 분석, 커뮤니티
-- 🎨 **현대적 UI/UX**: 반응형 디자인, SPA 네비게이션
+> 가계부 · 중고거래 · 커뮤니티 · 타임세일을 하나로 묶은 **AI 통합 생활 플랫폼**
 
 ---
 
-## 🛠 기술 스택
+## 프로젝트 개요
 
-### Backend
-- **Framework**: Spring Boot 3.5.11
-- **보안**: Spring Security, BCryptPasswordEncoder
-- **데이터베이스**: MySQL 8.0
-- **캐싱/세션**: Redis
-- **메시징**: WebSocket
-- **이메일**: JavaMailSender (Gmail SMTP)
-- **ORM**: Spring Data JPA
-- **템플릿**: Thymeleaf
-
-### Frontend
-- **Markup**: HTML5, Thymeleaf
-- **Styling**: CSS3
-- **Scripting**: Vanilla JavaScript (Promise-based)
-- **라이브러리**: Chart.js, Ionicons
-
-### DevOps
-- **빌드**: Gradle
-- **컨테이너**: Docker & Docker Compose
-- **JVM**: Java 21
+소라고동은 동네 생활에 필요한 4가지 핵심 기능(가계부, 중고거래, 커뮤니티, 타임세일)을 제공하며,
+AI 도우미 '소라고동'이 자연어 명령만으로 모든 기능을 직접 실행해주는 스마트 생활 앱입니다.
 
 ---
 
-## 📦 설치 및 실행
+## 기술 스택
 
-### 사전 요구사항
-- **Java**: JDK 21 이상
-- **MySQL**: 8.0 이상
-- **Redis**: 최신 버전
-- **Gradle**: 8.0 이상 (gradlew 포함)
-
-### 1️⃣ 환경 변수 설정
-
-프로젝트 루트에 `.env` 파일을 생성하거나, IDE의 Run Configuration에서 환경변수를 설정합니다:
-
-```bash
-# 데이터베이스
-export DB_HOST=<your-mysql-host>
-export DB_PORT=<your-mysql-port>
-export DB_USERNAME=<your-db-username>
-export DB_PASSWORD=<your-db-password>
-
-# Redis
-export REDIS_HOST=<your-redis-host>
-export REDIS_PORT=<your-redis-port>
-export REDIS_PASSWORD=<your-redis-password>
-
-# 이메일
-export MAIL_HOST=smtp.gmail.com
-export MAIL_PORT=587
-export MAIL_USERNAME=<your-email@gmail.com>
-export MAIL_PASSWORD=<your-gmail-app-password>
-
-# JWT & Security
-export JWT_SECRET=<your-32-character-secret-key>
-
-# API Keys
-export OPENAI_API_KEY=<your-openai-api-key>
-export GOOGLE_MAPS_API_KEY=<your-google-maps-api-key>
-
-# 프로필
-export SPRING_PROFILES_ACTIVE=local
-```
-
-> **💡 Tip**: 로컬 개발 환경에서는 `application-local.yml`이 자동으로 기본값을 제공합니다.
-
-### 2️⃣ 데이터베이스 초기화
-
-```bash
-# MySQL 접속
-mysql -h <your-mysql-host> -u <your-db-username> -p
-
-# 데이터베이스 생성
-CREATE DATABASE soragodong;
-USE soragodong;
-```
-
-### 3️⃣ 빌드
-
-```bash
-# Gradle 빌드 (Linux/Mac)
-./gradlew clean build
-
-# Gradle 빌드 (Windows)
-gradlew.bat clean build
-```
-
-### 4️⃣ 실행
-
-```bash
-# IDE에서 실행 (권장)
-# Run → SoragodongApplication.java
-
-# 또는 명령어로 실행
-./gradlew bootRun
-
-# JAR 파일로 실행
-java -jar build/libs/sora-api-0.0.1-SNAPSHOT.jar
-```
-
-### 5️⃣ 접속
-
-```
-🌐 http://localhost:8080
-```
+| 영역 | 기술 |
+|------|------|
+| **Backend** | Spring Boot 3.5, Java 21, Spring Security, Spring AI 1.1.2 |
+| **AI** | Groq API (llama-3.3-70b-versatile), Spring AI Function Calling |
+| **DB** | MySQL 8.0 (prod), H2 (test) |
+| **캐싱/세션** | Redis (Spring Session) |
+| **실시간** | SSE (알림), WebSocket (채팅) |
+| **이메일** | Gmail SMTP (JavaMailSender, @Async) |
+| **지도** | Google Maps API |
+| **Frontend** | Thymeleaf, Vanilla JS, CSS3, Chart.js, Ionicons |
+| **빌드/배포** | Gradle, Oracle Cloud (1GB RAM) |
 
 ---
 
-## 📁 프로젝트 구조
+## 주요 기능
+
+### 1. 인증 (Auth)
+- 이메일/비밀번호 회원가입 (BCrypt 암호화)
+- 이메일 인증 코드 발송 및 검증
+- 비밀번호 재설정 (이메일 코드 인증)
+- Google Maps 기반 주소/위치 설정 (회원가입 시)
+- 닉네임·이메일 실시간 중복 확인
+- Redis 세션 기반 로그인 유지
+
+### 2. 가계부 (Finance)
+- 수입/지출 내역 등록·수정·삭제
+- 카테고리별 분류 (식비, 교통, 생활 등)
+- 고정 지출 설정 (isFixed + 기간)
+- 월별 예산 설정 및 관리 (MonthlyBudget)
+- 달력 뷰 + 카테고리별 Chart.js 시각화
+- 월별 수입/지출 합계 요약
+
+### 3. 중고거래 (Used Market)
+- 물품 등록·수정·논리삭제 (이미지 첨부 가능)
+- 상태 관리: `TRADING` → `SALE` → `RESERVED` → `SOLD`
+- 찜(좋아요) 토글 + 찜한 사용자에게 알림
+- 키워드 알림: 최대 10개 등록, 신규 물품 등록 시 자동 매칭
+- 위치 기반 거래 장소 설정 (위도/경도)
+- 페이징 검색 (제목·내용 키워드)
+- 24시간 중복 방지 조회수 (Redis)
+
+### 4. 커뮤니티 (Community)
+- 게시글 CRUD + 이미지 첨부
+- 카테고리: `DISTRIBUTION`(나눔) · `TIP` · `HUMOR` · `COOK` · `QUESTION`
+- 댓글 등록·수정·삭제
+- 좋아요 토글 (LikeCount 복합키 테이블)
+- 무한스크롤 페이징 (10개씩)
+- 카테고리·키워드 복합 검색
+
+### 5. 타임세일 (Timesale)
+- 이벤트 진행 가게 목록 조회 + Google Maps 지도 표시
+- 할인 상품 목록 조회 (eventPrice)
+- 가게별 재고 있는 상품 조회
+- 상품 예약 처리 (재고 감소 + 주문 이력 저장)
+- 동시성 제어 (Pessimistic Lock)
+
+### 6. 실시간 알림 (Notification)
+- SSE(Server-Sent Events) 기반 실시간 푸시
+- 알림 타입: `KEYWORD`(키워드 매칭) · `USED_STATE_CHANGE`(상태 변경) · `USED_LIKE`(찜) · `ORDER`(주문) · `COMMENT`(댓글)
+- 알림 목록 조회·읽음 처리·삭제 (논리 삭제)
+- 미읽음 수 배지 표시
+- 트랜잭션 커밋 후 비동기 알림 (@Async + TransactionSynchronization)
+
+### 7. 실시간 채팅 (Chat)
+- WebSocket 기반 채팅방 구조
+- 채팅방 목록 / 채팅방 입장
+
+### 8. AI 도우미 - 소라고동
+- Groq API (llama-3.3-70b-versatile) + Spring AI SSE 스트리밍
+- **Function Calling**: 자연어 명령으로 앱 기능 직접 실행
+
+| Tool | 실행 가능한 기능 |
+|------|----------------|
+| `FinanceTool` | 가계부 등록, 목록 조회, 월별 요약, 예산 설정, 삭제 |
+| `UsedMarketTool` | 물품 등록·삭제·상태변경, 키워드 등록·삭제·조회, 목록 검색 |
+| `CommunityTool` | 게시글 작성·조회·삭제 |
+| `TimesaleTool` | 할인 상품 조회, 이벤트 가게 조회, 상품 예약 |
+
+**사용 예시:**
+```
+"편의점에서 라면 삼각김밥 3000원 지출 가계부 기록해줘"
+→ recordFinance() 호출 → DB 저장
+
+"아이폰 충전기 15000원에 중고 등록해줘"
+→ registerUsed() 호출 → DB 저장
+
+"이번달 가계부 요약해줘"
+→ summarizeMonth() 호출 → 수입/지출 합계 반환
+```
+
+### 9. 프로필 (Profile)
+- 프로필 이미지 업로드/변경
+- 닉네임, 주소, 위치 수정
+
+### 10. 파일 업로드 (File)
+- 게시글·중고물품·프로필 이미지 업로드
+- FileGrp + File 엔티티로 그룹 관리
+- 최대 10MB/파일, 20MB/요청
+
+---
+
+## 프로젝트 구조
 
 ```
 sora-api/
-├── src/
-│   ├── main/
-│   │   ├── java/com/scit/soragodong/
-│   │   │   ├── SoragodongApplication.java      # 메인 진입점
-│   │   │   ├── controller/                      # REST 컨트롤러
-│   │   │   │   ├── AuthController.java          # 인증 관련
-│   │   │   │   └── HomeController.java          # 홈 페이지
-│   │   │   ├── service/                         # 비즈니스 로직
-│   │   │   │   ├── UserService.java
-│   │   │   │   ├── EmailService.java            # 이메일 전송
-│   │   │   │   └── SseService.java              # 실시간 알림
-│   │   │   ├── repository/                      # 데이터 접근
-│   │   │   │   └── UserRepository.java
-│   │   │   ├── domain/                          # 도메인 모델
-│   │   │   │   ├── entity/                      # JPA 엔티티
-│   │   │   │   ├── dto/                         # Data Transfer Objects
-│   │   │   │   └── enums/                       # 열거형
-│   │   │   ├── config/                          # 설정 클래스
-│   │   │   │   ├── SecurityConfig.java          # Spring Security
-│   │   │   │   ├── RedisConfig.java             # Redis 설정
-│   │   │   │   └── WebSocketConfig.java         # WebSocket 설정
-│   │   │   ├── exception/                       # 예외 처리
-│   │   │   │   ├── CustomException.java
-│   │   │   │   ├── ErrorCode.java               # 에러 코드 enum
-│   │   │   │   └── GlobalExceptionHandler.java  # 전역 예외 핸들러
-│   │   │   └── util/                            # 유틸리티
-│   │   └── resources/
-│   │       ├── application.yml                  # 프로덕션 설정
-│   │       ├── application-local.yml            # 로컬 설정
-│   │       ├── application-prod.yml             # 프로덕션 프로필
-│   │       ├── templates/                       # Thymeleaf 템플릿
-│   │       │   ├── common.html                  # 공통 레이아웃
-│   │       │   ├── index.html                   # 메인 페이지
-│   │       │   ├── auth/                        # 인증 페이지
-│   │       │   │   ├── login.html
-│   │       │   │   ├── signup.html
-│   │       │   │   └── findAccount.html
-│   │       │   └── layout/                      # 레이아웃 조각
-│   │       │       ├── header.html
-│   │       │       └── nav.html
-│   │       └── static/
-│   │           ├── css/                         # 스타일시트
-│   │           │   ├── common.css
-│   │           │   ├── finance.css
-│   │           │   └── ...
-│   │           └── js/                          # 클라이언트 스크립트
-│   │               ├── api.js                   # API 요청 래퍼
-│   │               ├── utils.js                 # 유틸리티
-│   │               └── validation.js            # 폼 검증
-│   └── test/
-│       └── java/                                # 테스트 코드
-├── build.gradle                                 # Gradle 설정
-├── settings.gradle
-├── compose.yaml                                 # Docker Compose
-└── README.md                                    # 이 파일
+├── src/main/java/com/scit/soragodong/
+│   ├── SoragodongApplication.java        # 메인 (@EnableAsync)
+│   │
+│   ├── ai/                               # AI Function Calling Tools
+│   │   ├── FinanceTool.java
+│   │   ├── UsedMarketTool.java
+│   │   ├── CommunityTool.java
+│   │   └── TimesaleTool.java
+│   │
+│   ├── aspect/
+│   │   └── LoggingAspect.java            # AOP 자동 로깅
+│   │
+│   ├── common/
+│   │   └── BaseEntity.java               # createdAt/updatedAt 자동 관리
+│   │
+│   ├── config/
+│   │   ├── SecurityConfig.java           # Spring Security 설정
+│   │   ├── RedisConfig.java              # Redis 설정
+│   │   ├── SessionConfig.java            # 세션 설정
+│   │   ├── WebSocketConfig.java          # WebSocket 설정
+│   │   ├── WebMvcConfig.java             # Virtual Thread Executor (SSE)
+│   │   └── EmailProperties.java
+│   │
+│   ├── controller/
+│   │   ├── AiChatController.java         # AI 채팅 SSE 스트리밍
+│   │   ├── AuthController.java           # 회원가입/로그인/비번찾기
+│   │   ├── CommunityController.java      # 커뮤니티 CRUD
+│   │   ├── FinanceController.java        # 가계부 CRUD
+│   │   ├── NotificationController.java   # SSE 알림 구독/CRUD
+│   │   ├── ProfileController.java        # 프로필 관리
+│   │   ├── TimeSaleController.java       # 타임세일
+│   │   ├── UsedMarketController.java     # 중고거래 CRUD
+│   │   ├── FileController.java           # 파일 업로드/조회
+│   │   └── HomeController.java / MainController.java
+│   │
+│   ├── domain/
+│   │   ├── dto/                          # Java Record DTOs
+│   │   ├── entity/                       # JPA 엔티티
+│   │   ├── enums/                        # UserRole, UsedState, BoardCategory 등
+│   │   └── response/                     # ApiResponse<T>, PageResponse<T>
+│   │
+│   ├── exception/
+│   │   ├── CustomException.java
+│   │   ├── ErrorCode.java                # 에러 코드 enum (한국어 메시지)
+│   │   └── GlobalExceptionHandler.java
+│   │
+│   ├── handler/
+│   │   ├── CustomAuthenticationSuccessHandler.java
+│   │   └── CustomAuthenticationFailureHandler.java
+│   │
+│   ├── repository/                       # Spring Data JPA Repositories
+│   │
+│   ├── security/
+│   │   └── CustomUserDetails.java        # 인증 사용자 정보
+│   │
+│   ├── service/
+│   │   ├── AiChatService.java            # Spring AI + Tool 등록
+│   │   ├── CommunityService.java
+│   │   ├── FinanceService.java
+│   │   ├── NotificationService.java      # 알림 발송 (@Async)
+│   │   ├── SseService.java               # SSE 연결 관리
+│   │   ├── TimesaleService.java
+│   │   ├── UsedService.java              # 중고거래 + 키워드 알림
+│   │   ├── UserService.java
+│   │   ├── EmailService.java
+│   │   ├── FileService.java
+│   │   ├── ProfileService.java
+│   │   └── ViewCountService.java         # Redis 조회수 중복 방지
+│   │
+│   └── util/
+│       ├── ValidationUtil.java
+│       ├── FileUploadUtil.java
+│       ├── EncryptUtil.java
+│       ├── DateTimeUtil.java
+│       └── StringUtil.java
+│
+└── src/main/resources/
+    ├── application.yml                   # 공통 설정 (환경변수 기반)
+    ├── application-local.yml             # 로컬 개발 설정
+    ├── templates/
+    │   ├── common.html                   # SPA 공통 레이아웃
+    │   ├── layout/header.html            # 헤더 + SSE 초기화
+    │   ├── layout/nav.html               # 하단 네비게이션
+    │   ├── auth/                         # 로그인, 회원가입, 계정찾기
+    │   ├── finance/finance.html
+    │   ├── usedmarket/usedmarket.html
+    │   ├── community/community.html
+    │   ├── timesale/                     # 타임세일 + 상세
+    │   ├── chat/                         # AI 채팅, 채팅방
+    │   ├── notification/
+    │   └── profile/
+    └── static/
+        ├── css/common.css                # 공통 + 모듈별 CSS
+        └── js/                           # sse-client.js, 각 모듈 JS
 ```
 
 ---
 
-## 🔐 인증 및 보안
+## 도메인 모델
 
-### 회원가입 프로세스
-1. 사용자가 이메일과 비밀번호로 가입
-2. 비밀번호는 **BCrypt**로 암호화되어 저장
-3. 환영 이메일 비동기 발송 (`@Async`)
-4. 세션 정보는 **Redis**에 저장 (30분 TTL)
-
-### 로그인 프로세스
-1. Spring Security의 `AuthenticationManager` 사용
-2. `CustomUserDetailsService`에서 사용자 로드
-3. BCrypt 비밀번호 검증
-4. 성공 시 JSON 응답 + 세션 생성
-5. 실패 시 `ErrorCode.LOGIN_FAILED` 에러
-
-### 에러 처리
-- **중앙화된 에러 관리**: `GlobalExceptionHandler`
-- **표준 에러 코드**: `ErrorCode` enum
-- **일관된 응답 포맷**: `ApiResponse<T>`
-
----
-
-## 📧 이메일 시스템
-
-### 지원하는 이메일 템플릿
-
-#### 1. 환영 이메일 (Welcome)
-- 회원가입 완료 후 자동 발송
-- HTML 기반 디자인
-- 비동기 처리 (`@Async`)
-
-#### 2. 인증 이메일 (Authentication)
-- 특정 작업 검증 시 발송
-- OTP 또는 인증 링크 포함
-
-#### 3. 비밀번호 재설정 (Password Reset)
-- 비밀번호 찾기 요청 시 발송
-- 재설정 링크 포함
-
-### 이메일 발송 설정
-```yaml
-spring:
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: your-email@gmail.com
-    password: your-app-password  # Gmail 앱 비밀번호
+```
+Users ──< Finance
+      ──< MonthlyBudget
+      ──< Board ──< BoardReply
+                ──< LikeCount
+      ──< Used ──< UsedLike
+               ──< UsedKeyword (알림 키워드)
+      ──< UserOrder ──> StoreProduct ──> Store
+      ──< Notification
+FileGrp ──< File  (BOARD / PROFILE / USED)
 ```
 
 ---
 
-## 🗄 데이터베이스 스키마
+## 환경 변수
 
-### User 테이블
-```sql
-CREATE TABLE users (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    nickname VARCHAR(100),
-    phone VARCHAR(20),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-```
+| 변수명 | 설명 |
+|--------|------|
+| `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD` | MySQL 접속 정보 |
+| `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` | Redis 접속 정보 |
+| `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` | Gmail SMTP |
+| `JWT_SECRET` | JWT 서명 키 (32자 이상) |
+| `GOOGLE_MAPS_API_KEY` | Google Maps API |
+| `UPLOAD_PATH` | 파일 업로드 경로 (기본: `/upload`) |
+| `SPRING_PROFILES_ACTIVE` | 프로필 (`local` / `prod`) |
+
+로컬 개발 시 `application-local.yml`에 Groq API 키 포함.
 
 ---
 
-## 🚀 배포 (Production)
+## 빌드 및 실행
 
-### 환경변수 설정 (서버에서)
 ```bash
-# 프로덕션 환경변수
-export SPRING_PROFILES_ACTIVE=prod
-export DB_HOST=<your-prod-db-host>
-export DB_PORT=<your-db-port>
-export DB_USERNAME=<your-prod-username>
-export DB_PASSWORD=<your-prod-password>
-export REDIS_HOST=<your-prod-redis-host>
-# ... 기타 필수 환경변수
+# 빌드 (Windows)
+gradlew.bat clean build -x test
+
+# 실행
+gradlew.bat bootRun
+
+# 테스트 (H2 인메모리 DB 자동 사용)
+gradlew.bat test
 ```
 
-### Docker 배포
-```bash
-# 이미지 빌드
-docker build -t soragodong:latest .
-
-# 컨테이너 실행
-docker run -d \
-  -p 8080:8080 \
-  -e SPRING_PROFILES_ACTIVE=prod \
-  -e DB_HOST=your-db-host \
-  # ... 기타 환경변수
-  soragodong:latest
-```
-
-### Docker Compose (개발용)
-```bash
-docker-compose up -d
-```
+접속: `http://localhost:8080`
 
 ---
 
-## 📝 API 문서
+## 주요 설계 결정
 
-### 인증 관련
-
-#### 회원가입
-```http
-POST /auth/signup
-Content-Type: application/json
-
-{
-  "email": "user@example.com",
-  "password": "password123",
-  "nickname": "홍길동",
-  "phone": "010-1234-5678"
-}
-
-Response: 200 OK
-{
-  "success": true,
-  "message": "회원가입 완료"
-}
-```
-
-#### 로그인
-```http
-POST /auth/login-proc
-Content-Type: application/x-www-form-urlencoded
-
-email=user@example.com&password=password123
-
-Response: 200 OK
-{
-  "success": true,
-  "message": "로그인 완료"
-}
-Set-Cookie: JSESSIONID=...
-```
-
-#### 이메일 중복 확인
-```http
-POST /auth/check-email
-Content-Type: application/json
-
-{
-  "email": "user@example.com"
-}
-
-Response: 200 OK
-{
-  "available": true
-}
-```
-
----
-
-## 🐛 문제 해결
-
-### Redis 연결 실패
-```
-Error: Cannot get a resource, pool error Timeout waiting for idle object
-```
-**해결책**: Redis 서버 상태 확인
-```bash
-redis-cli -h <your-redis-host> -p <your-redis-port> ping
-# PONG 응답이 오면 정상
-```
-
-### MySQL 연결 실패
-```
-Error: Communications link failure
-```
-**해결책**: MySQL 서버 실행 확인 및 연결 정보 검증
-```bash
-mysql -h <your-mysql-host> -u <your-username> -p
-```
-
-### 이메일 발송 실패
-```
-Error: Authentication failed; nested exception is javax.mail.AuthenticationFailedException
-```
-**해결책**: Gmail 앱 비밀번호 확인
-- [Google 계정 보안](https://myaccount.google.com/security)에서 앱 비밀번호 재생성
-
----
-
-## 📚 참고 자료
-
-- [Spring Boot 공식 문서](https://spring.io/projects/spring-boot)
-- [Spring Security](https://spring.io/projects/spring-security)
-- [Spring Session](https://spring.io/projects/spring-session)
-- [Thymeleaf](https://www.thymeleaf.org/)
-- [Redis](https://redis.io/docs/)
-
----
-
-## 👥 팀 정보
-
-- **프로젝트 이름**: 소라고동 (Sora Godong)
-- **버전**: 1.0.0
-- **라이선스**: MIT
-
----
-
-## 📞 지원
-
-문제가 발생하면 [이슈](../../issues)를 생성해주세요.
-
----
-
-**Happy Coding! 🚀**
+- **API 응답 표준**: 모든 REST API는 `ApiResponse<T>` 래퍼 반환
+- **예외 처리**: `CustomException(ErrorCode)` → `GlobalExceptionHandler` 중앙 처리
+- **JPA 네이밍**: `PhysicalNamingStrategyStandardImpl` — `@Column(name=...)` 명시 필요
+- **트랜잭션 후 비동기**: `TransactionSynchronizationManager`로 커밋 후 알림 발송
+- **조회수 중복 방지**: Redis Set (`USED:{id}:viewers`) + 24시간 TTL
+- **AI Tool**: 요청마다 서비스 주입 + userIdx를 갖는 POJO 인스턴스 생성 (Thread-safe)
+- **SSE + Virtual Thread**: Java 21 Virtual Thread Executor로 비동기 스트리밍 지원
