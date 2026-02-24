@@ -799,7 +799,8 @@ input[type="checkbox"] {
 
 /* 주소 검색 버튼 */
 .geocode_btn {
-    padding: 12px;
+    padding: 12px 0;
+    width: 80px;
     background: #555;
     color: var(--white);
     border: none;
@@ -818,7 +819,8 @@ input[type="checkbox"] {
 
 /* 닉네임 중복확인 버튼 */
 .btn-check-nickname {
-    padding: 12px;
+    padding: 12px 0;
+    width: 80px;
     background: #555;
     color: var(--white);
     border: none;
@@ -1138,7 +1140,8 @@ input[type="checkbox"] {
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     border: 1px solid rgba(255, 255, 255, 0.9);
-    white-space: pre-wrap;   /* \n → 줄바꿈 렌더링 */
+    white-space: pre-wrap;
+    /* \n → 줄바꿈 렌더링 */
     font-size: 14px;
     line-height: 1.7;
     color: #3a3a4a;
@@ -1181,12 +1184,27 @@ input[type="checkbox"] {
     animation: aiTypingBounce 1.2s ease-in-out infinite;
 }
 
-.ai-typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-.ai-typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+.ai-typing-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.ai-typing-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
 
 @keyframes aiTypingBounce {
-    0%, 60%, 100% { transform: translateY(0); background: #ccc; }
-    30% { transform: translateY(-6px); background: var(--primary); }
+
+    0%,
+    60%,
+    100% {
+        transform: translateY(0);
+        background: #ccc;
+    }
+
+    30% {
+        transform: translateY(-6px);
+        background: var(--primary);
+    }
 }
 
 /* AI 채팅 입력 영역 */
