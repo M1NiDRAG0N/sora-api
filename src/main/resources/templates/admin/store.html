@@ -492,7 +492,7 @@ body {
         </div>
         <div class="input-group">
             <label>이벤트 내용(E):</label>
-            <input type="text" id="reg-eventContent" placeholder="예: 아메리카노 1+1 행사 중!">
+            <input type="text" id="reg-eventNote" placeholder="예: 아메리카노 1+1 행사 중!">
         </div>
         <div class="input-group inline">
             <label>이벤트 시작:</label>
@@ -673,37 +673,46 @@ function addNewAddress() {
 
     input.addEventListener('blur', finishEditing);
 }
-// 5. 점포 등록 실행 (폴더 생성)
 function registerStore() {
     const name = document.getElementById('reg-storeName').value;
-    const open = document.getElementById('reg-storeOpenTime').value;
-    const close = document.getElementById('reg-storeCloseTime').value;
 
+    // 1. 유효성 검사
     if (!name) {
         alert("점포명을 입력해주세요!");
         return;
     }
 
-    // 새 폴더(점포) 아이템 생성
-    const newFolder = document.createElement('div');
-    newFolder.className = 'folder-item';
-    newFolder.title = `영업시간: ${open} ~ ${close}`;
-    newFolder.innerHTML = `
-        <div class="folder-icon"></div>
-        <div class="folder-name">${name}</div>
-    `;
+    // 2. 서버로 보낼 데이터 준비 (화면에 그리는 대신 서버에 쏜다!)
+    const formData = new FormData();
 
-    // 더블클릭 시 해당 점포 내부(상품 목록)로 이동하는 이벤트 추가 가능
-    newFolder.ondblclick = () => {
-        const currentAddr = document.getElementById('address-input').value;
-        updateView([...currentAddr.split('\\'), name]);
-    };
+    // 현재 주소창의 값을 기반으로 DB 주소 생성 (C:\전체지역\서울 -> 전체지역 서울)
+    let rawAddress = document.getElementById('address-input').value;
+    let dbAddress = rawAddress.replace("C:\\전체지역", "").replaceAll("\\", " ").trim();
 
-    folderView.appendChild(newFolder);
-    closeModal();
+    formData.append('storeName', name);
+    formData.append('storeAddress', dbAddress);
+    formData.append('storeOpenTime', document.getElementById('reg-storeOpenTime').value);
+    formData.append('storeCloseTime', document.getElementById('reg-storeCloseTime').value);
+    formData.append('eventNote', document.getElementById('reg-eventNote').value);
+    formData.append('eventStartTime', document.getElementById('reg-eventStartTime').value);
+    formData.append('eventEndTime', document.getElementById('reg-eventEndTime').value);
 
-    // 실제 환경에서는 여기서 API를 호출하여 StoreDto를 서버에 저장합니다.
-    console.log("점포 등록 완료:", { name, open, close });
+
+
+    // 3. 서버 전송
+    fetch('/admin/api/store', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => {
+        if (res.ok) {
+            alert("서버에 점포 등록 성공!");
+            // 4. 페이지를 새로고침하면 서버가 DB에서 새 점포를 읽어와서 화면에 그려줍니다.
+            location.reload();
+        } else {
+            alert("서버 등록 실패!");
+        }
+    });
 }
 
 // 상위 폴더로 이동하는 함수
@@ -754,51 +763,8 @@ function navigateUp() {
         }
     }
 
-    function registerStore() {
-
-    const formData = new FormData();
-
-    // 1. 현재 입력창에 있는 주소 가져오기 (예: "C:\전체지역\서울시\강남구")
-    let rawAddress = document.getElementById('reg-storeAddress').value;
-
-    // 2. 주소 가공 (DB 저장용으로 변환)
-    // 'C:\' 제거 -> '전체지역' 제거 -> '\'를 공백으로 변경 -> 앞뒤 공백 제거
-    let cleanAddress = rawAddress
-        .replace("C:\\", "")       // 루트 경로 제거
-        .replace("전체지역", "")    // 가상 폴더 이름 제거
-        .replaceAll("\\", " ")     // 모든 역슬래시를 공백으로
-        .trim();                   // 최종 앞뒤 공백 제거
-
-    // 1. 일반 데이터 추가
-    formData.append('storeName', document.getElementById('reg-storeName').value);
-    formData.append('storeAddress', cleanAddress);
-    formData.append('storeOpenTime', document.getElementById('reg-storeOpenTime').value);
-    formData.append('storeCloseTime', document.getElementById('reg-storeCloseTime').value);
-    formData.append('eventContent', document.getElementById('reg-eventContent').value);
-    formData.append('eventStartTime', document.getElementById('reg-eventStartTime').value);
-    formData.append('eventEndTime', document.getElementById('reg-eventEndTime').value);
-
-    formData.append('isUse', 1);
-
-    // 2. 이미지 파일 추가
-    const imageFile = document.getElementById('reg-storeImage').files[0];
-    if (imageFile) {
-        formData.append('uploadFile', imageFile);
-    }
 
 
-// 서버로 전송 (FormData 전송 시 headers 설정 주의: Content-Type을 직접 설정하지 않음)
-    fetch('/admin/api/store', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => {
-        if (response.ok) {
-            alert("점포가 성공적으로 등록되었습니다.");
-            location.reload();
-        }
-    });
-}
 
 // 미리보기 함수
 function previewImage(input) {
@@ -939,7 +905,7 @@ function closeProductModal() {
     document.getElementById('product-modal').style.display = 'none';
 }
 function handleEdit() {
-    console.log("수정 함수 진입!");
+
     if (!targetStore){
         console.error("수정할 대상(targetStore)이 없습니다!");
         return;
@@ -949,15 +915,16 @@ function handleEdit() {
     fetch(`/admin/api/store/${targetStore.idx}`)
         .then(res => res.json())
         .then(data => {
+        console.log("서버에서 받은 데이터:", data);
             // 2. 모달창의 입력칸에 기존 데이터를 채웁니다.
             document.getElementById('reg-storeName').value = data.storeName;
             document.getElementById('reg-storeAddress').value = data.storeAddress;
             document.getElementById('reg-storeOpenTime').value = data.storeOpenTime;
             document.getElementById('reg-storeCloseTime').value = data.storeCloseTime;
-            document.getElementById('reg-eventContent').value = data.eventContent || "";
+            document.getElementById('reg-eventNote').value = data.eventNote || "";
             document.getElementById('reg-eventStartTime').value = data.eventStartTime || "";
             document.getElementById('reg-eventEndTime').value = data.eventEndTime || "";
-
+            console.log("값을 가져옴");
             // 3. 사진 미리보기 처리 (기존 사진이 있다면)
             if(data.storePictureIdx) {
                 document.getElementById('image-preview').src = `/images?filename=${data.storePictureIdx}`;
@@ -968,7 +935,7 @@ function handleEdit() {
             document.querySelector('#register-modal .title-text').innerText = "점포 속성 수정 - " + data.storeName;
             const confirmBtn = document.querySelector('#register-modal .xp-button[onclick="registerStore()"]');
             confirmBtn.setAttribute('onclick', `updateStore(${data.storeIdx})`);
-
+            console.log("모달 열기 전");
             // 5. 모달 열기
             document.getElementById('register-modal').style.display = 'block';
         });
@@ -976,17 +943,19 @@ function handleEdit() {
 function updateStore(storeIdx) {
     const formData = new FormData();
 
-    // 수정된 값들 수집
+    // 수정 데이터 수집
     formData.append('storeName', document.getElementById('reg-storeName').value);
-    // ... 나머지 event 정보들도 append ...
-    formData.append('eventContent', document.getElementById('reg-eventContent').value);
+    formData.append('storeAddress', document.getElementById('reg-storeAddress').value); // 수정 시엔 이미 가공된 주소일 수 있음
+    formData.append('storeOpenTime', document.getElementById('reg-storeOpenTime').value);
+    formData.append('storeCloseTime', document.getElementById('reg-storeCloseTime').value);
+    formData.append('eventNote', document.getElementById('reg-eventNote').value);
+    formData.append('eventStartTime', document.getElementById('reg-eventStartTime').value);
+    formData.append('eventEndTime', document.getElementById('reg-eventEndTime').value);
 
-    // 새 사진을 올렸을 경우에만 추가
     const imageFile = document.getElementById('reg-storeImage').files[0];
-    if (imageFile) {
-        formData.append('uploadFile', imageFile);
-    }
+    if (imageFile) formData.append('uploadFile', imageFile);
 
+    // 서버 전송 (PATCH)
     fetch(`/admin/api/store/${storeIdx}`, {
         method: 'PATCH',
         body: formData
@@ -995,8 +964,11 @@ function updateStore(storeIdx) {
         if (res.ok) {
             alert("정보가 성공적으로 수정되었습니다.");
             location.reload();
+        } else {
+            alert("수정에 실패했습니다.");
         }
-    });
+    })
+    .catch(err => console.error("에러:", err));
 }
 </script>
 </body>

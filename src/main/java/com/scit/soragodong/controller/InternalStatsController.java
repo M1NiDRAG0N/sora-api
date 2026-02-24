@@ -32,4 +32,6 @@ public class InternalStatsController {
         // JSON 형태로 반환합니다.
         return ResponseEntity.ok(stats);
     }
+	
+	
 }
