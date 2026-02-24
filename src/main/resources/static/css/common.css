@@ -113,6 +113,7 @@ button {
     font-weight: 700;
     color: var(--text-main);
     text-align: center;
+    width: 100%;
 }
 
 /* Header Profile Section */
@@ -806,6 +807,8 @@ input[type="checkbox"] {
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .geocode_btn:active {
@@ -823,6 +826,8 @@ input[type="checkbox"] {
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .btn-check-nickname:active {
