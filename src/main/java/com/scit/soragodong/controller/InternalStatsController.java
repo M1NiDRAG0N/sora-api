@@ -56,7 +56,7 @@ public class InternalStatsController {
             // 2. 대상에 따른 알림 전송
             if (userIdx != null && userIdx > 0) {
                 // 특정 사용자(신고자 또는 피신고자)에게 알림 전송 (DB 저장 + SSE)
-                notificationService.send(userIdx, NotificationType.ADMIN_NOTICE, noticeIdx, message);
+                notificationService.send(userIdx, NotificationType.REPORT_RESULT, noticeIdx, message);
                 return ResponseEntity.ok("Notification sent to user " + userIdx);
             } else {
                 // userIdx가 null이거나 0이면 모든 사용자에게 브로드캐스트 (DB 저장 + SSE)
