@@ -32,15 +32,21 @@ public class Notice {
     @JoinColumn(name = "FILE_GRP_IDX", foreignKey = @ForeignKey(name = "FK_NOTICE_FILE_GRP"))
     private FileGrp fileGrp;
 
-    @Column(name = "CREATE_AT", nullable = false, updatable = false,
-            columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "CREATE_AT", nullable = false, updatable = false)
     private LocalDateTime createAt;
 
-    @Column(name = "UPDATE_AT",
-            columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+    @Column(name = "UPDATE_AT")
     private LocalDateTime updateAt;
 
+    @Builder.Default
     @Column(name = "IS_USE", nullable = false)
     private Boolean isUse = true;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createAt = LocalDateTime.now();
+        this.updateAt = LocalDateTime.now();
+        if (this.isUse == null) this.isUse = true;
+    }
 }
 
