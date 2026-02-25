@@ -391,6 +391,24 @@
                 // 찜(좋아요) 토글 - 구매자 전용
                 document.querySelector('.heart-icon').addEventListener('click', () => this.toggleLike());
 
+                // 채팅하기 버튼 - 구매자 전용
+                document.querySelector('.chat-btn').addEventListener('click', async () => {
+                    const sellerIdx = this.currentDetailData?.createdUser;
+                    const usedIdx = this.currentDetailData?.usedIdx;
+                    if (!sellerIdx || !usedIdx) return;
+                    
+                    try {
+                        const roomId = await API.post('/api/chat/room', {
+                            type: 'USED',
+                            otherUserIdx: sellerIdx,
+                            usedIdx: usedIdx
+                        });
+                        location.href = `/chat/room/${roomId}`;
+                    } catch (e) {
+                        Utils.notify("채팅방 연결에 실패했습니다.", "error");
+                    }
+                });
+
                 // 상태 변경 드롭다운 - 판매자 전용
                 document.getElementById('status-dropdown-btn')?.addEventListener('click', (e) => {
                     e.stopPropagation();

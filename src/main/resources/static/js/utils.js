@@ -233,15 +233,32 @@ const Utils = {
 
     /**
      * N시간 전, N일 전 등 반환 (Java 로직 JS로 포팅)
-     * @param {string|Date} dateString - 날짜 문자열 (ex: '2026-02-11T14:30:00')
+     * @param {string|Date|Array} dateString - 날짜 문자열 (ex: '2026-02-11T14:30:00')
      * @returns {string} 방금 전, N분 전 등
      */
     timeAgo: (dateString) => {
         if (!dateString) return '';
 
-        const date = new Date(dateString);
+        let date;
+        if (Array.isArray(dateString)) {
+            const [y, m, d, h=0, min=0, s=0] = dateString;
+            date = new Date(y, m - 1, d, h, min, s);
+        } else if (typeof dateString === 'string') {
+            // 브라우저 호환성을 위해 'T'를 ' '로 변경하고 소수점 이하 밀리초 제거, '-'를 '/'로 변경
+            let safeStr = dateString.replace('T', ' ').split('.')[0].replace(/-/g, '/');
+            date = new Date(safeStr);
+            if (isNaN(date.getTime())) {
+                date = new Date(dateString); // 원본 문자열로 재시도
+            }
+        } else {
+            date = new Date(dateString);
+        }
+
+        if (isNaN(date.getTime())) return String(dateString); // 유효하지 않은 날짜면 원본 문자열 반환
+
         const now = new Date();
-        const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+        let seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+        if (seconds < 0) seconds = 0; // 서버 시간이 조금 빠를 경우 대비
 
         if (seconds < 60) return "방금 전";
 
@@ -252,9 +269,9 @@ const Utils = {
         if (hours < 24) return `${hours}시간 전`;
 
         const days = Math.floor(hours / 24);
-        if (days < 30) return `${days}일 전`;
+        if (days < 7) return `${days}일 전`;
 
-        // 30일 넘어가면 기존 Utils.formatDate 재사용해서 'YYYY-MM-DD' 반환
+        // 7일 넘어가면 기존 Utils.formatDate 재사용해서 'YYYY-MM-DD' 반환
         return Utils.formatDate(date);
     }
 };

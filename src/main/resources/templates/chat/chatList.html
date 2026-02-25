@@ -28,17 +28,20 @@
                 chatList.connectWebSocket();
             },
 
-            load: () => {
-                fetch('/api/chat/list')
-                    .then(response => {
-                        if (!response.ok) throw new Error('Network response was not ok');
-                        return response.json();
-                    })
-                    .then(data => {
-                        chatList.data = data;
-                        chatList.render();
-                    })
-                    .catch(error => console.error('Error loading chat list:', error));
+            load: async () => {
+                try {
+                    const data = await API.get('/api/chat/list');
+                    // 최신 메시지 순으로 정렬 (null이면 맨 뒤로)
+                    data.sort((a, b) => {
+                        if (!a.lastMessageAt) return 1;
+                        if (!b.lastMessageAt) return -1;
+                        return new Date(b.lastMessageAt) - new Date(a.lastMessageAt);
+                    });
+                    chatList.data = data;
+                    chatList.render();
+                } catch (error) {
+                    console.error('Error loading chat list:', error);
+                }
             },
 
             render: () => {
@@ -80,7 +83,13 @@
             },
 
             connectWebSocket: () => {
-                // 목록 실시간 갱신이 필요할 경우 구현 (선택 사항)
+                // SSE를 통해 채팅 알림이 오면 목록 실시간 갱신
+                window.addEventListener('sse-notification', (e) => {
+                    const data = e.detail;
+                    if (data && data.type === 'CHAT') {
+                        chatList.load(); // 채팅 알림이 오면 목록 다시 로드
+                    }
+                });
             }
         }
         const Renderer = {
