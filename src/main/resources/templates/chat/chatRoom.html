@@ -1,16 +1,16 @@
 <div class="chat-room-container" th:fragment="div">
 
-    <!-- 헤더 (ai-chat 스타일) -->
-    <div class="ai-chat-header">
-        <button type="button" class="ai-chat-close-btn" onclick="history.back()">
+    <!-- 헤더 -->
+    <div class="room-chat-header">
+        <button type="button" class="room-chat-close-btn" onclick="history.back()">
             <ion-icon name="chevron-back"></ion-icon>
         </button>
-        <div class="ai-chat-title">
+        <div class="room-chat-title">
             <img th:src="${partnerProfileImg != null ? '/img/' + partnerProfileImg : '/images/default-profile.png'}"
-                class="ai-chat-logo" style="border-radius:50%; width: 32px; height: 32px;">
+                class="room-chat-logo" style="border-radius:50%; width: 32px; height: 32px;">
             <span th:text="${partnerNickname ?: '상대방'}">상대방</span>
         </div>
-        <button type="button" class="ai-chat-clear-btn" title="메뉴">
+        <button type="button" class="room-chat-clear-btn" title="메뉴">
             <ion-icon name="ellipsis-vertical"></ion-icon>
         </button>
     </div>
@@ -30,17 +30,19 @@
                     가격</div>
             </div>
             <!-- 거래 상태 변경 버튼 -->
-            <button class="complete-btn" onclick="alert('거래 상태를 변경하시겠습니까?')">상태 변경</button>
+            <th:block th:if="${isOwner}">
+                <button class="complete-btn" onclick="ChatApp.changeStatus()">상태 변경</button>
+            </th:block>
         </div>
     </th:block>
 
     <!-- 채팅 내용 -->
-    <div class="ai-chat-body no-scrollbar" id="chatContainer">
+    <div class="room-chat-body no-scrollbar" id="roomChatContainer">
         <!-- 채팅 내역 로드 및 실시간 메시지 추가 영역 -->
     </div>
 
     <!-- 입력창 -->
-    <div class="ai-chat-input-area">
+    <div class="room-chat-input-area">
         <div class="chat-input-box">
             <input type="text" class="chat-input" id="chatInput" placeholder="메시지를 입력하세요...">
             <button type="button" class="btn-send-circle" id="chatSendBtn">
@@ -49,20 +51,99 @@
         </div>
     </div>
 
+    <!-- 상태 변경 모달 -->
+    <div class="chat-modal-overlay" id="statusConfirmModal">
+        <div class="chat-custom-modal">
+            <div class="chat-modal-title">거래 상태 변경</div>
+            <div class="chat-modal-desc" id="statusModalDesc">
+                거래 상태를 변경하시겠습니까?
+            </div>
+            <div class="chat-modal-btn-row">
+                <button class="chat-modal-btn chat-btn-close" onclick="ChatApp.closeStatusModal()">취소</button>
+                <button class="chat-modal-btn chat-btn-confirm" onclick="ChatApp.executeChangeStatus()">변경</button>
+            </div>
+        </div>
+    </div>
+
     <script th:inline="javascript">
         const roomId = /*[[${roomId}]]*/ 0;
         const loginUserIdx = /*[[${loginUserIdx}]]*/ 0;
         const loginUserNickname = /*[[${loginUserNickname}]]*/ '';
         const partnerProfileImg = /*[[${partnerProfileImg}]]*/ null;
+        const usedIdx = /*[[${usedIdx}]]*/ null;
+        let currentStatus = /*[[${productStatus}]]*/ 'TRADING';
 
         const ChatApp = {
             stompClient: null,
             partnerImg: partnerProfileImg ? `/img/${partnerProfileImg}` : '/images/default-profile.png',
 
             init() {
+                const modal = document.getElementById('statusConfirmModal');
+                if (modal && modal.parentElement !== document.body) {
+                    document.body.appendChild(modal);
+                }
+                
                 this.loadHistory();
                 this.connect();
                 this.bindEvents();
+            },
+
+            changeStatus() {
+                if (!usedIdx) return;
+                
+                // 순환: TRADING(거래중) -> RESERVED(예약중) -> SOLD(판매완료) -> TRADING
+                let nextState = 'TRADING';
+                let nextLabel = '판매중';
+                
+                if (currentStatus === 'TRADING' || currentStatus === 'SALE') {
+                    nextState = 'RESERVED';
+                    nextLabel = '예약중';
+                } else if (currentStatus === 'RESERVED') {
+                    nextState = 'SOLD';
+                    nextLabel = '판매완료';
+                }
+
+                this.pendingNextState = nextState;
+                this.pendingNextLabel = nextLabel;
+
+                document.getElementById('statusModalDesc').innerText = `거래 상태를 '${nextLabel}'(으)로 변경하시겠습니까?`;
+                document.getElementById('statusConfirmModal').classList.add('show');
+            },
+
+            closeStatusModal() {
+                document.getElementById('statusConfirmModal').classList.remove('show');
+            },
+
+            async executeChangeStatus() {
+                const nextState = this.pendingNextState;
+                const nextLabel = this.pendingNextLabel;
+                
+                this.closeStatusModal();
+
+                try {
+                    const res = await API.patch(`/used-market/${usedIdx}/status?state=${nextState}`);
+                    if (res.status === 200) {
+                        currentStatus = nextState;
+                        const badge = document.querySelector('.status-badge');
+                        if (badge) {
+                            badge.innerText = nextLabel;
+                            // 색상 변경은 필요에 따라 추가
+                            if (nextState === 'SOLD') {
+                                badge.style.background = '#e9ecef';
+                                badge.style.color = '#757575';
+                            } else if (nextState === 'RESERVED') {
+                                badge.style.background = '#fff3cd';
+                                badge.style.color = '#856404';
+                            } else {
+                                badge.style.background = '#F0EDFF';
+                                badge.style.color = '#8F7DF5';
+                            }
+                        }
+                        Utils.notify("거래 상태가 변경되었습니다.", "success");
+                    }
+                } catch (e) {
+                    Utils.notify("상태 변경에 실패했습니다.", "error");
+                }
             },
 
             connect() {
@@ -83,8 +164,7 @@
 
             async loadHistory() {
                 try {
-                    const response = await fetch(`/api/chat/history/${roomId}`);
-                    const data = await response.json();
+                    const data = await API.get(`/api/chat/history/${roomId}`);
                     data.forEach(chat => this.appendMessage(chat));
                     this.scrollToBottom();
                 } catch (e) {
@@ -110,7 +190,7 @@
             },
 
             appendMessage(chat) {
-                const container = document.getElementById('chatContainer');
+                const container = document.getElementById('roomChatContainer');
                 const isMe = Number(chat.senderIdx) === Number(loginUserIdx);
 
                 const row = document.createElement('div');
@@ -125,10 +205,13 @@
                 row.innerHTML = html;
                 container.appendChild(row);
                 this.scrollToBottom();
+
+                // 새로 메시지가 추가될 때마다 읽음 처리 (서버 부하가 우려되면 디바운스 적용 가능)
+                API.post(`/api/chat/read/${roomId}`).catch(console.error);
             },
 
             scrollToBottom() {
-                const container = document.getElementById('chatContainer');
+                const container = document.getElementById('roomChatContainer');
                 container.scrollTop = container.scrollHeight;
             },
 

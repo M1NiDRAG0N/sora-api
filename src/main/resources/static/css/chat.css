@@ -1,11 +1,11 @@
-/* =========================================
-   [채팅 관련 통합 스타일] 
-   : 채팅목록, 1:1채팅, 중고거래채팅 공통
+﻿/* =========================================
+   [梨꾪똿 愿???듯빀 ?ㅽ??? 
+   : 梨꾪똿紐⑸줉, 1:1梨꾪똿, 以묎퀬嫄곕옒梨꾪똿 怨듯넻
    ========================================= */
 
-/* --- 1. 헤더 스타일 --- */
+/* --- 1. ?ㅻ뜑 ?ㅽ???--- */
 
-/* 채팅 목록용 헤더 (심플) */
+/* 梨꾪똿 紐⑸줉???ㅻ뜑 (?ы뵆) */
 .page-header-simple {
     display: flex;
     justify-content: space-between;
@@ -17,7 +17,7 @@
     color: #333;
 }
 
-/* 채팅방 상세용 헤더 (블러 효과 + 고정) */
+/* 梨꾪똿諛??곸꽭???ㅻ뜑 (釉붾윭 ?④낵 + 怨좎젙) */
 .chat-header {
     display: flex;
     justify-content: space-between;
@@ -28,15 +28,15 @@
     font-weight: 700;
     color: #333;
     background: rgba(255, 255, 255, 0);
-    /* 반투명 */
+    /* 諛섑닾紐?*/
     backdrop-filter: blur(5px);
     position: sticky;
     top: 0;
     z-index: 20;
-    /* 상품바보다 위에 오도록 20 설정 */
+    /* ?곹뭹諛붾낫???꾩뿉 ?ㅻ룄濡?20 ?ㅼ젙 */
 }
 
-/* 헤더 아이콘 버튼 공통 */
+/* ?ㅻ뜑 ?꾩씠肄?踰꾪듉 怨듯넻 */
 .header-btn-icon {
     font-size: 24px;
     color: #333;
@@ -47,9 +47,9 @@
 }
 
 
-/* --- 2. 채팅 목록 페이지 (필터, 리스트) --- */
+/* --- 2. 梨꾪똿 紐⑸줉 ?섏씠吏 (?꾪꽣, 由ъ뒪?? --- */
 
-/* 필터 탭 영역 */
+/* ?꾪꽣 ???곸뿭 */
 .filter-tab-area {
     display: flex;
     gap: 8px;
@@ -75,7 +75,7 @@
     box-shadow: 0 2px 6px rgba(156, 136, 255, 0.4);
 }
 
-/* 채팅 리스트 아이템 */
+/* 梨꾪똿 由ъ뒪???꾩씠??*/
 .chat-list {
     display: flex;
     flex-direction: column;
@@ -96,7 +96,7 @@
     background: rgba(0, 0, 0, 0.02);
 }
 
-/* 프로필 이미지 영역 (겹침 효과) */
+/* ?꾨줈???대?吏 ?곸뿭 (寃뱀묠 ?④낵) */
 .chat-profile-area {
     position: relative;
     width: 50px;
@@ -124,7 +124,7 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* 채팅 목록 텍스트 */
+/* 梨꾪똿 紐⑸줉 ?띿뒪??*/
 .chat-text-group {
     flex: 1;
     display: flex;
@@ -159,9 +159,9 @@
 }
 
 
-/* --- 3. 채팅방 상세 페이지 (말풍선, 입력창) --- */
+/* --- 3. 梨꾪똿諛??곸꽭 ?섏씠吏 (留먰뭾?? ?낅젰李? --- */
 
-/* 채팅 내용 영역 */
+/* 梨꾪똿 ?댁슜 ?곸뿭 */
 .chat-content {
     flex: 1;
     overflow-y: auto;
@@ -170,14 +170,14 @@
     flex-direction: column;
     gap: 20px;
     padding-bottom: 100px;
-    /* 입력창 공간 확보 */
+    /* ?낅젰李?怨듦컙 ?뺣낫 */
 }
 
 .chat-content::-webkit-scrollbar {
     display: none;
 }
 
-/* 말풍선 공통 */
+/* 留먰뭾??怨듯넻 */
 .msg-row {
     display: flex;
     align-items: flex-start;
@@ -193,7 +193,7 @@
     word-break: break-all;
 }
 
-/* 상대방 말풍선 */
+/* ?곷?諛?留먰뭾??*/
 .msg-row.opponent {
     justify-content: flex-start;
 }
@@ -220,7 +220,7 @@
     display: block;
 }
 
-/* 내 말풍선 */
+/* ??留먰뭾??*/
 .msg-row.me {
     justify-content: flex-end;
 }
@@ -231,7 +231,7 @@
     border-radius: 20px 4px 20px 20px;
 }
 
-/* 하단 입력창 (플로팅) */
+/* ?섎떒 ?낅젰李?(?뚮줈?? */
 .chat-input-container {
     position: absolute;
     bottom: 20px;
@@ -287,7 +287,7 @@
 }
 
 
-/* --- 4. 중고거래 전용 (상품 바) --- */
+/* --- 4. 以묎퀬嫄곕옒 ?꾩슜 (?곹뭹 諛? --- */
 
 .product-info-bar {
     display: flex;
@@ -341,7 +341,7 @@
     overflow: hidden;
 }
 
-/* 필터 탭 */
+/* ?꾪꽣 ??*/
 .filter-tabs {
     background-color: transparent;
     display: flex;
@@ -377,7 +377,7 @@
     box-shadow: 0 4px 10px rgba(143, 125, 245, 0.3);
 }
 
-/* 채팅 리스트 영역 */
+/* 梨꾪똿 由ъ뒪???곸뿭 */
 .chat-list-content {
     background-color: var(--bg-color);
     flex: 1;
@@ -400,7 +400,7 @@
     background-color: rgba(178, 164, 255, 0.1);
 }
 
-/* ★ 썸네일 영역 CSS 수정 ★ */
+/* ???몃꽕???곸뿭 CSS ?섏젙 ??*/
 .chat-thumb-wrap {
     position: relative;
     width: 56px;
@@ -408,7 +408,7 @@
     flex-shrink: 0;
 }
 
-/* 기본 메인 썸네일 (1:1채팅용 프로필 - 원형) */
+/* 湲곕낯 硫붿씤 ?몃꽕??(1:1梨꾪똿???꾨줈??- ?먰삎) */
 .chat-thumb {
     width: 100%;
     height: 100%;
@@ -418,12 +418,24 @@
     border-radius: 50%;
 }
 
-/* 중고거래(market)일 때의 메인 썸네일 (상품 사진 - 둥근 사각형) */
+/* 以묎퀬嫄곕옒(market)???뚯쓽 硫붿씤 ?몃꽕??(?곹뭹 ?ъ쭊 - ?κ렐 ?ш컖?? */
 .chat-item.market .chat-thumb {
     border-radius: 16px;
 }
 
-/* 우측 하단 작게 들어가는 뱃지 (중고거래용 프로필 사진 - 원형) */
+/* ?곗륫 ?섎떒 ?묎쾶 ?ㅼ뼱媛??諭껋? (以묎퀬嫄곕옒???꾨줈???ъ쭊 - ?먰삎) */
+.profile-badge {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 2px solid white;
+    object-fit: cover;
+    background: #fff;
+    z-index: 2;
+}
 
 .chat-info {
     flex: 1;
@@ -467,10 +479,10 @@
     padding-right: 10px;
 }
 
-/* 안 읽은 메시지 배지 */
+/* ???쎌? 硫붿떆吏 諛곗? */
 .unread-badge {
-    background-color: var(--badge-color);
-    color: var(--white);
+    background-color: #FF6B6B;
+    color: #FFFFFF;
     font-size: 11px;
     font-weight: 800;
     min-width: 20px;
@@ -488,7 +500,7 @@
 
 
 
-/* 채팅방 전용 배경 (AI 챗과 유사한 톤) */
+/* 梨꾪똿諛??꾩슜 諛곌꼍 (AI 梨쀪낵 ?좎궗???? */
 .chat-room-container {
     width: 100%;
     max-width: 420px;
@@ -500,9 +512,21 @@
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     margin: 0 auto;
+    animation: slideInRight 0.3s ease-out forwards;
 }
 
-/* 중고거래 상품 정보 카드 */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* 以묎퀬嫄곕옒 ?곹뭹 ?뺣낫 移대뱶 */
 .product-info-card {
     margin: 10px 16px 0;
     padding: 12px;
@@ -584,7 +608,7 @@
     transform: scale(0.95);
 }
 
-/* 날짜 구분선 */
+/* ?좎쭨 援щ텇??*/
 .date-divider {
     text-align: center;
     font-size: 12px;
@@ -611,7 +635,7 @@
     right: 5%;
 }
 
-/* 말풍선 오버라이드 (일반 채팅) */
+/* 留먰뭾???ㅻ쾭?쇱씠??(?쇰컲 梨꾪똿) */
 .chat-room-container .bubble {
     max-width: 75%;
     padding: 10px 14px;
@@ -660,7 +684,7 @@
     margin-bottom: 2px;
 }
 
-/* 입력창 전용 스타일 (ai-chat과 동일) */
+/* ?낅젰李??꾩슜 ?ㅽ???(ai-chat怨??숈씪) */
 .chat-room-container .chat-input-box {
     background: rgba(255, 255, 255, 0.82);
     backdrop-filter: blur(12px);
@@ -706,3 +730,114 @@
 .chat-room-container .btn-send-circle:active {
     transform: scale(0.95);
 }
+
+/* 1:1 諛?以묎퀬嫄곕옒 梨꾪똿諛??꾩슜 ?ㅽ???(ai-chat怨?遺꾨━) */
+.room-chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    padding: 0 16px;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(178, 164, 255, 0.2);
+    flex-shrink: 0;
+}
+
+.room-chat-close-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #333;
+    font-size: 22px;
+}
+
+.room-chat-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.room-chat-logo {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: contain;
+    background: #f3f0ff;
+    padding: 2px;
+}
+
+.room-chat-clear-btn {
+    width: 36px;
+    height: 36px;
+    background: none;
+    border: none;
+    color: var(--text-sub);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.15s, color 0.15s;
+    flex-shrink: 0;
+}
+
+.room-chat-clear-btn:hover {
+    background: rgba(143, 125, 245, 0.12);
+    color: var(--primary);
+}
+
+.room-chat-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: transparent;
+}
+
+.room-chat-input-area {
+    padding: 12px 16px 24px;
+    background: transparent;
+    flex-shrink: 0;
+}
+
+/* --- 채팅 모달 --- */
+.chat-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(5px);
+    display: none;
+    justify-content: center; align-items: center;
+    z-index: 9999; padding: 20px;
+    animation: fadeIn 0.2s ease-out;
+}
+.chat-modal-overlay.show { display: flex; }
+.chat-custom-modal {
+    background: white; width: 300px; border-radius: 16px; padding: 24px;
+    text-align: center; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+.chat-modal-title { font-size: 18px; font-weight: 700; color: #111; margin-bottom: 12px; }
+.chat-modal-desc { font-size: 14px; color: #555; line-height: 1.5; margin-bottom: 24px; }
+.chat-modal-btn-row { display: flex; gap: 10px; }
+.chat-modal-btn {
+    flex: 1; padding: 12px; border-radius: 10px; font-size: 15px; font-weight: 600;
+    cursor: pointer; border: none; transition: 0.2s;
+}
+.chat-btn-close { background: #f1f3f5; color: #495057; }
+.chat-btn-close:hover { background: #e9ecef; }
+.chat-btn-confirm { background: #50bda1; color: white; }
+.chat-btn-confirm:hover { background: #3fa88e; }
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }

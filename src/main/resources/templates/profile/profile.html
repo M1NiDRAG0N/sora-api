@@ -141,13 +141,23 @@
                 layer.querySelector('.btn-back').addEventListener('click', ProfileApp.close);
 
                 // 프로필 메인 버튼 (수정/채팅)
-                document.getElementById('profile-main-btn').addEventListener('click', () => {
+                document.getElementById('profile-main-btn').addEventListener('click', async () => {
                     const isMe = ProfileApp.state.data && ProfileApp.state.data.myProfile;
                     if (isMe) {
                         ProfileEdit.open();
                     } else {
-                        // TODO: Chat logic
-                        Utils.notify("채팅 기능은 준비중입니다.", "warning");
+                        try {
+                            const otherUserIdx = ProfileApp.state.data.userIdx;
+                            if (!otherUserIdx) return;
+                            const roomId = await API.post('/api/chat/room', {
+                                type: 'NORMAL',
+                                otherUserIdx: otherUserIdx,
+                                usedIdx: null
+                            });
+                            location.href = `/chat/room/${roomId}`;
+                        } catch (error) {
+                            Utils.notify("채팅방을 열 수 없습니다.", "error");
+                        }
                     }
                 });
 
