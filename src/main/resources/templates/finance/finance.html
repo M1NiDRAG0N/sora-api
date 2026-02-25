@@ -172,7 +172,7 @@
             selectedDay: null,
             selectedYear: null,
             selectedMonth: null,
-            currentDetailData: [], // 🚨 [핵심] 달력과 분리된 '상세내역 전용 독립 메모리'
+            currentDetailData: [],
             isGridView: false,
             editingIndex: null,
             editingId: null,
@@ -297,18 +297,20 @@
                             expenseAmtEl.classList.add('text-red');
                         }
 
+                        // 🚨 [수정된 핵심 부분] 예산 퍼센트 계산 (소수점 2자리 + 초과 시 UI 보호)
                         let usagePercent = 0;
                         if (finance.currentBudget > 0) {
                             usagePercent = (thisMonthExpense / finance.currentBudget) * 100;
-                            if (thisMonthExpense > 0 && usagePercent < 1) usagePercent = 1;
+                            if (thisMonthExpense > 0 && usagePercent < 0.01) usagePercent = 0.01;
                         } else if (thisMonthExpense > 0) {
                             usagePercent = 100;
                         }
 
-                        // 🚨 [핵심 변경] 수치 표기용 퍼센트와 화면 UI 막대용 퍼센트를 분리
-                        let displayPercent = Math.round(usagePercent); // 실제 퍼센트 (100%를 넘을 수 있음)
-                        let barWidthPercent = usagePercent > 100 ? 100 : usagePercent; // 막대 UI는 최대 100%까지만 (화면 깨짐 방지)
-                        let remainWidthPercent = 100 - barWidthPercent; // 예산 초과 시 초록색 막대는 0%
+                        let displayPercent = Number(usagePercent.toFixed(2)); // 실제 % (초과분 표시)
+                        let remainPercent = Number((100 - usagePercent).toFixed(2));
+
+                        let barWidthPercent = usagePercent > 100 ? 100 : usagePercent; // UI 막대는 최대 100%까지만
+                        let remainWidthPercent = 100 - barWidthPercent;
 
                         if (barRed) {
                             barRed.style.width = `${barWidthPercent}%`;
@@ -316,18 +318,17 @@
                         }
                         if (barGreen) {
                             barGreen.style.width = `${remainWidthPercent}%`;
-                            barGreen.innerText = remainWidthPercent > 0 ? `${remainWidthPercent}%` : '';
+                            barGreen.innerText = remainPercent > 0 ? `${remainPercent}%` : '';
                         }
 
                         if (finance.isGridView) finance.renderGrid();
                         else finance.renderScroller();
 
-                        // 달력과 상세내역 달이 일치할 때만 정상 연동 (다를 땐 냅둠)
                         if (finance.selectedDay &&
                             finance.selectedYear === finance.currentDate.getFullYear() &&
                             finance.selectedMonth === finance.currentDate.getMonth()) {
                             finance.currentDetailData = finance.mockDB[finance.selectedDay] ? [...finance.mockDB[finance.selectedDay]] : [];
-                            finance.showDetails(null); // 인자 없이 화면 갱신만
+                            finance.showDetails(null);
                         }
 
                         finance.updateCharts(list, thisMonthStats, thisMonthChartTotal);
@@ -335,7 +336,6 @@
                     .catch(error => console.error("에러:", error));
             },
 
-            // 🚨 [추가된 핵심 함수] 달력이 어디에 있든, '상세내역의 달'을 찾아 백그라운드에서 조용히 데이터만 훔쳐옴
             refreshDetailOnly: () => {
                 if (!finance.selectedDay) return;
                 const ym = `${finance.selectedYear}-${String(finance.selectedMonth + 1).padStart(2, '0')}`;
@@ -383,8 +383,8 @@
                             }
                         });
 
-                        finance.currentDetailData = dayData; // 독립 메모리에 덮어쓰기
-                        finance.showDetails(null); // 화면 갱신
+                        finance.currentDetailData = dayData;
+                        finance.showDetails(null);
                     });
             },
 
@@ -424,7 +424,6 @@
             },
 
             updateCharts: (list, thisStats, thisTotal) => {
-
                 const curDate = finance.currentDate;
                 const lastDate = new Date(curDate.getFullYear(), curDate.getMonth() - 1, 1);
                 const lastYear = lastDate.getFullYear();
@@ -620,7 +619,6 @@
             toggleCalendarView: () => { finance.isGridView = !finance.isGridView; if (finance.isGridView) finance.renderGrid(); else finance.renderScroller(); },
 
             showDetails: (day) => {
-                // 달력 날짜를 명시적으로 클릭했을 때만 기준 정보 세팅
                 if (day !== null) {
                     finance.selectedDay = day;
                     finance.selectedYear = finance.currentDate.getFullYear();
@@ -655,7 +653,6 @@
                 const chkFixed = document.getElementById('inpFixed'), durationArea = document.getElementById('durationArea'), inpDuration = document.getElementById('inpDuration');
 
                 if (editIndex !== null) {
-                    // 🚨 [수정됨] 달력이 넘어가서 mockDB가 날아가도, 독립 메모리를 써서 정상적으로 수정 가능함!
                     const item = finance.currentDetailData[editIndex];
                     finance.editingId = item.financeIdx;
                     document.getElementById('inpCategory').value = item.cat;
@@ -691,7 +688,6 @@
 
                 if (!rawAmtStr || rawAmt < 0) { finance.showToast("금액을 정확히 입력해주세요! 💸"); return; }
 
-                // 항상 상세내역 창에 쓰여있는 날짜로 고정
                 const dateStr = `${finance.selectedYear}-${String(finance.selectedMonth + 1).padStart(2, '0')}-${String(finance.selectedDay).padStart(2, '0')}`;
                 const now = new Date();
                 const timeStr = String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0');
@@ -708,11 +704,9 @@
                         finance.showToast('저장되었습니다! 🎉');
                         finance.closeModal();
 
-                        // 현재 화면 달력과, 내가 저장한 상세내역 달력이 일치하면 평소처럼 갱신
                         if (finance.selectedYear === finance.currentDate.getFullYear() && finance.selectedMonth === finance.currentDate.getMonth()) {
                             finance.loadData();
                         } else {
-                            // 다르면? 눈에 보이는 달력은 그대로 두고, 상세내역 메모리만 따로 훔쳐와서 갱신함 (달력 안 돌아감!)
                             finance.loadData();
                             setTimeout(() => finance.refreshDetailOnly(), 200);
                         }

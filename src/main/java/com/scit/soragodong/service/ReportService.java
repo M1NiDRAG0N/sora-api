@@ -2,6 +2,7 @@ package com.scit.soragodong.service;
 
 import com.scit.soragodong.domain.dto.ReportRequest;
 import com.scit.soragodong.domain.entity.Report;
+import com.scit.soragodong.domain.enums.ReportStatus;
 import com.scit.soragodong.repository.ReportRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,7 @@ public class ReportService {
                 .targetId(request.getTargetId())
                 .reason(request.getReason())
                 .description(request.getDescription())
-                .status("PENDING")
+                .status(ReportStatus.PROCESSING.name())
                 .build();
         
         reportRepository.save(report);
