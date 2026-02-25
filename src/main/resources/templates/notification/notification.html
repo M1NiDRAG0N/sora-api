@@ -86,11 +86,18 @@
             createItem: function(item) {
                 const cfg = this.typeConfig(item.notiType);
                 const wrap = document.createElement('div');
-                wrap.className = 'noti-wrap' + (item.isRead ? '' : ' unread');
+
+                const isNotify = item.notiType === 'ADMIN_NOTICE';
+                wrap.className = 'noti-wrap' +
+                     (item.isRead ? '' : ' unread') +
+                     (isNotify ? ' admin-notice-bg' : '');
                 wrap.dataset.idx = item.notiIdx;
                 wrap.dataset.type = item.notiType;
                 wrap.dataset.ref = item.refId;
                 wrap.dataset.read = item.isRead;
+
+                // [수정] ADMIN_NOTICE가 아니고, 읽지 않았을 때만 점을 표시합니다.
+                const showUnreadDot = !item.isRead && item.notiType !== 'ADMIN_NOTICE';
 
                 wrap.innerHTML = `
                     <div class="noti-item">
@@ -101,7 +108,7 @@
                             <div class="noti-text">${this.escapeHtml(item.message)}</div>
                             <div class="noti-time">${Utils.timeAgo(item.createdAt)}</div>
                         </div>
-                        ${item.isRead ? '' : '<div class="noti-unread-dot"></div>'}
+                        ${showUnreadDot ? '<div class="noti-unread-dot"></div>' : ''}
                     </div>
                     <div class="noti-delete-btn">
                         <ion-icon name="trash-outline"></ion-icon>삭제
@@ -281,7 +288,7 @@
                     COMMENT:            { icon: 'chatbubbles',      bg: '#e8f4fd', color: '#0095f6' },
                     CHAT:               { icon: 'chatbubbles',      bg: '#e8f4fd', color: '#0095f6' },
                     KEYWORD:            { icon: 'pricetag',         bg: '#e6fcf5', color: '#0ca678' },
-                    NOTICE:             { icon: 'megaphone',        bg: '#fff4e6', color: '#fd7e14' },
+                    REPORT_RESULT:      { icon: 'megaphone',        bg: '#fff4e6', color: '#fd7e14' },
                     ADMIN_NOTICE:       { icon: 'shield-checkmark', bg: '#eef2ff', color: '#4f46e5' },
                 };
                 return map[type] ?? { icon: 'notifications', bg: '#f0f0f0', color: '#888' };
