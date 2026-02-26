@@ -47,7 +47,7 @@
             render: () => {
                 const container = document.querySelector('.chat-list-content');
                 if (!container) return;
-                
+
                 let filtered = chatList.data;
                 if (chatList.currentFilter === 'USED') {
                     filtered = chatList.data.filter(d => d.type === 'USED');
@@ -72,11 +72,11 @@
                     btn.addEventListener('click', () => {
                         buttons.forEach(b => b.classList.remove('active'));
                         btn.classList.add('active');
-                        
+
                         if (idx === 0) chatList.currentFilter = 'ALL';
                         else if (idx === 1) chatList.currentFilter = 'USED';
                         else chatList.currentFilter = 'NORMAL';
-                        
+
                         chatList.render();
                     });
                 });
@@ -96,7 +96,7 @@
             createUsedCardHTML: (dto) => {
                 const profileImg = dto.otherUserProfileIdx != null ? `/img/${dto.otherUserProfileIdx}` : '/images/default-profile.png';
                 const productImg = profileImg; // 임시
-                const timeAgo = (window.Utils && window.Utils.timeAgo) ? Utils.timeAgo(dto.lastMessageAt) : (dto.lastMessageAt || '');
+                const timeAgo = Utils.timeAgo(dto.lastMessageAt);
 
                 return `
                         <div class="chat-item market" onclick="location.href='/chat/room/${dto.chatRoomIdx}'">
@@ -119,7 +119,7 @@
             },
             createNormalCardHtml: (dto) => {
                 const profileImg = dto.otherUserProfileIdx != null ? `/img/${dto.otherUserProfileIdx}` : '/images/default-profile.png';
-                const timeAgo = (window.Utils && window.Utils.timeAgo) ? Utils.timeAgo(dto.lastMessageAt) : (dto.lastMessageAt || '');
+                const timeAgo = Utils.timeAgo(dto.lastMessageAt);
 
                 return `
                         <div class="chat-item" onclick="location.href='/chat/room/${dto.chatRoomIdx}'">

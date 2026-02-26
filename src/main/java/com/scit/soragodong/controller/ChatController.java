@@ -55,7 +55,7 @@ public class ChatController {
     }
 
     @GetMapping("/chat/room/{roomId}")
-    public String chatRoom(@PathVariable Integer roomId,
+    public String chatRoom(@PathVariable("roomId") Integer roomId,
             @AuthenticationPrincipal CustomUserDetails userDetails,
             Model model) {
         model.addAttribute("currentUri", "/chat/room");
@@ -115,7 +115,8 @@ public class ChatController {
 
     @ResponseBody
     @GetMapping("/api/chat/history/{roomId}")
-    public List<Object> getChatHistory(@PathVariable Integer roomId, @AuthenticationPrincipal CustomUserDetails userDetails) {
+    public List<Object> getChatHistory(@PathVariable("roomId") Integer roomId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         if (userDetails != null) {
             chatService.markAsRead(roomId, userDetails.getUserIdx());
         }
@@ -124,7 +125,8 @@ public class ChatController {
 
     @ResponseBody
     @PostMapping("/api/chat/read/{roomId}")
-    public void markAsRead(@PathVariable Integer roomId, @AuthenticationPrincipal CustomUserDetails userDetails) {
+    public void markAsRead(@PathVariable("roomId") Integer roomId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         if (userDetails != null) {
             chatService.markAsRead(roomId, userDetails.getUserIdx());
         }

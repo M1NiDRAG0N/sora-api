@@ -159,8 +159,8 @@ const SSEClient = {
             });
         }
         
-        // 또는 페이지 내 알림 배너 표시
-        this.showNotificationBanner(data.message);
+        // 또는 페이지 내 알림 배너 표시 (중복 알림 방지를 위해 주석 처리)
+        // this.showNotificationBanner(data.message);
     },
 
     /**
