@@ -13,6 +13,7 @@
                 </button>
                 <div id="profile-dropdown" class="custom-dropdown-menu">
                     <button class="menu-item danger" id="btn-logout">로그아웃</button>
+                    <button class="menu-item danger" id="btn-report-user" style="display: none;">신고하기</button>
                 </div>
             </div>
         </header>
@@ -221,6 +222,20 @@
                     } catch (e) {
                         console.error(e);
                         window.location.href = '/auth/login';
+                    }
+                });
+
+                // Report User Logic
+                document.getElementById('btn-report-user').addEventListener('click', () => {
+                    const targetUserIdx = ProfileApp.state.data ? ProfileApp.state.data.userIdx : null;
+                    if (targetUserIdx) {
+                        if (typeof window.openReportModal === 'function') {
+                            window.openReportModal('USER', targetUserIdx, '사용자 프로필');
+                            const dropdown = document.getElementById('profile-dropdown');
+                            if (dropdown) dropdown.classList.remove('active');
+                        } else {
+                            Utils.notify("신고 기능을 불러올 수 없습니다.", "error");
+                        }
                     }
                 });
 
@@ -474,15 +489,21 @@
 
                 const rightIcon = document.getElementById('profile-header-right-icon');
                 const mainBtn = document.getElementById('profile-main-btn');
+                const btnLogout = document.getElementById('btn-logout');
+                const btnReportUser = document.getElementById('btn-report-user');
 
                 if (isMe) {
                     rightIcon.innerHTML = '<ion-icon name="ellipsis-horizontal"></ion-icon>';
                     mainBtn.innerText = "프로필 수정";
                     mainBtn.className = "profile-action-btn edit";
+                    if (btnLogout) btnLogout.style.display = 'block';
+                    if (btnReportUser) btnReportUser.style.display = 'none';
                 } else {
                     rightIcon.innerHTML = '<ion-icon name="ellipsis-vertical"></ion-icon>';
                     mainBtn.innerText = "1:1 채팅하기";
                     mainBtn.className = "profile-action-btn";
+                    if (btnLogout) btnLogout.style.display = 'none';
+                    if (btnReportUser) btnReportUser.style.display = 'block';
                 }
             },
 
