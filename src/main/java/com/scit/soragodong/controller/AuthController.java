@@ -5,6 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -53,6 +54,19 @@ public class AuthController {
         String nickname = request.get("userNickname");
         boolean isDuplicate = us.existsByUserNickname(nickname);
         return ApiResponse.success(Map.of("isDuplicate", isDuplicate));
+    }
+
+    /**
+     * 이메일 인증 상태 확인 (남은 TTL 포함)
+     * 재진입 시 타이머 복원에 사용
+     */
+    @GetMapping("/verification-status")
+    @ResponseBody
+    public ApiResponse<?> checkVerificationStatus(@RequestParam(name = "email") String email) {
+        if (!ValidationUtil.isValid(email) || !ValidationUtil.isValidEmail(email)) {
+            return ApiResponse.success(Map.of("status", "none", "remainingSeconds", 0));
+        }
+        return ApiResponse.success(us.checkVerificationStatus(email));
     }
 
     @PostMapping("/send-verification-code")
