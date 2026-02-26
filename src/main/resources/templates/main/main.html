@@ -1,4 +1,3 @@
-
 <div th:fragment="main-section" class="main-content">
     <img src="/images/logo.png" alt="소라고동" class="mascot-img mascot-img-large">
     <div class="main-greeting">
@@ -8,39 +7,3 @@
         </span>
     </div>
 </div>
-<script>
-    // 채팅 데이터 (REST API 연결 전 테스트용)
-    const chatDummyData = [
-        { sender: "ai", message: "무엇을 도와줄까? 🐚" },
-        { sender: "user", message: "전자레인지 선물을 받아서 기존의 것을 정리하고 싶은데 어떻게 하는게 좋을까" },
-        { sender: "ai", message: "네네네 찾아봐오오오 호에에에에에에에에엥 호에에에에엥 에?" }
-    ];
-
-    function openChat() {
-        const layer = document.getElementById('chatLayer');
-        const container = document.getElementById('chatContainer');
-
-        container.innerHTML = '';
-
-        chatDummyData.forEach(data => {
-            const isMe = data.sender === 'user';
-            const profileImg = `<img src="sora.png" class="chat-profile">`;
-
-            const html = `
-                <div class="bubble-row ${isMe ? 'me' : ''}">
-                    ${!isMe ? profileImg : ''}
-                    <div class="bubble ${isMe ? 'me' : 'ai'}">
-                        ${data.message}
-                    </div>
-                </div>
-            `;
-            container.insertAdjacentHTML('beforeend', html);
-        });
-
-        layer.classList.add('active');
-    }
-
-    function closeChat() {
-        document.getElementById('chatLayer').classList.remove('active');
-    }
-</script>

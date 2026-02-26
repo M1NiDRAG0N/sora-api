@@ -165,12 +165,12 @@
                     <!-- 판매자 전용: 상태 변경 -->
                     <div id="status-dropdown" class="status-dropdown" style="display:none;">
                         <button class="status-dropdown-btn" id="status-dropdown-btn" type="button">
-                            <span id="status-dropdown-label">거래중</span>
+                            <span id="status-dropdown-label">판매중</span>
                             <ion-icon name="chevron-down-outline" class="status-dropdown-arrow"></ion-icon>
                         </button>
                         <ul class="status-dropdown-menu" id="status-dropdown-menu">
                             <li data-value="TRADING" class="active">
-                                <span class="status-dot dot-trading"></span>거래중
+                                <span class="status-dot dot-trading"></span>판매중
                             </li>
                             <li data-value="RESERVED">
                                 <span class="status-dot dot-reserved"></span>예약중
@@ -1039,6 +1039,8 @@
 
             /** 상태 드롭다운 열기/닫기 */
             toggleStatusDropdown: function () {
+                const btn = document.getElementById('status-dropdown-btn');
+                if (btn && btn.disabled) return;
                 const dropdown = document.getElementById('status-dropdown');
                 dropdown?.classList.toggle('open');
             },
@@ -1049,12 +1051,26 @@
 
             /** 드롭다운 값 설정 (라벨 + active 클래스) */
             setStatusDropdownValue: function (state) {
-                const labels = { TRADING: '거래중', RESERVED: '예약중', SOLD: '판매완료' };
+                const labels = { TRADING: '판매중', SALE: '판매중', RESERVED: '예약중', SOLD: '판매완료' };
                 const label = document.getElementById('status-dropdown-label');
                 if (label) label.textContent = labels[state] ?? state;
                 document.querySelectorAll('#status-dropdown-menu li').forEach(li => {
                     li.classList.toggle('active', li.dataset.value === state);
                 });
+                
+                const btn = document.getElementById('status-dropdown-btn');
+                if (btn) {
+                    if (state === 'SOLD') {
+                        btn.disabled = true;
+                        btn.style.color = '#757575';
+                        btn.style.cursor = 'default';
+                        document.getElementById('status-dropdown')?.classList.remove('open');
+                    } else {
+                        btn.disabled = false;
+                        btn.style.color = '#8F7DF5';
+                        btn.style.cursor = 'pointer';
+                    }
+                }
             },
 
             /** 드롭다운 항목 선택 → 상태 변경 API 호출 */

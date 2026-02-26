@@ -22,7 +22,7 @@
                 class="product-thumb">
             <div class="product-details">
                 <div class="product-status-row">
-                    <span class="status-badge" th:text="${productStatus ?: '판매중'}">판매중</span>
+                    <span class="status-badge" th:text="${productStatus == 'SOLD' ? '판매완료' : (productStatus == 'RESERVED' ? '예약중' : '판매중')}">판매중</span>
                     <span class="product-name" th:text="${productName ?: '상품명 정보 없음'}">상품명</span>
                 </div>
                 <div class="product-price"
@@ -31,7 +31,22 @@
             </div>
             <!-- 거래 상태 변경 버튼 -->
             <th:block th:if="${isOwner}">
-                <button class="complete-btn" onclick="ChatApp.changeStatus()">상태 변경</button>
+                <div id="status-dropdown" class="status-dropdown">
+                    <th:block th:if="${productStatus == 'SOLD'}">
+                        <button class="complete-btn" disabled style="background: transparent; color: #757575; cursor: default;">판매완료</button>
+                    </th:block>
+                    <th:block th:unless="${productStatus == 'SOLD'}">
+                        <button class="complete-btn" id="status-dropdown-btn" type="button" onclick="ChatApp.toggleStatusDropdown(event)">
+                            <span id="status-dropdown-label" th:text="${productStatus == 'RESERVED' ? '예약중' : '판매중'}">판매중</span>
+                            <ion-icon name="chevron-down-outline" style="font-size: 14px; margin-left: 4px;"></ion-icon>
+                        </button>
+                        <ul class="status-dropdown-menu" id="status-dropdown-menu" style="bottom: auto; top: calc(100% + 5px); left: auto; right: 0; transform: none;">
+                            <li data-value="TRADING" onclick="ChatApp.changeStatus('TRADING', '판매중')">판매중</li>
+                            <li data-value="RESERVED" onclick="ChatApp.changeStatus('RESERVED', '예약중')">예약중</li>
+                            <li data-value="SOLD" onclick="ChatApp.changeStatus('SOLD', '판매완료')">판매완료</li>
+                        </ul>
+                    </th:block>
+                </div>
             </th:block>
         </div>
     </th:block>
@@ -86,67 +101,76 @@
                 this.loadHistory();
                 this.connect();
                 this.bindEvents();
+                document.addEventListener('click', () => this.closeStatusDropdown());
             },
 
-            changeStatus() {
-                if (!usedIdx) return;
-                
-                // 순환: TRADING(거래중) -> RESERVED(예약중) -> SOLD(판매완료) -> TRADING
-                let nextState = 'TRADING';
-                let nextLabel = '판매중';
-                
-                if (currentStatus === 'TRADING' || currentStatus === 'SALE') {
-                    nextState = 'RESERVED';
-                    nextLabel = '예약중';
-                } else if (currentStatus === 'RESERVED') {
-                    nextState = 'SOLD';
-                    nextLabel = '판매완료';
-                }
-
-                this.pendingNextState = nextState;
-                this.pendingNextLabel = nextLabel;
-
-                document.getElementById('statusModalDesc').innerText = `거래 상태를 '${nextLabel}'(으)로 변경하시겠습니까?`;
-                document.getElementById('statusConfirmModal').classList.add('show');
-            },
-
-            closeStatusModal() {
-                document.getElementById('statusConfirmModal').classList.remove('show');
-            },
-
-            async executeChangeStatus() {
-                const nextState = this.pendingNextState;
-                const nextLabel = this.pendingNextLabel;
-                
-                this.closeStatusModal();
-
-                try {
-                    const res = await API.patch(`/used-market/${usedIdx}/status?state=${nextState}`);
-                    if (res.status === 200) {
-                        currentStatus = nextState;
-                        const badge = document.querySelector('.status-badge');
-                        if (badge) {
-                            badge.innerText = nextLabel;
-                            // 색상 변경은 필요에 따라 추가
-                            if (nextState === 'SOLD') {
-                                badge.style.background = '#e9ecef';
-                                badge.style.color = '#757575';
-                            } else if (nextState === 'RESERVED') {
-                                badge.style.background = '#fff3cd';
-                                badge.style.color = '#856404';
-                            } else {
-                                badge.style.background = '#F0EDFF';
-                                badge.style.color = '#8F7DF5';
-                            }
-                        }
-                        Utils.notify("거래 상태가 변경되었습니다.", "success");
-                    }
-                } catch (e) {
-                    Utils.notify("상태 변경에 실패했습니다.", "error");
-                }
-            },
-
-            connect() {
+                                    toggleStatusDropdown(e) {
+                                        e.stopPropagation();
+                                        const dropdown = document.getElementById('status-dropdown');
+                                        dropdown?.classList.toggle('open');
+                                    },
+                        
+                                    closeStatusDropdown() {
+                                        document.getElementById('status-dropdown')?.classList.remove('open');
+                                    },
+                        
+                                    changeStatus(nextState, nextLabel) {
+                                        if (!usedIdx) return;
+                                        if (currentStatus === nextState) return;
+                        
+                                        this.pendingNextState = nextState;
+                                        this.pendingNextLabel = nextLabel;
+                                        this.closeStatusDropdown();
+                        
+                                        document.getElementById('statusModalDesc').innerText = `거래 상태를 '${nextLabel}'(으)로 변경하시겠습니까?`;
+                                        document.getElementById('statusConfirmModal').classList.add('show');
+                                    },
+                        
+                                    closeStatusModal() {
+                                        document.getElementById('statusConfirmModal').classList.remove('show');
+                                    },
+                        
+                                    async executeChangeStatus() {
+                                        const nextState = this.pendingNextState;
+                                        const nextLabel = this.pendingNextLabel;
+                                        
+                                        document.getElementById('statusConfirmModal').classList.remove('show');
+                        
+                                        try {
+                                            const res = await API.patch(`/used-market/${usedIdx}/status?state=${nextState}`);
+                                            if (res.status === 200) {
+                                                currentStatus = nextState;
+                                                const badge = document.querySelector('.status-badge');
+                                                if (badge) {
+                                                    badge.innerText = nextLabel;
+                                                    if (nextState === 'SOLD') {
+                                                        badge.style.background = '#e9ecef';
+                                                        badge.style.color = '#757575';
+                                                    } else if (nextState === 'RESERVED') {
+                                                        badge.style.background = '#fff3cd';
+                                                        badge.style.color = '#856404';
+                                                    } else {
+                                                        badge.style.background = '#F0EDFF';
+                                                        badge.style.color = '#8F7DF5';
+                                                    }
+                                                }
+                        
+                                                if (nextState === 'SOLD') {
+                                                    const dropdown = document.getElementById('status-dropdown');
+                                                    if (dropdown) {
+                                                        dropdown.innerHTML = `<button class="complete-btn" disabled style="background: transparent; color: #757575; cursor: default;">판매완료</button>`;
+                                                    }
+                                                } else {
+                                                    const label = document.getElementById('status-dropdown-label');
+                                                    if (label) label.innerText = nextLabel;
+                                                }
+                        
+                                                Utils.notify("거래 상태가 변경되었습니다.", "success");
+                                            }
+                                        } catch (e) {
+                                            Utils.notify("상태 변경에 실패했습니다.", "error");
+                                        }
+                                    },            connect() {
                 const socket = new SockJS('/ws-chat');
                 this.stompClient = Stomp.over(socket);
                 this.stompClient.debug = null; // 디버그 로그 끄기
