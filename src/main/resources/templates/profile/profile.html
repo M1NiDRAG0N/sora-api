@@ -91,7 +91,13 @@
                 <!-- Nickname -->
                 <div class="input-group">
                     <label class="label">닉네임</label>
-                    <input type="text" id="edit-nickname" class="input-field" placeholder="닉네임 입력">
+                    <div style="display:flex; gap: 8px;">
+                        <input type="text" id="edit-nickname" class="input-field" placeholder="닉네임 입력" maxlength="8">
+                        <button type="button" id="btn-check-nickname-edit" class="btn-check-nickname"
+                            style="white-space:nowrap; padding: 0 15px; background:var(--primary); color:#fff; border:none; border-radius:8px; font-weight: 600;">중복
+                            확인</button>
+                    </div>
+                    <span id="edit-nickname-status" class="nickname-status"></span>
                 </div>
 
                 <!-- Address -->
@@ -230,6 +236,22 @@
 
                 // Address Search
                 document.getElementById('btn-search-addr').addEventListener('click', ProfileEdit.searchAddress);
+
+                // Nickname Check
+                document.getElementById('btn-check-nickname-edit').addEventListener('click', ProfileEdit.checkNickname);
+                document.getElementById('edit-nickname').addEventListener('input', () => {
+                    const originalNickname = ProfileApp.state.data ? ProfileApp.state.data.nickname : '';
+                    const currentNickname = document.getElementById('edit-nickname').value.trim();
+                    const statusEl = document.getElementById('edit-nickname-status');
+
+                    if (currentNickname === originalNickname) {
+                        statusEl.textContent = '';
+                        ProfileEdit.isNicknameChecked = true;
+                    } else {
+                        statusEl.textContent = '';
+                        ProfileEdit.isNicknameChecked = false;
+                    }
+                });
             }
         };
 
@@ -289,8 +311,8 @@
 
                         // 중고거래 아이템 (UsedListRes)
                         if (subTab === 'market' || type === 'market') {
-                            const state = item.usedState === 'SALES' ? '판매중' : (item.usedState === 'RESERVED' ? '예약중' : '판매완료');
-                            const stateClass = item.usedState === 'SALES' ? 'market' : 'comm'; // 색상 구분용
+                            const state = (item.usedState === 'TRADING' || item.usedState === 'SALE') ? '판매중' : (item.usedState === 'RESERVED' ? '예약중' : '판매완료');
+                            const stateClass = (item.usedState === 'TRADING' || item.usedState === 'SALE') ? 'market' : 'comm'; // 색상 구분용
                             badgeHtml = `<span class="profile-badge ${stateClass}">${state}</span>`;
                             priceHtml = `<div class="profile-list-price">${(item.usedPrice || item.price || 0).toLocaleString()}원</div>`;
                         } else {
@@ -481,47 +503,47 @@
                 statsBox.innerHTML = ProfileRenderer.createStatsHTML(tabs, currentTab);
             },
 
-                                    switchTab: (key) => {
-                                        ProfileApp.state.currentTab = key;
-                                        ProfileApp.state.subTab = 'community'; // 기본 탭
-                                        ProfileApp.renderStats();
-                                        ProfileApp.renderList();
-                                    },
-                        
-                                    switchSubTab: (key) => {
-                                        ProfileApp.state.subTab = key;
-                                        ProfileApp.renderList();
-                                    },
-                        
-                                    renderList: () => {
-                                        const { data, currentTab, subTab } = ProfileApp.state;
-                                        const container = document.getElementById('profile-dynamic-area');
-                        
-                                        let items = [];
-                                        let title = "";
-                                        let showSubTabs = false;
-                        
-                                        if (currentTab === 'posts') {
-                                            title = "작성한 글 목록";
-                                            showSubTabs = true;
-                                            if (data.posts && Array.isArray(data.posts)) {
-                                                items = data.posts.filter(p => p.type === subTab);
-                                            }
-                                        } else if (currentTab === 'comments') {
-                                            title = "내가 쓴 댓글";
-                                            items = data.comments || [];
-                                        } else if (currentTab === 'likes') {
-                                            title = "관심 목록";
-                                            showSubTabs = true;
-                                            
-                                            // 이미 백엔드에서 합쳐서 내려주므로 필터링만 하면 됨
-                                            if (data.likes && Array.isArray(data.likes)) {
-                                                items = data.likes.filter(p => p.type === subTab);
-                                            }
-                                        }
-                        
-                                        container.innerHTML = ProfileRenderer.createListHTML(title, showSubTabs, subTab, items, currentTab);
-                                    },            goToDetail: (id, type) => {
+            switchTab: (key) => {
+                ProfileApp.state.currentTab = key;
+                ProfileApp.state.subTab = 'community'; // 기본 탭
+                ProfileApp.renderStats();
+                ProfileApp.renderList();
+            },
+
+            switchSubTab: (key) => {
+                ProfileApp.state.subTab = key;
+                ProfileApp.renderList();
+            },
+
+            renderList: () => {
+                const { data, currentTab, subTab } = ProfileApp.state;
+                const container = document.getElementById('profile-dynamic-area');
+
+                let items = [];
+                let title = "";
+                let showSubTabs = false;
+
+                if (currentTab === 'posts') {
+                    title = "작성한 글 목록";
+                    showSubTabs = true;
+                    if (data.posts && Array.isArray(data.posts)) {
+                        items = data.posts.filter(p => p.type === subTab);
+                    }
+                } else if (currentTab === 'comments') {
+                    title = "내가 쓴 댓글";
+                    items = data.comments || [];
+                } else if (currentTab === 'likes') {
+                    title = "관심 목록";
+                    showSubTabs = true;
+
+                    // 이미 백엔드에서 합쳐서 내려주므로 필터링만 하면 됨
+                    if (data.likes && Array.isArray(data.likes)) {
+                        items = data.likes.filter(p => p.type === subTab);
+                    }
+                }
+
+                container.innerHTML = ProfileRenderer.createListHTML(title, showSubTabs, subTab, items, currentTab);
+            }, goToDetail: (id, type) => {
                 if (type === 'market') {
                     // 중고거래 목록 페이지로 이동
                     location.href = `/used-market?openDetail=${id}`;
@@ -548,6 +570,7 @@
         // ==========================================
         const ProfileEdit = {
             selectedFile: null,
+            isNicknameChecked: true,
 
             open: () => {
                 const data = ProfileApp.state.data;
@@ -556,6 +579,8 @@
                 // Pre-fill fields
                 document.getElementById('edit-nickname').value = data.nickname;
                 document.getElementById('edit-address').value = data.description; // 주소
+                document.getElementById('edit-nickname-status').textContent = '';
+                ProfileEdit.isNicknameChecked = true;
                 document.getElementById('edit-profile-img-preview').src = data.profileImg || "/images/default-profile.png";
 
                 // Clear password fields
@@ -580,6 +605,42 @@
                 if (history.state && history.state.modal === 'profileEdit') {
                     // history.back(); // This might trigger closing the main profile too if not careful
                     // Just rely on the popstate event handler in ProfileApp
+                }
+            },
+
+            checkNickname: async () => {
+                const userNickname = document.getElementById('edit-nickname').value.trim();
+                const originalNickname = ProfileApp.state.data ? ProfileApp.state.data.nickname : '';
+
+                if (!userNickname) {
+                    Utils.notify('닉네임을 입력해주세요', 'warning');
+                    return;
+                }
+
+                if (userNickname === originalNickname) {
+                    const statusEl = document.getElementById('edit-nickname-status');
+                    statusEl.textContent = '현재 사용 중인 닉네임입니다';
+                    statusEl.style.color = '#FF4B4B';
+                    ProfileEdit.isNicknameChecked = true;
+                    return;
+                }
+
+                try {
+                    const res = await API.post('/auth/check-nickname', { userNickname });
+                    const statusEl = document.getElementById('edit-nickname-status');
+                    if (res.data.isDuplicate) {
+                        statusEl.textContent = '이미 사용 중인 닉네임입니다';
+                        statusEl.style.color = '#FF4B4B';
+                        Utils.notify('이미 사용 중인 닉네임입니다', 'warning');
+                        ProfileEdit.isNicknameChecked = false;
+                    } else {
+                        statusEl.textContent = '사용 가능한 닉네임입니다';
+                        statusEl.style.color = '#00C46B';
+                        Utils.notify('사용 가능한 닉네임입니다', 'success');
+                        ProfileEdit.isNicknameChecked = true;
+                    }
+                } catch (error) {
+                    Utils.notify('닉네임 확인 실패: ' + error.message, 'error');
                 }
             },
 
@@ -651,6 +712,11 @@
 
                 if (!nickname) {
                     Utils.notify('닉네임을 입력해주세요.', 'warning');
+                    return;
+                }
+
+                if (!ProfileEdit.isNicknameChecked) {
+                    Utils.notify('닉네임 중복확인을 해주세요.', 'warning');
                     return;
                 }
 

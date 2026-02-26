@@ -40,12 +40,11 @@ public class UsedMarketTool {
         return usedService.getUsedList(1, keyword);
     }
 
-    @Tool(description = "내 중고 물품의 상태를 변경합니다. state는 TRADING(거래중), SALE(판매중), RESERVED(예약중), SOLD(판매완료) 중 하나입니다.")
+    @Tool(description = "내 중고 물품의 상태를 변경합니다. state는 TRADING(판매중), SALE(판매중), RESERVED(예약중), SOLD(판매완료) 중 하나입니다.")
     public String updateUsedState(Integer usedIdx, String state) {
         usedService.updateState(usedIdx, UsedState.valueOf(state.toUpperCase()), userIdx);
         String stateName = switch (state.toUpperCase()) {
-            case "TRADING" -> "거래중";
-            case "SALE" -> "판매중";
+            case "TRADING", "SALE" -> "판매중";
             case "RESERVED" -> "예약중";
             case "SOLD" -> "판매완료";
             default -> state;
