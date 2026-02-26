@@ -2,6 +2,7 @@ package com.scit.soragodong.controller;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -32,6 +33,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class ChatController {
+    @Value("${google.maps.api-key:default-key}")
+    private String googleMapsApiKey;
 
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatService chatService;
@@ -42,6 +45,7 @@ public class ChatController {
 
     @GetMapping("/chatList")
     public String chatList(Model model) {
+        model.addAttribute("googleMapsApiKey", googleMapsApiKey);
         model.addAttribute("currentUri", "/chatList");
         return "common";
     }

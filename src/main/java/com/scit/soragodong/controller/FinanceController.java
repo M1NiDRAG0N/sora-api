@@ -7,6 +7,7 @@ import com.scit.soragodong.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,7 +21,8 @@ import java.util.List;
 @Controller
 @RequiredArgsConstructor
 public class FinanceController {
-
+    @Value("${google.maps.api-key:default-key}")
+    private String googleMapsApiKey;
     private final FinanceService financeService;
 
     /**
@@ -28,6 +30,7 @@ public class FinanceController {
      */
     @GetMapping("/finance")
     public String financePage(Model model) {
+        model.addAttribute("googleMapsApiKey", googleMapsApiKey);
         model.addAttribute("currentUri", "/finance");
         return "common";
     }
