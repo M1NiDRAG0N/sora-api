@@ -3,6 +3,7 @@ package com.scit.soragodong.controller;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,13 +15,15 @@ import jakarta.servlet.http.HttpSession;
 
 @Controller
 public class MainController {
+    @Value("${google.maps.api-key:default-key}")
+    private String googleMapsApiKey;
 
     @GetMapping("/main")
     public String mainPage(Model model) {
+        model.addAttribute("googleMapsApiKey", googleMapsApiKey);
         model.addAttribute("currentUri", "/main");
         return "common";
     }
-
 
     /**
      * 세션 정보 확인 (테스트용)

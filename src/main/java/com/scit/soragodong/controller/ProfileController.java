@@ -36,22 +36,22 @@ public class ProfileController {
     public ResponseEntity<ProfileDto> getProfileData(
             @PathVariable("userIdx") Integer targetUserIdx,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        
+
         Integer loginUserIdx = userDetails.getUserIdx();
         ProfileDto profileDto = profileService.getProfile(targetUserIdx, loginUserIdx);
-        
+
         return ResponseEntity.ok(profileDto);
     }
-    
+
     // 내 프로필 정보
     @GetMapping("/api/me")
     @ResponseBody
     public ResponseEntity<ProfileDto> getMyProfile(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        
+
         Integer loginUserIdx = userDetails.getUserIdx();
         ProfileDto profileDto = profileService.getProfile(loginUserIdx, loginUserIdx);
-        
+
         return ResponseEntity.ok(profileDto);
     }
 
@@ -61,7 +61,7 @@ public class ProfileController {
             @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
             @RequestPart("data") ProfileUpdateDto data,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        
+
         profileService.updateProfile(userDetails.getUserIdx(), data, profileImage);
         return ResponseEntity.ok("Profile updated successfully");
     }
@@ -71,8 +71,9 @@ public class ProfileController {
     @ResponseBody
     public ResponseEntity<java.util.List<com.scit.soragodong.domain.dto.UsedListRes>> getMyLikedUsedItems(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        
-        java.util.List<com.scit.soragodong.domain.dto.UsedListRes> list = profileService.getMyLikedUsedItems(userDetails.getUserIdx());
+
+        java.util.List<com.scit.soragodong.domain.dto.UsedListRes> list = profileService
+                .getMyLikedUsedItems(userDetails.getUserIdx());
         return ResponseEntity.ok(list);
     }
 }
