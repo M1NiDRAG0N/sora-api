@@ -1,5 +1,6 @@
 package com.scit.soragodong.service;
 
+import java.util.Map;
 import java.util.Random;
 
 import org.springframework.data.redis.core.RedisTemplate;
@@ -86,18 +87,15 @@ public class UserService {
         String redisKey = VERIFICATION_CODE_PREFIX + userDto.userEmail();
         String verificationStatus = redisTemplate.opsForValue().get(redisKey);
         
-        if (verificationStatus == null) {
-            throw new CustomException(ErrorCode.VERIFICATION_EXPIRED);
-        }
+        if (verificationStatus == null) 
+            throw new CustomException(ErrorCode.NOT_FOUND_VERIFICATION);
         
-        if (!"verified".equals(verificationStatus)) {
+        if (!"verified".equals(verificationStatus))
             throw new CustomException(ErrorCode.INVALID_VERIFICATION);
-        }
         
         // 이메일 중복 재확인
-        if (ur.existsByUserEmail(userDto.userEmail())) {
+        if (ur.existsByUserEmail(userDto.userEmail()))
             throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
-        }
 
         // 비밀번호 암호화
         String encryptedPassword = bCryptPasswordEncoder.encode(userDto.password());
@@ -127,6 +125,25 @@ public class UserService {
         emailService.sendWelcomeEmail(savedUser.getUserEmail(), savedUser.getUserName());
     }
     
+    /**
+     * 이메일 인증 상태 및 남은 TTL 조회
+     * status: "none" | "pending" | "verified"
+     */
+    public Map<String, Object> checkVerificationStatus(String email) {
+        String redisKey = VERIFICATION_CODE_PREFIX + email;
+        String value = redisTemplate.opsForValue().get(redisKey);
+        Long ttl = redisTemplate.getExpire(redisKey, TimeUnit.SECONDS);
+        long remaining = (ttl != null && ttl > 0) ? ttl : 0;
+
+        if (value == null) {
+            return Map.of("status", "none", "remainingSeconds", 0);
+        } else if ("verified".equals(value)) {
+            return Map.of("status", "verified", "remainingSeconds", remaining);
+        } else {
+            return Map.of("status", "pending", "remainingSeconds", remaining);
+        }
+    }
+
     /**
      * 6자리 인증 코드 생성
      */
