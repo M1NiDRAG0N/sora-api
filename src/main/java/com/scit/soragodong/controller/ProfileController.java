@@ -2,8 +2,10 @@ package com.scit.soragodong.controller;
 
 import com.scit.soragodong.domain.dto.ProfileDto;
 import com.scit.soragodong.domain.dto.ProfileUpdateDto;
+import com.scit.soragodong.domain.dto.UserOrderDto;
 import com.scit.soragodong.security.CustomUserDetails;
 import com.scit.soragodong.service.ProfileService;
+import com.scit.soragodong.service.TimesaleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @Controller
 @RequestMapping("/profile")
 @RequiredArgsConstructor
@@ -24,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class ProfileController {
 
     private final ProfileService profileService;
+    private final TimesaleService timesaleService;
 
     // 프로필 HTML 조각 반환 (초기 로딩용 아님, 데이터는 JSON으로)
     @GetMapping("/view")
@@ -64,6 +69,15 @@ public class ProfileController {
         
         profileService.updateProfile(userDetails.getUserIdx(), data, profileImage);
         return ResponseEntity.ok("Profile updated successfully");
+    }
+
+    // 내 예약 내역 조회
+    @GetMapping("/api/orders")
+    @ResponseBody
+    public ResponseEntity<List<UserOrderDto>> getMyOrders(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        List<UserOrderDto> orders = timesaleService.getUserOrders(userDetails.getUserIdx());
+        return ResponseEntity.ok(orders);
     }
 
     // 내가 찜한 중고 물품 목록 조회

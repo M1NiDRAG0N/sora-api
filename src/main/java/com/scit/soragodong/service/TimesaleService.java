@@ -241,6 +241,36 @@ public class TimesaleService {
     }
 
     /**
+     * 사용자 예약 내역 조회
+     *
+     * @param userIdx 사용자 인덱스
+     * @return 주문 DTO 목록 (최신순)
+     */
+    public List<UserOrderDto> getUserOrders(Integer userIdx) {
+        log.info("[getUserOrders] 예약 내역 조회 - userIdx: {}", userIdx);
+        return userOrderRepository.findByUsers_UserIdxOrderByOrderTimeDesc(userIdx)
+                .stream()
+                .map(this::convertToOrderDto)
+                .collect(Collectors.toList());
+    }
+
+    private UserOrderDto convertToOrderDto(UserOrder order) {
+        return new UserOrderDto(
+                order.getOrderIndex(),
+                order.getUsers().getUserIdx(),
+                order.getStoreProduct().getProductNum(),
+                order.getStore().getStoreIdx(),
+                order.getProductName(),
+                order.getTotalPrice(),
+                order.getOrderQuantity(),
+                order.getOrderTime(),
+                order.getOrderStatus() != null ? order.getOrderStatus().intValue() : 0,
+                order.getCancelledAt(),
+                order.getCancelReason() != null ? order.getCancelReason().intValue() : null
+        );
+    }
+
+    /**
      * Store 엔티티를 StoreDto로 변환
      */
     private StoreDto convertToStoreDto(Store store) {
