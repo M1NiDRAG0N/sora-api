@@ -65,15 +65,15 @@ public class NotificationService {
     @Transactional
     public void broadcast(NotificationType type, Integer refId, String message) {
         log.info("[알림 브로드캐스트] 유형: {}, 메시지: {}", type, message);
-        
+
         // 1. DB에 userIdx=0으로 공지용 알림 저장 (필요한 경우)
         // 여기서는 모든 개별 사용자에게 알림이 가도록 처리하는 것이 사용자의 요청에 부합할 수 있음.
         // 하지만 효율성을 위해 모든 유저에게 하나씩 저장함.
-        
+
         // 2. 현재 접속 중인 모든 사용자에게 SSE 전송 및 DB 저장
-        // (실제 서비스에서는 시스템 공지 테이블을 따로 두기도 하지만, 
+        // (실제 서비스에서는 시스템 공지 테이블을 따로 두기도 하지만,
         // 현재 NotificationService.getNotifications 로직을 보면 userIdx=0인 경우를 처리하는 로직이 있음)
-        
+
         Notification notification = Notification.builder()
                 .userIdx(0) // 시스템 공지용 ID
                 .notiType(type)
@@ -82,7 +82,7 @@ public class NotificationService {
                 .isRead(false)
                 .build();
         Notification saved = notificationRepository.save(notification);
-        
+
         // SSE는 현재 연결된 모든 사용자에게 보냄
         sseService.broadcast(refId, message);
     }
@@ -105,7 +105,8 @@ public class NotificationService {
 
         List<UsedKeyword> allKeywords = usedKeywordRepository.findByIsUseTrue();
         log.info("[키워드] 활성화된 키워드 개수: {}", allKeywords.size());
-        if (allKeywords.isEmpty()) return;
+        if (allKeywords.isEmpty())
+            return;
 
         String searchText = (title + " " + content).toLowerCase();
         Set<Integer> matchedUserIdxs = new HashSet<>();
@@ -137,7 +138,7 @@ public class NotificationService {
                 Notification saved = notificationRepository.save(notification);
                 log.info("[알림 저장] 사용자 {} - 알림 ID: {}", userIdx, saved.getNotiIdx());
 
-                sseService.notify(userIdx, NotificationType.USED_KEYWORD_MATCH.name(),  saved.getNotiIdx(), message);
+                sseService.notify(userIdx, NotificationType.USED_KEYWORD_MATCH.name(), saved.getNotiIdx(), message);
                 log.info("[SSE 알림 전송] 사용자 {}", userIdx);
             } catch (Exception e) {
                 log.error("[알림 전송 실패] 사용자 {}: {}", userIdx, e.getMessage(), e);
@@ -154,20 +155,21 @@ public class NotificationService {
      */
     @Transactional(readOnly = true)
     public List<NotificationRes> getNotifications(Integer userIdx) {
-		
-		List<Notification> notifications = notificationRepository.findActiveNotifications(userIdx);
-		
-  
-		return notifications.stream()
-				.sorted((n1, n2) -> {
-					// n1이 공지(0)면 앞으로 (-1), n2가 공지(0)면 뒤로 (1)
-					if (n1.getUserIdx() == 0 && n2.getUserIdx() != 0) return -1;
-					if (n1.getUserIdx() != 0 && n2.getUserIdx() == 0) return 1;
-					// 둘 다 공지거나 둘 다 일반이면 최신순 정렬
-					return n2.getCreatedAt().compareTo(n1.getCreatedAt());
-				})
-				.map(NotificationRes::from)
-				.toList();
+
+        List<Notification> notifications = notificationRepository.findActiveNotifications(userIdx);
+
+        return notifications.stream()
+                .sorted((n1, n2) -> {
+                    // n1이 공지(0)면 앞으로 (-1), n2가 공지(0)면 뒤로 (1)
+                    if (n1.getUserIdx() == 0 && n2.getUserIdx() != 0)
+                        return -1;
+                    if (n1.getUserIdx() != 0 && n2.getUserIdx() == 0)
+                        return 1;
+                    // 둘 다 공지거나 둘 다 일반이면 최신순 정렬
+                    return n2.getCreatedAt().compareTo(n1.getCreatedAt());
+                })
+                .map(NotificationRes::from)
+                .toList();
     }
 
     /**
