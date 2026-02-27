@@ -25,24 +25,24 @@
         const NotificationUI = {
             swipeState: null,
 
-            init: function() {
+            init: function () {
                 this.bindModalEvents();
                 this.bindSwipe();
                 window.addEventListener('sse-notification', () => this.loadNotifications());
             },
 
-            bindModalEvents: function() {
+            bindModalEvents: function () {
                 document.getElementById('notiCloseBtn')?.addEventListener('click', () => this.close());
                 document.querySelector('.open-noti-modal')?.addEventListener('click', () => this.open());
                 document.getElementById('notiReadAllBtn')?.addEventListener('click', () => this.markAllRead());
             },
 
-            open: function() {
+            open: function () {
                 document.getElementById('notiModal')?.classList.add('active');
                 this.loadNotifications();
             },
 
-            close: function() {
+            close: function () {
                 document.getElementById('notiModal')?.classList.remove('active');
                 // 배지 카운트 갱신
                 fetch('/notifications/unread-count')
@@ -53,10 +53,10 @@
                         const count = res?.data ?? 0;
                         badge.textContent = count > 99 ? '99+' : count;
                         badge.style.display = count > 0 ? 'flex' : 'none';
-                    }).catch(() => {});
+                    }).catch(() => { });
             },
 
-            loadNotifications: async function() {
+            loadNotifications: async function () {
                 const container = document.getElementById('notiListContainer');
                 const loading = document.getElementById('notiLoading');
                 const empty = document.getElementById('notiEmpty');
@@ -77,20 +77,20 @@
                         return;
                     }
                     items.forEach(item => container.appendChild(this.createItem(item)));
-                } catch(e) {
+                } catch (e) {
                     loading.style.display = 'none';
                     empty.style.display = 'flex';
                 }
             },
 
-            createItem: function(item) {
+            createItem: function (item) {
                 const cfg = this.typeConfig(item.notiType);
                 const wrap = document.createElement('div');
 
                 const isNotify = item.notiType === 'ADMIN_NOTICE';
                 wrap.className = 'noti-wrap' +
-                     (item.isRead ? '' : ' unread') +
-                     (isNotify ? ' admin-notice-bg' : '');
+                    (item.isRead ? '' : ' unread') +
+                    (isNotify ? ' admin-notice-bg' : '');
                 wrap.dataset.idx = item.notiIdx;
                 wrap.dataset.type = item.notiType;
                 wrap.dataset.ref = item.refId;
@@ -129,7 +129,7 @@
                 return wrap;
             },
 
-            handleClick: async function(wrap) {
+            handleClick: async function (wrap) {
                 const notiIdx = wrap.dataset.idx;
                 const type = wrap.dataset.type;
                 const refId = wrap.dataset.ref;
@@ -142,7 +142,7 @@
                         wrap.dataset.read = 'true';
                         const dot = wrap.querySelector('.noti-unread-dot');
                         if (dot) dot.remove();
-                    } catch(e) {}
+                    } catch (e) { }
                 }
 
                 // 이동
@@ -169,26 +169,42 @@
                 }
             },
 
-            deleteItem: async function(wrap) {
+            deleteItem: async function (wrap) {
                 const notiIdx = wrap.dataset.idx;
                 try {
-                    await fetch(`/notifications/${notiIdx}`, { method: 'DELETE' });
-                    wrap.classList.add('removing');
-                    requestAnimationFrame(() => {
-                        requestAnimationFrame(() => wrap.classList.add('removed'));
+                    // 1. 서버에 삭제 요청 보내기
+                    const response = await fetch(`/notifications/${notiIdx}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' }
                     });
-                    wrap.addEventListener('transitionend', () => {
-                        wrap.remove();
-                        if (!document.querySelector('.noti-wrap')) {
-                            document.getElementById('notiEmpty').style.display = 'flex';
-                        }
-                    }, { once: true });
-                } catch(e) {
-                    if (typeof Utils !== 'undefined') Utils.notify('삭제에 실패했습니다.', 'error');
+
+                    const data = await response.json();
+
+                    // 2. 서버에서 삭제 성공 응답이 오면 화면에서 지우기
+                    if (data.result === 'success' || response.ok) {
+                        wrap.classList.add('removing');
+
+                        // 애니메이션을 위해 약간의 딜레이 후 삭제
+                        setTimeout(() => {
+                            wrap.classList.add('removed');
+                            wrap.addEventListener('transitionend', () => {
+                                wrap.remove();
+                                // 남은 알림이 없으면 '알림이 없습니다' 메시지 띄우기
+                                if (!document.querySelector('.noti-wrap')) {
+                                    document.getElementById('notiEmpty').style.display = 'flex';
+                                }
+                            }, { once: true });
+                        }, 50);
+                    } else {
+                        if (typeof Utils !== 'undefined') Utils.notify('삭제에 실패했습니다.', 'error');
+                    }
+                } catch (e) {
+                    console.error("알림 삭제 에러:", e);
+                    if (typeof Utils !== 'undefined') Utils.notify('서버 통신 오류로 삭제에 실패했습니다.', 'error');
                 }
             },
 
-            markAllRead: async function() {
+            markAllRead: async function () {
                 const unreads = document.querySelectorAll('.noti-wrap.unread');
                 if (unreads.length === 0) return;
                 await Promise.all([...unreads].map(wrap =>
@@ -198,12 +214,12 @@
                             wrap.dataset.read = 'true';
                             const dot = wrap.querySelector('.noti-unread-dot');
                             if (dot) dot.remove();
-                        }).catch(() => {})
+                        }).catch(() => { })
                 ));
             },
 
             // ===== 스와이프 to 삭제 =====
-            bindSwipe: function() {
+            bindSwipe: function () {
                 const container = document.getElementById('notiListContainer');
                 if (!container) return;
 
@@ -278,23 +294,23 @@
                 });
             },
 
-            typeConfig: function(type) {
+            typeConfig: function (type) {
                 const map = {
-                    USED_KEYWORD_MATCH: { icon: 'pricetag',        bg: '#e6fcf5', color: '#0ca678' },
-                    USED_LIKE:          { icon: 'heart',            bg: '#fff0f0', color: '#fa5252' },
-                    USED_STATE_CHANGE:  { icon: 'swap-horizontal',  bg: '#fff4e6', color: '#fd7e14' },
-                    LIKE:               { icon: 'heart',            bg: '#fff0f0', color: '#fa5252' },
-                    COMMUNITY_LIKE:     { icon: 'heart',            bg: '#fff0f0', color: '#fa5252' },
-                    COMMENT:            { icon: 'chatbubbles',      bg: '#e8f4fd', color: '#0095f6' },
-                    CHAT:               { icon: 'chatbubbles',      bg: '#e8f4fd', color: '#0095f6' },
-                    KEYWORD:            { icon: 'pricetag',         bg: '#e6fcf5', color: '#0ca678' },
-                    REPORT_RESULT:      { icon: 'megaphone',        bg: '#fff4e6', color: '#fd7e14' },
-                    ADMIN_NOTICE:       { icon: 'shield-checkmark', bg: '#eef2ff', color: '#4f46e5' },
+                    USED_KEYWORD_MATCH: { icon: 'pricetag', bg: '#e6fcf5', color: '#0ca678' },
+                    USED_LIKE: { icon: 'heart', bg: '#fff0f0', color: '#fa5252' },
+                    USED_STATE_CHANGE: { icon: 'swap-horizontal', bg: '#fff4e6', color: '#fd7e14' },
+                    LIKE: { icon: 'heart', bg: '#fff0f0', color: '#fa5252' },
+                    COMMUNITY_LIKE: { icon: 'heart', bg: '#fff0f0', color: '#fa5252' },
+                    COMMENT: { icon: 'chatbubbles', bg: '#e8f4fd', color: '#0095f6' },
+                    CHAT: { icon: 'chatbubbles', bg: '#e8f4fd', color: '#0095f6' },
+                    KEYWORD: { icon: 'pricetag', bg: '#e6fcf5', color: '#0ca678' },
+                    REPORT_RESULT: { icon: 'megaphone', bg: '#fff4e6', color: '#fd7e14' },
+                    ADMIN_NOTICE: { icon: 'shield-checkmark', bg: '#eef2ff', color: '#4f46e5' },
                 };
                 return map[type] ?? { icon: 'notifications', bg: '#f0f0f0', color: '#888' };
             },
 
-            escapeHtml: function(str) {
+            escapeHtml: function (str) {
                 const d = document.createElement('div');
                 d.textContent = str;
                 return d.innerHTML;

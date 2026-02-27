@@ -1,6 +1,12 @@
 <div class="detail-content no-scrollbar" th:fragment="div">
 
     <div class="dashboard-card">
+        <div class="compare-box">
+            <span id="compareText">지출 비교 분석 중...</span>
+        </div>
+    </div>
+
+    <div class="dashboard-card">
         <div class="charts-row">
             <div class="chart-col">
                 <div class="chart-title">Last Month</div>
@@ -68,8 +74,10 @@
 
         <div id="ddList"></div>
 
-        <div class="fab-edit open-modal">
-            <ion-icon name="pencil"></ion-icon>
+        <div class="fab-container">
+            <div class="fab-edit open-modal">
+                <ion-icon name="pencil"></ion-icon>
+            </div>
         </div>
     </div>
 
@@ -500,6 +508,34 @@
 
                 applyToChart(finance.chartLast, lastMonthStats, lastTotal, 'chartLastBox');
                 applyToChart(finance.chartThis, thisStats, thisTotal, 'chartThisBox');
+                // 충고 영역 제거, 전월 대비 금액만 출력
+                const compareEl = document.getElementById('compareText');
+                if (compareEl) {
+                    const diff = thisTotal - lastTotal;
+                    let resultText = '';
+                    let colorClass = '';
+
+                    if (diff > 0) {
+                        resultText = `+${diff.toLocaleString()}원`;
+                        colorClass = 'text-red';
+                    } else if (diff < 0) {
+                        resultText = `-${Math.abs(diff).toLocaleString()}원`;
+                        colorClass = 'text-green';
+                    } else {
+                        resultText = '0원';
+                        colorClass = '';
+                    }
+
+                    compareEl.innerHTML = `
+                        <div class="ledger-wrap">
+                            <div class="ledger-header">월간 지출 비교 분석</div>
+                            <div class="ledger-row ledger-total ${colorClass}">
+                                <span class="ledger-label">전월 대비</span>
+                                <span class="ledger-val">${resultText}</span>
+                            </div>
+                        </div>
+                    `;
+                }
             },
 
             initCharts: () => {
@@ -744,7 +780,11 @@
                         }
                     } else { finance.showToast("삭제 실패!"); }
                 });
-            }
+            },
         };
+        // 🚨 기존 DOMContentLoaded 이벤트 안에 OCR 이벤트 핸들러 추가
+        document.addEventListener('DOMContentLoaded', () => {
+            finance.init();
+        });
     </script>
 </div>
