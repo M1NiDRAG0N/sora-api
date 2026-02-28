@@ -19,7 +19,9 @@ import com.scit.soragodong.domain.dto.ChatRoomCreateDto;
 import com.scit.soragodong.domain.entity.ChatRoom;
 import com.scit.soragodong.domain.entity.Used;
 import com.scit.soragodong.domain.entity.Users;
+import com.scit.soragodong.domain.enums.FileRefType;
 import com.scit.soragodong.repository.ChatRoomRepository;
+import com.scit.soragodong.repository.FileGrpRepository;
 import com.scit.soragodong.repository.UsedRepository;
 import com.scit.soragodong.repository.UserRepository;
 import com.scit.soragodong.security.CustomUserDetails;
@@ -41,6 +43,7 @@ public class ChatController {
     private final ChatRoomRepository chatRoomRepository;
     private final UserRepository userRepository;
     private final UsedRepository usedRepository;
+    private final FileGrpRepository fileGrpRepository;
     private final SseService sseService;
 
     @GetMapping("/chatList")
@@ -90,7 +93,10 @@ public class ChatController {
                     model.addAttribute("productName", used.getUsedTitle());
                     model.addAttribute("productPrice", used.getUsedPrice());
                     model.addAttribute("productStatus", used.getUsedState().name());
-                    model.addAttribute("productImg", null);
+                    String productImg = fileGrpRepository.findByRefTypeAndRefId(FileRefType.USED, used.getUsedIdx())
+                            .map(grp -> "group/" + grp.getFileGrpIdx())
+                            .orElse(null);
+                    model.addAttribute("productImg", productImg);
                 }
             }
         } else {

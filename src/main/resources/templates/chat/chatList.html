@@ -95,7 +95,7 @@
         const Renderer = {
             createUsedCardHTML: (dto) => {
                 const profileImg = dto.otherUserProfileIdx != null ? `/img/${dto.otherUserProfileIdx}` : '/images/default-profile.png';
-                const productImg = profileImg; // 임시
+                const productImg = dto.productImg != null ? `/img/${dto.productImg}` : '/images/default-store.jpg';
                 const timeAgo = Utils.timeAgo(dto.lastMessageAt);
 
                 return `
