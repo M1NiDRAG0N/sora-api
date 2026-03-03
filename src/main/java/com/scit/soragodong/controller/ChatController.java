@@ -2,6 +2,7 @@ package com.scit.soragodong.controller;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,7 +19,9 @@ import com.scit.soragodong.domain.dto.ChatRoomCreateDto;
 import com.scit.soragodong.domain.entity.ChatRoom;
 import com.scit.soragodong.domain.entity.Used;
 import com.scit.soragodong.domain.entity.Users;
+import com.scit.soragodong.domain.enums.FileRefType;
 import com.scit.soragodong.repository.ChatRoomRepository;
+import com.scit.soragodong.repository.FileGrpRepository;
 import com.scit.soragodong.repository.UsedRepository;
 import com.scit.soragodong.repository.UserRepository;
 import com.scit.soragodong.security.CustomUserDetails;
@@ -32,16 +35,20 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class ChatController {
+    @Value("${google.maps.api-key:default-key}")
+    private String googleMapsApiKey;
 
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatService chatService;
     private final ChatRoomRepository chatRoomRepository;
     private final UserRepository userRepository;
     private final UsedRepository usedRepository;
+    private final FileGrpRepository fileGrpRepository;
     private final SseService sseService;
 
     @GetMapping("/chatList")
     public String chatList(Model model) {
+        model.addAttribute("googleMapsApiKey", googleMapsApiKey);
         model.addAttribute("currentUri", "/chatList");
         return "common";
     }
@@ -86,7 +93,10 @@ public class ChatController {
                     model.addAttribute("productName", used.getUsedTitle());
                     model.addAttribute("productPrice", used.getUsedPrice());
                     model.addAttribute("productStatus", used.getUsedState().name());
-                    model.addAttribute("productImg", null);
+                    String productImg = fileGrpRepository.findByRefTypeAndRefId(FileRefType.USED, used.getUsedIdx())
+                            .map(grp -> "group/" + grp.getFileGrpIdx())
+                            .orElse(null);
+                    model.addAttribute("productImg", productImg);
                 }
             }
         } else {

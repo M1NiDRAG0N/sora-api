@@ -7,5 +7,6 @@ public record ChatRoomListDto(
     String otherUserNickname,
     String lastMessage,
     String lastMessageAt,
-    int unreadCount
+    int unreadCount,
+    String productImg
 ) {}

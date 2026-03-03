@@ -2,6 +2,7 @@ package com.scit.soragodong.controller;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -35,11 +36,15 @@ import org.springframework.web.bind.annotation.PutMapping;
 @Slf4j
 @RequiredArgsConstructor
 public class CommunityController {
+    @Value("${google.maps.api-key:default-key}")
+    private String googleMapsApiKey;
+
     private final CommunityService cs;
 
     // 커뮤니티 메인 조회
     @GetMapping("/community")
     public String communityPage(Model model) {
+        model.addAttribute("googleMapsApiKey", googleMapsApiKey);
         model.addAttribute("currentUri", "/community");
         // int page = 0;
         // String category = "ALL";
@@ -102,10 +107,10 @@ public class CommunityController {
 
         if (!viewed) {
             cs.incrementViewCount(boardIdx);
-            
+
             // 쿠키 생성 (24시간 유지)
             Cookie cookie = new Cookie("viewed_board_" + boardIdx, "true");
-            cookie.setMaxAge(60 * 60 * 24); 
+            cookie.setMaxAge(60 * 60 * 24);
             cookie.setPath("/"); // 모든 경로에서 유효
             response.addCookie(cookie);
         }
@@ -222,7 +227,7 @@ public class CommunityController {
     public ResponseEntity<ApiResponse<?>> toggleLike(@PathVariable("boardIdx") Integer boardIdx,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         log.info("좋아요 토글 boardIdx: {}, userIdx: {}", boardIdx, userDetails.getUserIdx());
-        
+
         boolean isLiked = cs.toggleLike(boardIdx, userDetails.getUserIdx());
 
         return ResponseEntity.ok(ApiResponse.success(isLiked));

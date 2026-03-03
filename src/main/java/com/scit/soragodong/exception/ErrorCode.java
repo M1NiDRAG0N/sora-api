@@ -26,6 +26,7 @@ public enum ErrorCode {
     INVALID_PASSWORD(400, "올바르지 않은 비밀번호 양식입니다."),
     INVALID_INPUT(400, "올바르지 않은 요청입니다."),
     INVALID_VERIFICATION(400, "인증번호가 일치하지 않습니다."),
+    NOT_FOUND_VERIFICATION(400, "이메일 인증을 진행해주세요."),
     VERIFICATION_EXPIRED(400, "인증번호가 만료되었습니다. 다시 요청해주세요."),
     REQUIRED_VALUE_MISSING(400, "필수 입력값이 누락되었습니다."),
 

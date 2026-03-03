@@ -4,7 +4,9 @@ import com.scit.soragodong.domain.dto.ChatMessageDto;
 import com.scit.soragodong.domain.dto.ChatRoomListDto;
 import com.scit.soragodong.domain.entity.ChatRoom;
 import com.scit.soragodong.domain.entity.Users;
+import com.scit.soragodong.domain.enums.FileRefType;
 import com.scit.soragodong.repository.ChatRoomRepository;
+import com.scit.soragodong.repository.FileGrpRepository;
 import com.scit.soragodong.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -23,6 +25,7 @@ public class ChatService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final ChatRoomRepository chatRoomRepository;
     private final UserRepository userRepository;
+    private final FileGrpRepository fileGrpRepository;
 
     @Transactional
     public Integer createOrGetChatRoom(Integer loginUserIdx, Integer otherUserIdx, String type, Integer usedIdx) {
@@ -129,6 +132,13 @@ public class ChatService {
                     unreadCount = (int) (totalMessages - readCount);
                 }
 
+                String productImg = null;
+                if ("USED".equals(room.getRoomType()) && room.getUsedIdx() != null) {
+                    productImg = fileGrpRepository.findByRefTypeAndRefId(FileRefType.USED, room.getUsedIdx())
+                            .map(grp -> "group/" + grp.getFileGrpIdx())
+                            .orElse(null);
+                }
+
                 result.add(new ChatRoomListDto(
                         room.getChatRoomIdx(),
                         room.getRoomType(),
@@ -136,7 +146,8 @@ public class ChatService {
                         otherUser.getUserNickname(),
                         lastMessage,
                         lastMessageAt,
-                        unreadCount
+                        unreadCount,
+                        productImg
                 ));
             }
         }
