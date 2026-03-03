@@ -11,6 +11,6 @@ public record StoreProductDto(
     Integer eventPrice,
     Integer productQuantity,
     String productPictureIdx
-) 
-{} 
+)
+{}
 

@@ -95,10 +95,16 @@
     <script>
         /**
          * 이미지 URL 생성 헬퍼 함수
-         * @param {string|number} pictureIdx - 파일 인덱스 또는 파일 그룹 인덱스
-         * @param {string} type - 'file' 또는 'group' (기본값: 'file')
-         * @returns {string} - FileController를 통한 이미지 URL
+         * @param {string|number} fileIdx - FILE_IDX
+         * @returns {string} - FileController 경로
          */
+        function getImageUrl(fileIdx) {
+            if (!fileIdx) {
+                return '/images/no-image.png';
+            }
+            return `/img/${fileIdx}`;
+        }
+
         function formatTime(timeString) {
             if (!timeString) return '';
             const parts = timeString.split(':');
@@ -108,20 +114,6 @@
             const period = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12 || 12;
             return `${String(hours).padStart(2, '0')}:${minutes} ${period}`;
-        }
-
-        function getImageUrl(pictureIdx, type = 'file') {
-            if (!pictureIdx) {
-                return '/images/no-image.png'; // 기본 이미지
-            }
-
-            // type이 'group'이면 썸네일 엔드포인트 사용
-            if (type === 'group') {
-                return `/img/group/${pictureIdx}`;
-            }
-
-            // 기본은 파일 ID로 조회
-            return `/img/${pictureIdx}`;
         }
 
         /**
@@ -435,8 +427,8 @@
                     ? Math.round((1 - product.eventPrice / product.price) * 100)
                     : 0;
 
-                // ✅ FileController를 통해 이미지 로드
-                const imageUrl = getImageUrl(product.productPictureIdx, 'file');
+                // ✅ 이미지 경로 생성
+                const imageUrl = getImageUrl(product.productPictureIdx);
 
                 return `
                     <div class="food-card" onclick="openReservationModal(${product.productNum})">
@@ -461,8 +453,8 @@
              * 가게 카드 HTML 생성
              */
             createStoreCard: function (store) {
-                // ✅ FileController를 통해 썸네일 로드 (group 엔드포인트 사용)
-                const imageUrl = getImageUrl(store.storePictureIdx, 'group');
+                // ✅ 이미지 경로 생성
+                const imageUrl = getImageUrl(store.storePictureIdx);
 
                 const openTime = formatTime(store.storeOpenTime);
                 const closeTime = formatTime(store.storeCloseTime);
@@ -667,10 +659,10 @@
                     storeNameEl.textContent = product.storeName || '로딩 중...';
                 }
 
-                // ✅ 상품 이미지 - FileController를 통해 로드
+                // ✅ 상품 이미지
                 const productImg = document.getElementById('modalProductImg');
                 if (productImg) {
-                    const imageUrl = getImageUrl(product.productPictureIdx, 'file');
+                    const imageUrl = getImageUrl(product.productPictureIdx);
                     productImg.src = imageUrl;
                     productImg.alt = product.productName;
                 }
