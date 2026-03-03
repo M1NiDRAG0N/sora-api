@@ -71,6 +71,17 @@ spring:
     upload:
       path: ${UPLOAD_PATH:/upload}
 
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      base-url: ${OPENAI_BASE_URL:https://api.groq.com/openai}
+      chat:
+        options:
+          model: ${AI_MODEL:llama-3.3-70b-versatile}
+    ollama:
+      chat:
+        enabled: false
+
 server:
   port: 8080
   shutdown: graceful
