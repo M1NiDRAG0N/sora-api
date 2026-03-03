@@ -1,0 +1,20 @@
+services:
+  sora-api:
+    image: ghcr.io/m1nidrag0n/sora-api:latest
+    container_name: sora-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    networks:
+      - sora-network
+    volumes:
+      - /opt/sora-api/upload:/upload
+
+# MySQL, Redis는 이미 실행 중인 외부 컨테이너
+# docker network connect sora-network <mysql-container>
+# docker network connect sora-network <redis-container>
+networks:
+  sora-network:
+    external: true

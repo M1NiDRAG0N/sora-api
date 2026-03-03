@@ -17,8 +17,43 @@ public class FinanceTool {
         this.userIdx = userIdx;
     }
 
-    @Tool(description = "가계부 내역을 등록합니다. type은 'plus'(수입) 또는 'minus'(지출). date 형식: yyyy-MM-dd, time 형식: HH:mm. 날짜/시간이 없으면 오늘 날짜와 현재 시간을 사용하세요.")
+    @Tool(description = "가계부 내역을 등록합니다. date는 날짜(yyyy-MM-dd 형식, 예: 2026-03-03), time은 시간(HH:mm 형식, 예: 14:30), type은 반드시 'plus'(수입) 또는 'minus'(지출) 문자열. 날짜/시간이 없으면 오늘 날짜와 현재 시간을 사용하세요.")
     public String recordFinance(String date, String time, String category, String type, Long amount, String memo) {
+        // AI가 date 자리에 type 값("plus"/"minus")을 넣은 경우 교정
+        if ("plus".equals(date) || "minus".equals(date)) {
+            if (!"plus".equals(type) && !"minus".equals(type)) {
+                type = date;
+            }
+            date = null; // 기본값으로 재처리
+        }
+
+        // AI가 time 자리에 날짜(yyyy-MM-dd)를 넣은 경우 교정
+        if (time != null && time.matches("\\d{4}-\\d{2}-\\d{2}")) {
+            if (date == null || !date.matches("\\d{4}-\\d{2}-\\d{2}")) {
+                date = time;
+            }
+            time = null; // 기본값으로 재처리
+        }
+
+        // date 형식 검증: yyyy-MM-dd 패턴이 아니면 오늘 날짜로
+        if (date == null || date.isBlank() || !date.matches("\\d{4}-\\d{2}-\\d{2}")) {
+            date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        }
+
+        // time 형식 검증: HH:mm 패턴이 아니면 현재 시간으로
+        if (time == null || time.isBlank() || !time.matches("\\d{1,2}:\\d{2}")) {
+            time = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
+        }
+
+        // 시간 형식 정규화: "9:00" → "09:00"
+        String[] parts = time.split(":");
+        time = String.format("%02d:%02d", Integer.parseInt(parts[0].trim()), Integer.parseInt(parts[1].trim()));
+
+        // type 정규화: 한국어나 기타 값 처리
+        if (!"plus".equals(type) && !"minus".equals(type)) {
+            type = "minus"; // 불명확한 경우 지출로 기본 처리
+        }
+
         FinanceDto dto = FinanceDto.builder()
                 .date(date)
                 .time(time)
