@@ -88,7 +88,7 @@
         <!-- 예약 버튼 -->
         <div class="modal-footer">
             <button class="modal-reserve-btn" id="confirmBtn">
-                <span id="reserveButtonText">1개 예약하기</span>
+                <span id="reserveButtonText">예약하기</span>
             </button>
         </div>
     </div>
@@ -626,6 +626,7 @@
             updateQuantityDisplay: function () {
                 const quantityInput = document.getElementById('quantityInput');
                 const totalPriceEl = document.getElementById('modalTotalPrice');
+                const reserveTextEl = document.getElementById('reserveButtonText');
 
                 if (quantityInput) {
                     quantityInput.value = this.quantity;
@@ -635,6 +636,10 @@
                     const price = this.currentProduct.eventPrice || this.currentProduct.price;
                     const total = price * this.quantity;
                     totalPriceEl.textContent = total.toLocaleString() + '원';
+                }
+
+                if (reserveTextEl) {
+                    reserveTextEl.textContent = `${this.quantity}개 예약하기`;
                 }
             },
 
@@ -712,6 +717,9 @@
                 if (totalPriceEl) {
                     totalPriceEl.textContent = totalPrice.toLocaleString() + '원';
                 }
+
+                // 버튼 텍스트 맞춤
+                this.updateQuantityDisplay();
 
                 console.log('[예약모달] 렌더링 완료');
             },
