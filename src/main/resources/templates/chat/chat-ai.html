@@ -15,12 +15,7 @@
     </div>
 
     <!-- 채팅 내용 -->
-    <div class="ai-chat-body no-scrollbar" id="chatContainer">
-        <div class="bubble-row">
-            <img src="/images/logo.png" class="chat-profile">
-            <div class="bubble ai">무엇을 도와줄까? 🐚</div>
-        </div>
-    </div>
+    <div class="ai-chat-body no-scrollbar" id="chatContainer"></div>
 
     <!-- 입력창 -->
     <div class="ai-chat-input-area">
@@ -32,13 +27,59 @@
         </div>
     </div>
 
+    <style>
+        /* 날짜 구분선 */
+        .chat-date-separator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 8px 0 4px;
+            padding: 0 4px;
+        }
+
+        .chat-date-separator::before,
+        .chat-date-separator::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(150, 150, 180, 0.25);
+        }
+
+        .chat-date-separator span {
+            font-size: 11px;
+            color: #aaa;
+            white-space: nowrap;
+        }
+
+        /* 말풍선 시간 */
+        .bubble-time {
+            font-size: 10px;
+            color: #aaa;
+            align-self: flex-end;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .bubble-row .bubble-time {
+            margin-left: 2px;
+        }
+
+        .bubble-row.me .bubble-time {
+            margin-left: 0;
+            margin-right: 2px;
+        }
+    </style>
+
     <script>
         const AiChat = {
             isStreaming: false,
+            lastDateKey: null,
+            historyLoaded: false,
 
             init() {
                 document.getElementById('aiChatCloseBtn').addEventListener('click', () => {
                     document.getElementById('chatLayer').classList.remove('active');
+                    this.historyLoaded = false; // 다음 오픈 시 이력 재로드
                 });
                 document.getElementById('aiChatSendBtn').addEventListener('click', () => this.send());
                 document.getElementById('aiChatClearBtn').addEventListener('click', () => this.clearHistory());
@@ -48,42 +89,143 @@
                         this.send();
                     }
                 });
+
+                // chatLayer에 active 클래스 추가 감지 → 이력 로드
+                const chatLayer = document.getElementById('chatLayer');
+                new MutationObserver(() => {
+                    if (chatLayer.classList.contains('active') && !this.historyLoaded) {
+                        this.loadHistory();
+                    }
+                }).observe(chatLayer, { attributes: true, attributeFilter: ['class'] });
+
+                // 이미 active 상태라면 즉시 로드
+                if (chatLayer.classList.contains('active')) {
+                    this.loadHistory();
+                }
             },
 
+            /* ── 날짜/시간 포맷 유틸 ── */
+            _formatTime(timestamp) {
+                const d = timestamp ? new Date(timestamp) : new Date();
+                const h = d.getHours();
+                const m = d.getMinutes();
+                return `${h < 12 ? '오전' : '오후'} ${h % 12 || 12}:${String(m).padStart(2, '0')}`;
+            },
+
+            _dateKey(timestamp) {
+                const d = timestamp ? new Date(timestamp) : new Date();
+                return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+            },
+
+            _formatDateLabel(timestamp) {
+                const days = ['일', '월', '화', '수', '목', '금', '토'];
+                const d = timestamp ? new Date(timestamp) : new Date();
+                return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 ${days[d.getDay()]}요일`;
+            },
+
+            _checkDateSeparator(timestamp) {
+                const key = this._dateKey(timestamp);
+                if (key !== this.lastDateKey) {
+                    this.lastDateKey = key;
+                    const sep = document.createElement('div');
+                    sep.className = 'chat-date-separator';
+                    sep.innerHTML = `<span>${this._formatDateLabel(timestamp)}</span>`;
+                    document.getElementById('chatContainer').appendChild(sep);
+                }
+            },
+
+            /* ── 말풍선 DOM 생성 ── */
+            _appendAiBubble(text, timestamp) {
+                const container = document.getElementById('chatContainer');
+                const row = document.createElement('div');
+                row.className = 'bubble-row';
+                row.innerHTML = `
+                    <img src="/images/logo.png" class="chat-profile">
+                    <div class="bubble ai">${this.escapeHtml(text)}</div>
+                    <span class="bubble-time">${this._formatTime(timestamp)}</span>`;
+                container.appendChild(row);
+            },
+
+            _appendUserBubble(text, timestamp) {
+                const container = document.getElementById('chatContainer');
+                const row = document.createElement('div');
+                row.className = 'bubble-row me';
+                row.innerHTML = `
+                    <span class="bubble-time">${this._formatTime(timestamp)}</span>
+                    <div class="bubble me">${this.escapeHtml(text)}</div>`;
+                container.appendChild(row);
+            },
+
+            /* ── 이력 로드 ── */
+            async loadHistory() {
+                this.historyLoaded = true;
+                const container = document.getElementById('chatContainer');
+                container.innerHTML = '';
+                this.lastDateKey = null;
+
+                try {
+                    const res = await fetch('/ai/chat/history');
+                    if (!res.ok) throw new Error('fetch failed');
+                    const json = await res.json();
+                    const messages = json.data;
+
+                    if (!messages || messages.length === 0) {
+                        this._showWelcome();
+                        return;
+                    }
+
+                    for (const msg of messages) {
+                        this._checkDateSeparator(msg.timestamp);
+                        if (msg.role === 'user') {
+                            this._appendUserBubble(msg.content, msg.timestamp);
+                        } else {
+                            this._appendAiBubble(msg.content, msg.timestamp);
+                        }
+                    }
+                    this.scrollToBottom();
+                } catch (e) {
+                    this._showWelcome();
+                }
+            },
+
+            _showWelcome() {
+                const container = document.getElementById('chatContainer');
+                if (container.innerHTML.trim()) return;
+                const now = Date.now();
+                this._checkDateSeparator(now);
+                this._appendAiBubble('무엇을 도와줄까? 🐚', now);
+            },
+
+            /* ── 대화 초기화 ── */
             async clearHistory() {
                 if (this.isStreaming) return;
                 try {
                     await fetch('/ai/chat/history', { method: 'DELETE' });
-                } catch (e) { /* 서버 오류 무시 */ }
+                } catch (e) { /* 무시 */ }
 
-                // 화면 초기화
+                this.lastDateKey = null;
+                this.historyLoaded = true;
                 const container = document.getElementById('chatContainer');
-                container.innerHTML = `
-                    <div class="bubble-row">
-                        <img src="/images/logo.png" class="chat-profile">
-                        <div class="bubble ai">대화 기록을 초기화했어요. 무엇을 도와줄까요? 🐚</div>
-                    </div>`;
+                container.innerHTML = '';
+                const now = Date.now();
+                this._checkDateSeparator(now);
+                this._appendAiBubble('대화 기록을 초기화했어요. 무엇을 도와줄까요? 🐚', now);
+                this.scrollToBottom();
             },
 
+            /* ── 메시지 전송 ── */
             send() {
                 if (this.isStreaming) return;
                 const input = document.getElementById('aiChatInput');
                 const message = input.value.trim();
                 if (!message) return;
 
+                const now = Date.now();
                 input.value = '';
-                this.appendUserMessage(message);
+                this._checkDateSeparator(now);
+                this._appendUserBubble(message, now);
                 this.showTyping();
                 this.streamResponse(message);
-            },
-
-            appendUserMessage(text) {
-                const container = document.getElementById('chatContainer');
-                const row = document.createElement('div');
-                row.className = 'bubble-row me';
-                row.innerHTML = `<div class="bubble me">${this.escapeHtml(text)}</div>`;
-                container.appendChild(row);
-                this.scrollToBottom();
             },
 
             showTyping() {
@@ -104,6 +246,7 @@
                 document.getElementById('aiTypingIndicator')?.remove();
             },
 
+            /* ── SSE 스트리밍 수신 ── */
             async streamResponse(message) {
                 this.isStreaming = true;
                 const sendBtn = document.getElementById('aiChatSendBtn');
@@ -121,16 +264,19 @@
                     this.hideTyping();
 
                     // AI 말풍선 생성
+                    const now = Date.now();
+                    this._checkDateSeparator(now);
                     const container = document.getElementById('chatContainer');
                     const row = document.createElement('div');
                     row.className = 'bubble-row';
                     row.innerHTML = `
                         <img src="/images/logo.png" class="chat-profile">
-                        <div class="bubble ai"></div>`;
+                        <div class="bubble ai"></div>
+                        <span class="bubble-time">${this._formatTime(now)}</span>`;
                     container.appendChild(row);
                     const bubble = row.querySelector('.bubble.ai');
 
-                    // SSE 스트리밍 수신
+                    // SSE 스트리밍 수신 (textContent로 직접 누적 — pre-wrap 적용됨)
                     const reader = response.body.getReader();
                     const decoder = new TextDecoder();
                     let buffer = '';
@@ -139,15 +285,13 @@
                         const { done, value } = await reader.read();
                         if (done) break;
 
-                        // 청크를 buffer에 누적 후 완성된 라인만 처리
                         buffer += decoder.decode(value, { stream: true });
                         const lines = buffer.split('\n');
-                        buffer = lines.pop(); // 마지막 불완전한 라인 보존
+                        buffer = lines.pop(); // 마지막 불완전 라인 보존
 
                         for (const line of lines) {
                             if (line.startsWith('data:')) {
-                                // 'data: ' 또는 'data:' 이후 내용 추출
-                                // trim() 금지 — 공백 토큰이 소실되어 글자 붙음 현상 발생
+                                // trim() 금지 — 공백 토큰 소실 방지
                                 const text = line.startsWith('data: ') ? line.slice(6) : line.slice(5);
                                 if (text && text !== '[DONE]') {
                                     bubble.textContent += text;
@@ -158,13 +302,9 @@
                     }
                 } catch (e) {
                     this.hideTyping();
-                    const container = document.getElementById('chatContainer');
-                    const row = document.createElement('div');
-                    row.className = 'bubble-row';
-                    row.innerHTML = `
-                        <img src="/images/logo.png" class="chat-profile">
-                        <div class="bubble ai">죄송해요, 오류가 발생했어요. 다시 시도해주세요. 🐚</div>`;
-                    container.appendChild(row);
+                    const now = Date.now();
+                    this._checkDateSeparator(now);
+                    this._appendAiBubble('죄송해요, 오류가 발생했어요. 다시 시도해주세요. 🐚', now);
                     this.scrollToBottom();
                 } finally {
                     this.isStreaming = false;
