@@ -19,3 +19,7 @@ public record StoreDto(
     Double storeLat,
     Double storeLng
 ) {}
+
+
+
+

@@ -88,29 +88,21 @@
         <!-- 예약 버튼 -->
         <div class="modal-footer">
             <button class="modal-reserve-btn" id="confirmBtn">
-                <span id="reserveButtonText">1개 예약하기</span>
+                <span id="reserveButtonText">예약하기</span>
             </button>
         </div>
     </div>
     <script>
         /**
          * ✅ 이미지 URL 생성 헬퍼 함수
-         * @param {string|number} pictureIdx - 파일 인덱스 또는 파일 그룹 인덱스
-         * @param {string} type - 'file' 또는 'group' (기본값: 'file')
-         * @returns {string} - FileController를 통한 이미지 URL
+         * @param {string|number} fileIdx - FILE_IDX
+         * @returns {string} - FileController 경로
          */
-        function getImageUrl(pictureIdx, type = 'file') {
-            if (!pictureIdx) {
-                return '/images/no-image.png'; // 기본 이미지
+        function getImageUrl(fileIdx) {
+            if (!fileIdx) {
+                return '/images/no-image.png';
             }
-
-            // type이 'group'이면 썸네일 엔드포인트 사용
-            if (type === 'group') {
-                return `/img/group/${pictureIdx}`;
-            }
-
-            // 기본은 파일 ID로 조회
-            return `/img/${pictureIdx}`;
+            return `/img/${fileIdx}`;
         }
 
         /**
@@ -257,8 +249,8 @@
 
                 console.log('[renderStoreInfo] 렌더링 시작:', store);
 
-                // ✅ 가게 이미지 - FileController를 통해 썸네일 로드
-                const imageUrl = getImageUrl(store.storePictureIdx, 'group');
+                // ✅ 가게 이미지 - FileController를 통해 로드
+                const imageUrl = getImageUrl(store.storePictureIdx);
                 storeImage.src = imageUrl;
                 storeImage.alt = store.storeName;
 
@@ -441,7 +433,7 @@
                 }
 
                 // ✅ FileController를 통해 상품 이미지 로드
-                const imageUrl = getImageUrl(product.productPictureIdx, 'file');
+                const imageUrl = getImageUrl(product.productPictureIdx);
 
                 card.innerHTML = `
             <img src="${imageUrl}" 
@@ -634,6 +626,7 @@
             updateQuantityDisplay: function () {
                 const quantityInput = document.getElementById('quantityInput');
                 const totalPriceEl = document.getElementById('modalTotalPrice');
+                const reserveTextEl = document.getElementById('reserveButtonText');
 
                 if (quantityInput) {
                     quantityInput.value = this.quantity;
@@ -643,6 +636,10 @@
                     const price = this.currentProduct.eventPrice || this.currentProduct.price;
                     const total = price * this.quantity;
                     totalPriceEl.textContent = total.toLocaleString() + '원';
+                }
+
+                if (reserveTextEl) {
+                    reserveTextEl.textContent = `${this.quantity}개 예약하기`;
                 }
             },
 
@@ -668,7 +665,7 @@
                 // ✅ 상품 이미지 - FileController를 통해 로드
                 const productImg = document.getElementById('modalProductImg');
                 if (productImg) {
-                    const imageUrl = getImageUrl(product.productPictureIdx, 'file');
+                    const imageUrl = getImageUrl(product.productPictureIdx);
                     productImg.src = imageUrl;
                     productImg.alt = product.productName;
                 }
@@ -720,6 +717,9 @@
                 if (totalPriceEl) {
                     totalPriceEl.textContent = totalPrice.toLocaleString() + '원';
                 }
+
+                // 버튼 텍스트 맞춤
+                this.updateQuantityDisplay();
 
                 console.log('[예약모달] 렌더링 완료');
             },

@@ -137,6 +137,22 @@
         </div>
     </div>
 
+    <style>
+        .order-card-list { display: flex; flex-direction: column; gap: 12px; padding: 0 16px 16px; }
+        .order-card { background: #fff; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); overflow: hidden; }
+        .order-card-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f8f8f8; border-bottom: 1px solid #eee; }
+        .order-status-badge { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+        .order-status-reserved { background: #e6f7ee; color: #00C46B; }
+        .order-status-cancelled { background: #ffeaea; color: #f03d3d; }
+        .order-status-done { background: #ececec; color: #888; }
+        .order-card-date { font-size: 12px; color: #aaa; }
+        .order-card-body { padding: 12px 14px; }
+        .order-product-name { font-size: 15px; font-weight: 600; color: #222; margin-bottom: 8px; }
+        .order-card-footer { display: flex; justify-content: space-between; align-items: center; }
+        .order-quantity { font-size: 13px; color: #888; }
+        .order-price { font-size: 16px; font-weight: 700; color: var(--primary, #00C46B); }
+    </style>
+
     <script>
         // ==========================================
         //  1. Event Handler (이벤트 리스너 모음)
@@ -292,6 +308,37 @@
                 return html;
             },
 
+            createOrderCardsHTML: (orders) => {
+                let html = `<div class="profile-section-title">예약 내역</div>`;
+                if (orders.length === 0) {
+                    return html + `<div class="profile-empty-state">예약 내역이 없습니다.</div>`;
+                }
+                html += `<div class="order-card-list">`;
+                orders.forEach(order => {
+                    const statusMap = { 0: '예약완료', 1: '취소됨', 2: '완료' };
+                    const statusClass = order.orderStatus === 0 ? 'order-status-reserved' : (order.orderStatus === 1 ? 'order-status-cancelled' : 'order-status-done');
+                    const statusText = statusMap[order.orderStatus] ?? '예약완료';
+                    const orderDate = order.orderTime ? new Date(order.orderTime).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+                    html += `
+                        <div class="order-card">
+                            <div class="order-card-header">
+                                <span class="order-status-badge ${statusClass}">${statusText}</span>
+                                <span class="order-card-date">${orderDate}</span>
+                            </div>
+                            <div class="order-card-body">
+                                <div class="order-product-name">${order.productName}</div>
+                                <div class="order-card-footer">
+                                    <span class="order-quantity">수량 ${order.orderQuantity}개</span>
+                                    <span class="order-price">${(order.totalPrice ?? 0).toLocaleString()}원</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+                return html;
+            },
+
             createListHTML: (title, showSubTabs, subTab, items, currentTab) => {
                 let html = `<div class="profile-section-title">${title}</div>`;
 
@@ -367,7 +414,8 @@
                 data: null,
                 currentTab: 'posts',
                 subTab: 'community',
-                isLoading: false
+                isLoading: false,
+                orders: null
             },
 
             // 초기화
@@ -446,6 +494,7 @@
                 ProfileApp.state.data = null;
                 ProfileApp.state.currentTab = 'posts';
                 ProfileApp.state.subTab = 'community';
+                ProfileApp.state.orders = null;
             },
 
             loadData: async (userIdx) => {
@@ -455,6 +504,11 @@
 
                     const data = await API.get(url);
                     ProfileApp.state.data = data;
+
+                    // 본인 프로필인 경우 예약 내역 미리 로드
+                    if (data.myProfile) {
+                        ProfileApp.state.orders = await API.get('/profile/api/orders').catch(() => []);
+                    }
 
                     ProfileApp.render();
 
@@ -519,6 +573,7 @@
 
                 if (isMe) {
                     tabs.push({ key: 'likes', label: '관심 목록', value: data.likeCount, active: true });
+                    tabs.push({ key: 'orders', label: '예약 내역', value: (ProfileApp.state.orders || []).length, active: true });
                 }
 
                 statsBox.innerHTML = ProfileRenderer.createStatsHTML(tabs, currentTab);
@@ -561,6 +616,9 @@
                     if (data.likes && Array.isArray(data.likes)) {
                         items = data.likes.filter(p => p.type === subTab);
                     }
+                } else if (currentTab === 'orders') {
+                    container.innerHTML = ProfileRenderer.createOrderCardsHTML(ProfileApp.state.orders || []);
+                    return;
                 }
 
                 container.innerHTML = ProfileRenderer.createListHTML(title, showSubTabs, subTab, items, currentTab);
