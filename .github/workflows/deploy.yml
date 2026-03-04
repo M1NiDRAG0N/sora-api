@@ -167,5 +167,5 @@ jobs:
             # 사용하지 않는 이미지 정리
             docker image prune -f
         env:
-          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+          GHCR_PAT: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
