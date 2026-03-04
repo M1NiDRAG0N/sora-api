@@ -63,8 +63,9 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           envs: GHCR_PAT,GITHUB_ACTOR
           script: |
-            # 디렉토리 생성
-            mkdir -p /opt/sora-api/nginx /opt/sora-api/upload
+            # 디렉토리 생성 및 권한 설정
+            sudo mkdir -p /opt/sora-api/nginx /opt/sora-api/upload
+            sudo chown -R $USER:$USER /opt/sora-api
 
             # docker-compose.yml 작성
             cat > /opt/sora-api/docker-compose.yml << 'COMPOSE_EOF'
