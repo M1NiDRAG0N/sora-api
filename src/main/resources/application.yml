@@ -17,14 +17,16 @@ spring:
     password: ${DB_PASSWORD}
     hikari:
       auto-commit: false
+      maximum-pool-size: 5
+      minimum-idle: 2
       idle-timeout: 30000
-      max-lifetime: 50000   # ⭐ 핵심 (DB timeout보다 짧게)
+      max-lifetime: 50000
       connection-timeout: 30000
       leak-detection-threshold: 60000
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: validate        # prod 기본값, local에서 update로 오버라이드
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     open-in-view: false
@@ -67,6 +69,9 @@ spring:
     redis:
       time-to-live: 600000
 
+  thymeleaf:
+    cache: true                 # prod 기본값, local에서 false로 오버라이드
+
   file:
     upload:
       path: ${UPLOAD_PATH:/upload}
@@ -103,8 +108,8 @@ server:
 
 logging:
   level:
-    root: INFO
-    com.scit.soragodong: DEBUG
+    root: WARN
+    com.scit.soragodong: INFO   # prod 기본값, local에서 DEBUG로 오버라이드
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

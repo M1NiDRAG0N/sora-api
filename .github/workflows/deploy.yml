@@ -95,6 +95,8 @@ jobs:
                   - app-network
                 volumes:
                   - /opt/sora-api/upload:/upload
+                mem_limit: 768m
+                mem_reservation: 512m
 
             networks:
               app-network:
