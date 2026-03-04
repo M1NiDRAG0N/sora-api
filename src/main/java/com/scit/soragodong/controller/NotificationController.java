@@ -89,9 +89,9 @@ public class NotificationController {
 
     /**
      * 알림 목록 조회
-     * GET /notifications
+     * GET /notifications  또는  GET /notifications/
      */
-    @GetMapping("")
+    @GetMapping({"", "/"})
     public ApiResponse<List<NotificationRes>> getNotifications(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         return ApiResponse.success(notificationService.getNotifications(userDetails.getUserIdx()));

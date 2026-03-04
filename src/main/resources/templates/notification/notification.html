@@ -44,16 +44,15 @@
 
             close: function () {
                 document.getElementById('notiModal')?.classList.remove('active');
-                // 배지 카운트 갱신
-                fetch('/notifications/unread-count')
-                    .then(r => r.json())
+                const badge = document.getElementById('notiUnreadBadge');
+                if (!badge) return;
+                API.get('/notifications/unread-count')
                     .then(res => {
-                        const badge = document.getElementById('notiUnreadBadge');
-                        if (!badge) return;
                         const count = res?.data ?? 0;
                         badge.textContent = count > 99 ? '99+' : count;
                         badge.style.display = count > 0 ? 'flex' : 'none';
-                    }).catch(() => { });
+                    })
+                    .catch(() => {});
             },
 
             loadNotifications: async function () {
@@ -63,13 +62,11 @@
 
                 loading.style.display = 'flex';
                 empty.style.display = 'none';
-                // 기존 아이템 제거
                 container.querySelectorAll('.noti-wrap').forEach(el => el.remove());
 
                 try {
-                    const res = await fetch('/notifications');
-                    const json = await res.json();
-                    const items = json?.data ?? [];
+                    const res = await API.get('/notifications');
+                    const items = res?.data ?? [];
 
                     loading.style.display = 'none';
                     if (items.length === 0) {
@@ -96,7 +93,6 @@
                 wrap.dataset.ref = item.refId;
                 wrap.dataset.read = item.isRead;
 
-                // [수정] ADMIN_NOTICE가 아니고, 읽지 않았을 때만 점을 표시합니다.
                 const showUnreadDot = !item.isRead && item.notiType !== 'ADMIN_NOTICE';
 
                 wrap.innerHTML = `
@@ -115,12 +111,10 @@
                     </div>
                 `;
 
-                // 클릭: wrap 전체에서 이벤트 위임 (setPointerCapture 호환성)
                 wrap.addEventListener('click', (e) => {
                     if (e.target.closest('.noti-delete-btn')) return;
                     this.handleClick(wrap);
                 });
-                // 삭제 버튼
                 wrap.querySelector('.noti-delete-btn').addEventListener('click', (e) => {
                     e.stopPropagation();
                     this.deleteItem(wrap);
@@ -134,18 +128,15 @@
                 const type = wrap.dataset.type;
                 const refId = wrap.dataset.ref;
 
-                // 읽음 처리
                 if (wrap.dataset.read === 'false') {
                     try {
-                        await fetch(`/notifications/${notiIdx}/read`, { method: 'PATCH' });
+                        await API.patch(`/notifications/${notiIdx}/read`);
                         wrap.classList.remove('unread');
                         wrap.dataset.read = 'true';
-                        const dot = wrap.querySelector('.noti-unread-dot');
-                        if (dot) dot.remove();
-                    } catch (e) { }
+                        wrap.querySelector('.noti-unread-dot')?.remove();
+                    } catch (e) {}
                 }
 
-                // 이동
                 const usedTypes = ['USED_KEYWORD_MATCH', 'USED_LIKE', 'USED_STATE_CHANGE'];
                 const communityTypes = ['LIKE', 'COMMUNITY_LIKE', 'COMMENT'];
                 const noticeTypes = ['REPORT_RESULT', 'ADMIN_NOTICE'];
@@ -157,50 +148,28 @@
                 } else if (communityTypes.includes(type) && validRefId) {
                     this.close();
                     location.href = `/community?detail=${refId}`;
-                } else if (noticeTypes.includes(type)) {
+                } else if (noticeTypes.includes(type) && validRefId) {
                     this.close();
-                    if (validRefId) {
-                        if (window.openNoticeModal) {
-                            window.openNoticeModal(refId);
-                        } else {
-                            console.error('NoticeModal is not initialized');
-                        }
-                    }
+                    window.openNoticeModal?.(refId);
                 }
             },
 
             deleteItem: async function (wrap) {
                 const notiIdx = wrap.dataset.idx;
                 try {
-                    // 1. 서버에 삭제 요청 보내기
-                    const response = await fetch(`/notifications/${notiIdx}`, {
-                        method: 'DELETE',
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-
-                    const data = await response.json();
-
-                    // 2. 서버에서 삭제 성공 응답이 오면 화면에서 지우기
-                    if (data.result === 'success' || response.ok) {
-                        wrap.classList.add('removing');
-
-                        // 애니메이션을 위해 약간의 딜레이 후 삭제
-                        setTimeout(() => {
-                            wrap.classList.add('removed');
-                            wrap.addEventListener('transitionend', () => {
-                                wrap.remove();
-                                // 남은 알림이 없으면 '알림이 없습니다' 메시지 띄우기
-                                if (!document.querySelector('.noti-wrap')) {
-                                    document.getElementById('notiEmpty').style.display = 'flex';
-                                }
-                            }, { once: true });
-                        }, 50);
-                    } else {
-                        if (typeof Utils !== 'undefined') Utils.notify('삭제에 실패했습니다.', 'error');
-                    }
+                    await API.delete(`/notifications/${notiIdx}`);
+                    wrap.classList.add('removing');
+                    setTimeout(() => {
+                        wrap.classList.add('removed');
+                        wrap.addEventListener('transitionend', () => {
+                            wrap.remove();
+                            if (!document.querySelector('.noti-wrap')) {
+                                document.getElementById('notiEmpty').style.display = 'flex';
+                            }
+                        }, { once: true });
+                    }, 50);
                 } catch (e) {
-                    console.error("알림 삭제 에러:", e);
-                    if (typeof Utils !== 'undefined') Utils.notify('서버 통신 오류로 삭제에 실패했습니다.', 'error');
+                    Utils.notify('삭제에 실패했습니다.', 'error');
                 }
             },
 
@@ -208,13 +177,13 @@
                 const unreads = document.querySelectorAll('.noti-wrap.unread');
                 if (unreads.length === 0) return;
                 await Promise.all([...unreads].map(wrap =>
-                    fetch(`/notifications/${wrap.dataset.idx}/read`, { method: 'PATCH' })
+                    API.patch(`/notifications/${wrap.dataset.idx}/read`)
                         .then(() => {
                             wrap.classList.remove('unread');
                             wrap.dataset.read = 'true';
-                            const dot = wrap.querySelector('.noti-unread-dot');
-                            if (dot) dot.remove();
-                        }).catch(() => { })
+                            wrap.querySelector('.noti-unread-dot')?.remove();
+                        })
+                        .catch(() => {})
                 ));
             },
 
@@ -243,7 +212,6 @@
                     if (!isDragging && Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
                     isDragging = true;
 
-                    // 좌우 스와이프일 때만 처리
                     if (Math.abs(dx) > Math.abs(dy)) {
                         e.preventDefault();
                         const item = target.querySelector('.noti-item');
@@ -268,15 +236,11 @@
                     del.style.transition = '';
 
                     if (isDragging && dx < -50) {
-                        // 닫힌 상태에서 열기
                         target.classList.add('swiped');
                         item.style.transform = '';
                         del.style.transform = '';
-                        // 다른 열린 항목 닫기
                         document.querySelectorAll('.noti-wrap.swiped').forEach(w => {
-                            if (w !== target) {
-                                w.classList.remove('swiped');
-                            }
+                            if (w !== target) w.classList.remove('swiped');
                         });
                     } else {
                         target.classList.remove('swiped');
@@ -286,7 +250,6 @@
                     target = null;
                 });
 
-                // 다른 곳 클릭 시 모두 닫기
                 container.addEventListener('click', (e) => {
                     if (!e.target.closest('.noti-wrap.swiped')) {
                         document.querySelectorAll('.noti-wrap.swiped').forEach(w => w.classList.remove('swiped'));
@@ -296,16 +259,16 @@
 
             typeConfig: function (type) {
                 const map = {
-                    USED_KEYWORD_MATCH: { icon: 'pricetag', bg: '#e6fcf5', color: '#0ca678' },
-                    USED_LIKE: { icon: 'heart', bg: '#fff0f0', color: '#fa5252' },
-                    USED_STATE_CHANGE: { icon: 'swap-horizontal', bg: '#fff4e6', color: '#fd7e14' },
-                    LIKE: { icon: 'heart', bg: '#fff0f0', color: '#fa5252' },
-                    COMMUNITY_LIKE: { icon: 'heart', bg: '#fff0f0', color: '#fa5252' },
-                    COMMENT: { icon: 'chatbubbles', bg: '#e8f4fd', color: '#0095f6' },
-                    CHAT: { icon: 'chatbubbles', bg: '#e8f4fd', color: '#0095f6' },
-                    KEYWORD: { icon: 'pricetag', bg: '#e6fcf5', color: '#0ca678' },
-                    REPORT_RESULT: { icon: 'megaphone', bg: '#fff4e6', color: '#fd7e14' },
-                    ADMIN_NOTICE: { icon: 'shield-checkmark', bg: '#eef2ff', color: '#4f46e5' },
+                    USED_KEYWORD_MATCH: { icon: 'pricetag',         bg: '#e6fcf5', color: '#0ca678' },
+                    USED_LIKE:          { icon: 'heart',             bg: '#fff0f0', color: '#fa5252' },
+                    USED_STATE_CHANGE:  { icon: 'swap-horizontal',   bg: '#fff4e6', color: '#fd7e14' },
+                    LIKE:               { icon: 'heart',             bg: '#fff0f0', color: '#fa5252' },
+                    COMMUNITY_LIKE:     { icon: 'heart',             bg: '#fff0f0', color: '#fa5252' },
+                    COMMENT:            { icon: 'chatbubbles',       bg: '#e8f4fd', color: '#0095f6' },
+                    CHAT:               { icon: 'chatbubbles',       bg: '#e8f4fd', color: '#0095f6' },
+                    KEYWORD:            { icon: 'pricetag',          bg: '#e6fcf5', color: '#0ca678' },
+                    REPORT_RESULT:      { icon: 'megaphone',         bg: '#fff4e6', color: '#fd7e14' },
+                    ADMIN_NOTICE:       { icon: 'shield-checkmark',  bg: '#eef2ff', color: '#4f46e5' },
                 };
                 return map[type] ?? { icon: 'notifications', bg: '#f0f0f0', color: '#888' };
             },

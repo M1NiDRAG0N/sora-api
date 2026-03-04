@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.scit.soragodong.domain.response.ApiResponse;
 
@@ -190,17 +191,29 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 404 Not Found 예외 처리
+     * 404 Not Found 예외 처리 (컨트롤러 핸들러 없음)
      */
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<ApiResponse<?>> handleNoHandlerFoundException(
             NoHandlerFoundException ex, WebRequest request) {
         log.error("[{}] NoHandlerFoundException: {}", locate(ex), ex.getRequestURL());
-        
+
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error(ErrorCode.NOT_FOUND)
                         .addDetail("path", ex.getRequestURL()));
+    }
+
+    /**
+     * 404 Not Found 예외 처리 (정적 리소스 없음 - Spring Boot 3.x)
+     * RuntimeException을 상속하므로 별도 핸들러 없으면 500으로 처리됨
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handleNoResourceFoundException(
+            NoResourceFoundException ex, WebRequest request) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(ErrorCode.NOT_FOUND));
     }
 
     /**
