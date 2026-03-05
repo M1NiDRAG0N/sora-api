@@ -361,11 +361,11 @@ public class UsedService {
 
         int currentCount = usedKeywordRepository.countByUserIdxAndIsUseTrue(userIdx);
         if (currentCount >= MAX_KEYWORDS_PER_USER) {
-            throw new IllegalStateException("키워드는 최대 " + MAX_KEYWORDS_PER_USER + "개까지 등록 가능합니다.");
+            throw new CustomException(ErrorCode.MAX_KEYWORD);
         }
 
         if (usedKeywordRepository.existsByUserIdxAndKeywordAndIsUseTrue(userIdx, trimmedKeyword)) {
-            throw new IllegalStateException("이미 등록된 키워드입니다.");
+            throw new CustomException(ErrorCode.DUPLICATE_KEYWORD);
         }
 
         UsedKeyword newKeyword = UsedKeyword.builder()
