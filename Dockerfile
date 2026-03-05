@@ -16,4 +16,5 @@ ENTRYPOINT ["java", \
   "-Xss256k", \
   "-XX:+ExitOnOutOfMemoryError", \
   "-Djava.security.egd=file:/dev/./urandom", \
+  "-Duser.timezone=Asia/Seoul", \
   "-jar", "app.jar"]
