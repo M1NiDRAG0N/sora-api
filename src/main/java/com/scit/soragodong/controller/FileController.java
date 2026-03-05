@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -38,19 +38,18 @@ public class FileController {
     private final FileRepository fileRepository;
     private final FileGrpRepository fileGrpRepository;
 
+    private final ConcurrentHashMap<Integer, File> fileCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Integer, Integer> groupThumbnailCache = new ConcurrentHashMap<>();
+
     /**
      * 파일 ID로 이미지 조회
      * 예: /img/1
      */
     @GetMapping("/{fileIdx}")
-    public ResponseEntity<byte[]> getFileByIdx(@PathVariable(name = "fileIdx") int fileIdx) {
+    public ResponseEntity<byte[]> getFileByIdx(@PathVariable int fileIdx) {
         try {
-            Optional<File> fileOpt = fileRepository.findById(fileIdx);
-            if (fileOpt.isEmpty()) {
-                throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
-            }
-
-            File file = fileOpt.get();
+            File file = fileCache.computeIfAbsent(fileIdx, id ->
+                    fileRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND)));
             return buildImageResponse(file);
         } catch (IOException e) {
             log.error("파일 조회 실패: {}", fileIdx, e);
@@ -63,20 +62,17 @@ public class FileController {
      * 예: /img/group/1
      */
     @GetMapping("/group/{fileGrpIdx}")
-    public ResponseEntity<byte[]> getThumbnailByGroupIdx(@PathVariable(name = "fileGrpIdx") int fileGrpIdx) {
+    public ResponseEntity<byte[]> getThumbnailByGroupIdx(@PathVariable int fileGrpIdx) {
         try {
-            Optional<FileGrp> groupOpt = fileGrpRepository.findById(fileGrpIdx);
-            if (groupOpt.isEmpty()) {
-                throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
-            }
-
-            FileGrp fileGrp = groupOpt.get();
-            Optional<File> fileOpt = fileRepository.findFirstByFileGroupAndIsUseTrueOrderByFileOrder(fileGrp);
-            if (fileOpt.isEmpty()) {
-                throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
-            }
-
-            File file = fileOpt.get();
+            int fileIdx = groupThumbnailCache.computeIfAbsent(fileGrpIdx, id -> {
+                FileGrp fileGrp = fileGrpRepository.findById(id)
+                        .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+                return fileRepository.findFirstByFileGroupAndIsUseTrueOrderByFileOrder(fileGrp)
+                        .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND))
+                        .getFileIdx();
+            });
+            File file = fileCache.computeIfAbsent(fileIdx, id ->
+                    fileRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND)));
             return buildImageResponse(file);
         } catch (IOException e) {
             log.error("썸네일 조회 실패: {}", fileGrpIdx, e);
