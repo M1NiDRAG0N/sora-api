@@ -20,6 +20,7 @@ import com.scit.soragodong.domain.entity.ChatRoom;
 import com.scit.soragodong.domain.entity.Used;
 import com.scit.soragodong.domain.entity.Users;
 import com.scit.soragodong.domain.enums.FileRefType;
+import com.scit.soragodong.domain.response.ApiResponse;
 import com.scit.soragodong.repository.ChatRoomRepository;
 import com.scit.soragodong.repository.FileGrpRepository;
 import com.scit.soragodong.repository.UsedRepository;
@@ -81,6 +82,7 @@ public class ChatController {
             Users otherUser = userRepository.findById(otherUserIdx).orElse(null);
 
             if (otherUser != null) {
+                model.addAttribute("partnerUserIdx", otherUserIdx);
                 model.addAttribute("partnerNickname", otherUser.getUserNickname());
                 model.addAttribute("partnerProfileImg", otherUser.getProfileIdx());
             }
@@ -140,6 +142,14 @@ public class ChatController {
         if (userDetails != null) {
             chatService.markAsRead(roomId, userDetails.getUserIdx());
         }
+    }
+
+    @ResponseBody
+    @GetMapping("/api/chat/unread-count")
+    public ApiResponse<?> getUnreadCount(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) return ApiResponse.success(0);
+        Integer unreadCount = chatService.getTotalUnreadCount(userDetails.getUserIdx());
+        return ApiResponse.success(unreadCount);
     }
 
     @ResponseBody

@@ -36,6 +36,12 @@ import com.scit.soragodong.repository.UsedKeywordRepository;
 import com.scit.soragodong.repository.UsedLikeRepository;
 import com.scit.soragodong.repository.UsedRepository;
 
+import com.scit.soragodong.domain.dto.FinanceDto;
+import com.scit.soragodong.service.FinanceService;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,6 +61,7 @@ public class UsedService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final ViewCountService viewCountService;
+    private final FinanceService financeService;
 
     /**
      * 중고 물건 등록
@@ -241,7 +248,7 @@ public class UsedService {
     /**
      * 상품 상태 변경 (판매자 전용)
      */
-    public void updateState(Integer usedIdx, UsedState state, Integer userIdx) {
+    public void updateState(Integer usedIdx, UsedState state, Integer buyerIdx, Integer userIdx) {
         Used used = usedRepository.findByUsedIdxAndIsUseTrue(usedIdx)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
         if (!used.getCreatedUser().equals(userIdx)) {
@@ -250,7 +257,46 @@ public class UsedService {
         used.updateState(state);
         log.info("[중고] 상태 변경 - ID: {}, 상태: {}", usedIdx, state);
 
-        // 찜한 사용자들에게 상태 변경 알림 (판매자 본인 제외)
+        // 판매 완료 시 가계부에 자동 수입/지출 등록 및 알림
+        if (state == UsedState.SOLD) {
+            try {
+                // 1. 판매자 수입 기록
+                FinanceDto income = FinanceDto.builder()
+                        .date(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                        .time(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")))
+                        .category("중고수입")
+                        .type("plus")
+                        .amount(used.getUsedPrice() != null ? used.getUsedPrice().longValue() : 0L)
+                        .memo(used.getUsedTitle() + " 판매")
+                        .isFixed(false)
+                        .build();
+                financeService.write(income, userIdx);
+                log.info("[중고] 가계부 수입 자동 등록 완료 - 판매자: {}", userIdx);
+
+                // 2. 구매자 지출 기록 및 알림 (buyerIdx가 있는 경우)
+                if (buyerIdx != null) {
+                    FinanceDto expense = FinanceDto.builder()
+                            .date(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                            .time(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")))
+                            .category("중고지출")
+                            .type("minus")
+                            .amount(used.getUsedPrice() != null ? used.getUsedPrice().longValue() : 0L)
+                            .memo(used.getUsedTitle() + " 구매")
+                            .isFixed(false)
+                            .build();
+                    financeService.write(expense, buyerIdx);
+                    log.info("[중고] 가계부 지출 자동 등록 완료 - 구매자: {}", buyerIdx);
+
+                    // 구매자에게 거래 완료 알림 전송
+                    String buyerMsg = String.format("'%s' 상품 거래가 완료되어 가계부에 지출이 등록되었습니다.", used.getUsedTitle());
+                    notificationService.send(buyerIdx, NotificationType.USED_STATE_CHANGE, usedIdx, buyerMsg);
+                }
+            } catch (Exception e) {
+                log.error("[중고] 가계부 수입/지출 자동 등록 실패", e);
+            }
+        }
+
+        // 찜한 사용자들에게 상태 변경 알림 (판매자 및 구매자 제외)
         String stateName = switch (state) {
             case TRADING -> "거래중";
             case SALE -> "판매중";
@@ -259,7 +305,7 @@ public class UsedService {
         };
         String msg = String.format("찜한 '%s' 상품이 '%s' 상태로 변경되었습니다.", used.getUsedTitle(), stateName);
         usedLikeRepository.findByUsedIdx(usedIdx).forEach(like -> {
-            if (!like.getUserIdx().equals(userIdx)) {
+            if (!like.getUserIdx().equals(userIdx) && !like.getUserIdx().equals(buyerIdx)) {
                 notificationService.send(like.getUserIdx(), NotificationType.USED_STATE_CHANGE, usedIdx, msg);
             }
         });

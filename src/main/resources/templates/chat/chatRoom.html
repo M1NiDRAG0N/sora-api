@@ -85,6 +85,7 @@
         const loginUserIdx = /*[[${loginUserIdx}]]*/ 0;
         const loginUserNickname = /*[[${loginUserNickname}]]*/ '';
         const partnerProfileImg = /*[[${partnerProfileImg}]]*/ null;
+        const partnerUserIdx = /*[[${partnerUserIdx}]]*/ null;
         const usedIdx = /*[[${usedIdx}]]*/ null;
         let currentStatus = /*[[${productStatus}]]*/ 'TRADING';
 
@@ -137,7 +138,11 @@
                                         document.getElementById('statusConfirmModal').classList.remove('show');
                         
                                         try {
-                                            const res = await API.patch(`/used-market/${usedIdx}/status?state=${nextState}`);
+                                            let apiUrl = `/used-market/${usedIdx}/status?state=${nextState}`;
+                                            if (nextState === 'SOLD' && partnerUserIdx) {
+                                                apiUrl += `&buyerIdx=${partnerUserIdx}`;
+                                            }
+                                            const res = await API.patch(apiUrl);
                                             if (res.status === 200) {
                                                 currentStatus = nextState;
                                                 const badge = document.querySelector('.status-badge');

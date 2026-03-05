@@ -76,6 +76,9 @@ const SSEClient = {
                 case 'USED_KEYWORD_MATCH':
                     this.handleUsedKeywordMatch(data);
                     break;
+                case 'USED_STATE_CHANGE':
+                    this.handleUsedStateChange(data);
+                    break;
                 case 'KEYWORD':
                     this.handleKeywordNotification(data);
                     break;
@@ -100,6 +103,18 @@ const SSEClient = {
 
         } catch (error) {
             console.error('[SSE] 알림 파싱 실패:', error);
+        }
+    },
+
+    /**
+     * 중고거래 상품 상태 변경 알림 처리
+     */
+    handleUsedStateChange: function (data) {
+        console.log('[SSE] 상품 상태 변경 알림:', data);
+        if (typeof Utils !== 'undefined' && Utils.notify) {
+            Utils.notify(data.message, 'info');
+        } else {
+            alert(data.message);
         }
     },
 

@@ -193,9 +193,10 @@ public class UsedMarketController {
     public ApiResponse<?> updateStatus(
             @PathVariable(name = "usedIdx") Integer usedIdx,
             @RequestParam UsedState state,
+            @RequestParam(required = false) Integer buyerIdx,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        usedService.updateState(usedIdx, state, userDetails.getUserIdx());
+        usedService.updateState(usedIdx, state, buyerIdx, userDetails.getUserIdx());
         return ApiResponse.success("상태가 변경되었습니다.", null);
     }
 

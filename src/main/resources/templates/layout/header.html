@@ -76,8 +76,13 @@
                     .catch(() => {});
             }
 
-            // 채팅 안읽은 개수 초기화 (추후 API 구현 시 연동 가능)
-            // fetch('/api/chat/unread-count').then(...).catch(...);
+            // 채팅 안읽은 개수 초기화
+            if (chatBadge) {
+                fetch('/api/chat/unread-count')
+                    .then(r => r.json())
+                    .then(res => { if (res?.data != null) updateBadge(chatBadge, res.data); })
+                    .catch(() => {});
+            }
 
             // SSE 새 알림 수신 시 배지 +1
             window.addEventListener('sse-notification', (e) => {

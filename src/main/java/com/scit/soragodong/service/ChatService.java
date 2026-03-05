@@ -75,6 +75,31 @@ public class ChatService {
         }
     }
 
+    public Integer getTotalUnreadCount(Integer userId) {
+        List<ChatRoom> rooms = chatRoomRepository.findByUserId(userId);
+        int totalUnread = 0;
+        for (ChatRoom room : rooms) {
+            String roomKey = "chat:room:" + room.getChatRoomIdx();
+            Long totalMessages = redisTemplate.opsForList().size(roomKey);
+            if (totalMessages == null || totalMessages == 0) continue;
+
+            String readKey = roomKey + ":read:" + userId;
+            Object readCountObj = redisTemplate.opsForValue().get(readKey);
+            long readCount = 0;
+            if (readCountObj != null) {
+                try {
+                    if (readCountObj instanceof Integer) readCount = ((Integer) readCountObj).longValue();
+                    else if (readCountObj instanceof Long) readCount = (Long) readCountObj;
+                    else readCount = Long.parseLong(readCountObj.toString());
+                } catch (Exception e) {}
+            }
+            if (totalMessages > readCount) {
+                totalUnread += (int) (totalMessages - readCount);
+            }
+        }
+        return totalUnread;
+    }
+
     public List<ChatRoomListDto> getUserChatList(Integer userId) {
         List<ChatRoom> rooms = chatRoomRepository.findByUserId(userId);
         List<ChatRoomListDto> result = new ArrayList<>();
