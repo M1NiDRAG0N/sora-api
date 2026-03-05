@@ -132,7 +132,7 @@
                             <div class="chat-item market" onclick="if(!this.closest('.swiped'))location.href='/chat/room/${dto.chatRoomIdx}'">
                                 <div class="chat-thumb-wrap">
                                     <img src="${productImg}" class="chat-thumb">
-                                    <img src="${profileImg}" class="profile-badge">
+                                    <img src="${profileImg}" class="chat-profile profile-badge">
                                 </div>
                                 <div class="chat-info">
                                     <div class="chat-top">
@@ -189,16 +189,16 @@
 
                 const snapTo = (wrap, open) => {
                     const item = wrap.querySelector('.chat-item');
-                    const del  = wrap.querySelector('.chat-delete-btn');
+                    const del = wrap.querySelector('.chat-delete-btn');
                     if (!item || !del) return;
                     if (open) wrap.classList.add('swiped'); else wrap.classList.remove('swiped');
                     item.style.transition = `transform ${open ? '0.3s' : '0.25s'} ${SNAP}`;
-                    del.style.transition  = `transform ${open ? '0.3s' : '0.25s'} ${SNAP}`;
-                    item.style.transform  = open ? `translateX(-${MAX}px)` : 'translateX(0)';
-                    del.style.transform   = open ? 'translateX(0%)'        : 'translateX(100%)';
+                    del.style.transition = `transform ${open ? '0.3s' : '0.25s'} ${SNAP}`;
+                    item.style.transform = open ? `translateX(-${MAX}px)` : 'translateX(0)';
+                    del.style.transform = open ? 'translateX(0%)' : 'translateX(100%)';
                     item.addEventListener('transitionend', () => {
                         item.style.transition = item.style.transform = '';
-                        del.style.transition  = del.style.transform  = '';
+                        del.style.transition = del.style.transform = '';
                     }, { once: true });
                 };
 
@@ -219,12 +219,12 @@
                     }
                     e.preventDefault();
                     const item = target.querySelector('.chat-item');
-                    const del  = target.querySelector('.chat-delete-btn');
-                    const tx    = dx < -MAX ? -MAX + (dx + MAX) * 0.15 : Math.min(dx, 0);
+                    const del = target.querySelector('.chat-delete-btn');
+                    const tx = dx < -MAX ? -MAX + (dx + MAX) * 0.15 : Math.min(dx, 0);
                     const ratio = Math.min(Math.abs(tx) / MAX, 1);
                     item.style.transition = del.style.transition = 'none';
-                    item.style.transform  = `translateX(${tx}px)`;
-                    del.style.transform   = `translateX(${(1 - ratio) * 100}%)`;
+                    item.style.transform = `translateX(${tx}px)`;
+                    del.style.transform = `translateX(${(1 - ratio) * 100}%)`;
                 }, { passive: false });
 
                 container.addEventListener('pointerup', (e) => {

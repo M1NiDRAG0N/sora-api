@@ -89,7 +89,9 @@
 
 .chat-swipe-wrap .chat-delete-btn {
     position: absolute;
-    right: 0; top: 0; bottom: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
     width: 80px;
     background: #fa5252;
     color: #fff;
@@ -105,15 +107,25 @@
     cursor: pointer;
     user-select: none;
 }
-.chat-swipe-wrap .chat-delete-btn ion-icon { font-size: 20px; }
-.chat-swipe-wrap.swiped .chat-delete-btn { transform: translateX(0); }
-.chat-swipe-wrap.swiped .chat-item { transform: translateX(-80px); }
+
+.chat-swipe-wrap .chat-delete-btn ion-icon {
+    font-size: 20px;
+}
+
+.chat-swipe-wrap.swiped .chat-delete-btn {
+    transform: translateX(0);
+}
+
+.chat-swipe-wrap.swiped .chat-item {
+    transform: translateX(-80px);
+}
 
 .chat-swipe-wrap.removing {
     max-height: 200px;
     overflow: hidden;
     transition: max-height 0.3s ease, opacity 0.3s ease;
 }
+
 .chat-swipe-wrap.removed {
     max-height: 0 !important;
     opacity: 0;
@@ -462,7 +474,7 @@
 }
 
 /* ?곗륫 ?섎떒 ?묎쾶 ?ㅼ뼱媛??諭껋? (以묎퀬嫄곕옒???꾨줈???ъ쭊 - ?먰삎) */
-.profile-badge {
+.chat-profile .profile-badge {
     position: absolute;
     bottom: -4px;
     right: -4px;
@@ -782,6 +794,7 @@
     color: rgba(100, 100, 100, 0.6);
     font-size: 11px;
 }
+
 .chat-room-container .date-separator::before,
 .chat-room-container .date-separator::after {
     content: '';
