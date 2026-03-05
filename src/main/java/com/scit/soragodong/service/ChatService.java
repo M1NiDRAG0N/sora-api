@@ -5,6 +5,8 @@ import com.scit.soragodong.domain.dto.ChatRoomListDto;
 import com.scit.soragodong.domain.entity.ChatRoom;
 import com.scit.soragodong.domain.entity.Users;
 import com.scit.soragodong.domain.enums.FileRefType;
+import com.scit.soragodong.exception.CustomException;
+import com.scit.soragodong.exception.ErrorCode;
 import com.scit.soragodong.repository.ChatRoomRepository;
 import com.scit.soragodong.repository.FileGrpRepository;
 import com.scit.soragodong.repository.UserRepository;
@@ -54,6 +56,20 @@ public class ChatService {
                     });
         }
         throw new IllegalArgumentException("Invalid chat room type");
+    }
+
+    @Transactional
+    public void leaveChatRoom(Integer roomId, Integer userId) {
+        ChatRoom room = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+        if (!room.getUser1Idx().equals(userId) && !room.getUser2Idx().equals(userId)) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+        chatRoomRepository.delete(room);
+        String roomKey = "chat:room:" + roomId;
+        redisTemplate.delete(roomKey);
+        redisTemplate.delete(roomKey + ":read:" + room.getUser1Idx());
+        redisTemplate.delete(roomKey + ":read:" + room.getUser2Idx());
     }
 
     public void saveMessage(ChatMessageDto message) {

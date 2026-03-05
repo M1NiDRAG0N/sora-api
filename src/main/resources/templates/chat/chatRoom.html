@@ -92,6 +92,7 @@
         const ChatApp = {
             stompClient: null,
             partnerImg: partnerProfileImg ? `/img/${partnerProfileImg}` : '/images/default-profile.png',
+            lastDateKey: null,
 
             init() {
                 const modal = document.getElementById('statusConfirmModal');
@@ -193,6 +194,7 @@
 
             async loadHistory() {
                 try {
+                    this.lastDateKey = null;
                     const data = await API.get(`/api/chat/history/${roomId}`);
                     data.forEach(chat => this.appendMessage(chat));
                     this.scrollToBottom();
@@ -222,14 +224,32 @@
                 const container = document.getElementById('roomChatContainer');
                 const isMe = Number(chat.senderIdx) === Number(loginUserIdx);
 
+                // 날짜 구분선 삽입
+                if (chat.createdAt) {
+                    const dateKey = this.getDateKey(chat.createdAt);
+                    if (dateKey && dateKey !== this.lastDateKey) {
+                        this.lastDateKey = dateKey;
+                        const sep = document.createElement('div');
+                        sep.className = 'date-separator';
+                        sep.innerHTML = `<span>${dateKey}</span>`;
+                        container.appendChild(sep);
+                    }
+                }
+
                 const row = document.createElement('div');
                 row.className = isMe ? 'bubble-row me' : 'bubble-row';
+
+                const timeStr = chat.createdAt ? Utils.chatTime(chat.createdAt) : '';
 
                 let html = '';
                 if (!isMe) {
                     html += `<img src="${this.partnerImg}" class="chat-profile" onclick="window.openProfile(${chat.senderIdx})" style="cursor:pointer;">`;
+                    html += `<div class="bubble other">${this.escapeHtml(chat.message)}</div>`;
+                    if (timeStr) html += `<span class="bubble-time">${timeStr}</span>`;
+                } else {
+                    if (timeStr) html += `<span class="bubble-time">${timeStr}</span>`;
+                    html += `<div class="bubble me">${this.escapeHtml(chat.message)}</div>`;
                 }
-                html += `<div class="bubble ${isMe ? 'me' : 'other'}">${this.escapeHtml(chat.message)}</div>`;
 
                 row.innerHTML = html;
                 container.appendChild(row);
@@ -237,6 +257,22 @@
 
                 // 새로 메시지가 추가될 때마다 읽음 처리 (서버 부하가 우려되면 디바운스 적용 가능)
                 API.post(`/api/chat/read/${roomId}`).catch(console.error);
+            },
+
+            getDateKey(dateString) {
+                if (!dateString) return null;
+                let date;
+                if (Array.isArray(dateString)) {
+                    const [y, m, d] = dateString;
+                    date = new Date(y, m - 1, d);
+                } else {
+                    let safeStr = String(dateString).replace('T', ' ').split('.')[0].replace(/-/g, '/');
+                    date = new Date(safeStr);
+                    if (isNaN(date.getTime())) date = new Date(dateString);
+                }
+                if (isNaN(date.getTime())) return null;
+                const days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+                return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 ${days[date.getDay()]}`;
             },
 
             scrollToBottom() {

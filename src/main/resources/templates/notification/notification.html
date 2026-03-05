@@ -113,6 +113,7 @@
 
                 wrap.addEventListener('click', (e) => {
                     if (e.target.closest('.noti-delete-btn')) return;
+                    if (wrap.classList.contains('swiped')) return;
                     this.handleClick(wrap);
                 });
                 wrap.querySelector('.noti-delete-btn').addEventListener('click', (e) => {
@@ -192,68 +193,64 @@
                 const container = document.getElementById('notiListContainer');
                 if (!container) return;
 
-                let startX = 0, startY = 0, target = null, isDragging = false;
+                const MAX = 80, THRESHOLD = 40;
+                const SNAP = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                let startX = 0, startY = 0, target = null, isSwiping = false;
+
+                const snapTo = (wrap, open) => {
+                    const item = wrap.querySelector('.noti-item');
+                    const del = wrap.querySelector('.noti-delete-btn');
+                    if (!item || !del) return;
+                    if (open) wrap.classList.add('swiped'); else wrap.classList.remove('swiped');
+                    item.style.transition = `transform ${open ? '0.3s' : '0.25s'} ${SNAP}`;
+                    del.style.transition  = `transform ${open ? '0.3s' : '0.25s'} ${SNAP}`;
+                    item.style.transform  = open ? `translateX(-${MAX}px)` : 'translateX(0)';
+                    del.style.transform   = open ? 'translateX(0%)'        : 'translateX(100%)';
+                    item.addEventListener('transitionend', () => {
+                        item.style.transition = item.style.transform = '';
+                        del.style.transition  = del.style.transform  = '';
+                    }, { once: true });
+                };
 
                 container.addEventListener('pointerdown', (e) => {
                     const wrap = e.target.closest('.noti-wrap');
                     if (!wrap) return;
-                    startX = e.clientX;
-                    startY = e.clientY;
-                    target = wrap;
-                    isDragging = false;
-                    wrap.setPointerCapture(e.pointerId);
+                    startX = e.clientX; startY = e.clientY;
+                    target = wrap; isSwiping = false;
                 });
 
                 container.addEventListener('pointermove', (e) => {
                     if (!target) return;
-                    const dx = e.clientX - startX;
-                    const dy = e.clientY - startY;
-
-                    if (!isDragging && Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
-                    isDragging = true;
-
-                    if (Math.abs(dx) > Math.abs(dy)) {
-                        e.preventDefault();
-                        const item = target.querySelector('.noti-item');
-                        if (dx < 0) {
-                            const tx = Math.max(dx, -80);
-                            item.style.transition = 'none';
-                            item.style.transform = `translateX(${tx}px)`;
-                            const del = target.querySelector('.noti-delete-btn');
-                            del.style.transition = 'none';
-                            del.style.transform = `translateX(${100 + tx}%)`;
-                        }
+                    const dx = e.clientX - startX, dy = e.clientY - startY;
+                    if (!isSwiping) {
+                        if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+                        if (Math.abs(dy) >= Math.abs(dx)) { target = null; return; }
+                        isSwiping = true;
                     }
+                    e.preventDefault();
+                    const item = target.querySelector('.noti-item');
+                    const del  = target.querySelector('.noti-delete-btn');
+                    // 고무줄: -80px 초과 시 저항감 적용
+                    const tx    = dx < -MAX ? -MAX + (dx + MAX) * 0.15 : Math.min(dx, 0);
+                    const ratio = Math.min(Math.abs(tx) / MAX, 1);
+                    item.style.transition = del.style.transition = 'none';
+                    item.style.transform  = `translateX(${tx}px)`;
+                    del.style.transform   = `translateX(${(1 - ratio) * 100}%)`;
                 }, { passive: false });
 
                 container.addEventListener('pointerup', (e) => {
-                    if (!target) return;
-                    const dx = e.clientX - startX;
-                    const item = target.querySelector('.noti-item');
-                    const del = target.querySelector('.noti-delete-btn');
-
-                    item.style.transition = '';
-                    del.style.transition = '';
-
-                    if (isDragging && dx < -50) {
-                        target.classList.add('swiped');
-                        item.style.transform = '';
-                        del.style.transform = '';
-                        document.querySelectorAll('.noti-wrap.swiped').forEach(w => {
-                            if (w !== target) w.classList.remove('swiped');
-                        });
-                    } else {
-                        target.classList.remove('swiped');
-                        item.style.transform = '';
-                        del.style.transform = '';
-                    }
-                    target = null;
+                    if (!target || !isSwiping) { target = null; isSwiping = false; return; }
+                    // 스와이프 후 발생하는 click 이벤트가 handleClick으로 전달되지 않도록 캡처 단계에서 차단
+                    container.addEventListener('click', ev => ev.stopImmediatePropagation(), { once: true, capture: true });
+                    const shouldOpen = e.clientX - startX < -THRESHOLD;
+                    if (shouldOpen) document.querySelectorAll('.noti-wrap.swiped').forEach(w => { if (w !== target) snapTo(w, false); });
+                    snapTo(target, shouldOpen);
+                    target = null; isSwiping = false;
                 });
 
                 container.addEventListener('click', (e) => {
-                    if (!e.target.closest('.noti-wrap.swiped')) {
-                        document.querySelectorAll('.noti-wrap.swiped').forEach(w => w.classList.remove('swiped'));
-                    }
+                    if (!e.target.closest('.noti-wrap.swiped'))
+                        document.querySelectorAll('.noti-wrap.swiped').forEach(w => snapTo(w, false));
                 });
             },
 
