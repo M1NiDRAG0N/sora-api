@@ -134,6 +134,11 @@
                 }
             },
 
+            /* ── \n → <br> 변환 후 HTML 이스케이프 ── */
+            _formatText(text) {
+                return this.escapeHtml(text).replace(/\\n/g, '<br>');
+            },
+
             /* ── 말풍선 DOM 생성 ── */
             _appendAiBubble(text, timestamp) {
                 const container = document.getElementById('chatContainer');
@@ -141,7 +146,7 @@
                 row.className = 'bubble-row';
                 row.innerHTML = `
                     <img src="/images/logo.png" class="chat-profile">
-                    <div class="bubble ai">${this.escapeHtml(text)}</div>
+                    <div class="bubble ai">${this._formatText(text)}</div>
                     <span class="bubble-time">${this._formatTime(timestamp)}</span>`;
                 container.appendChild(row);
             },
@@ -152,7 +157,7 @@
                 row.className = 'bubble-row me';
                 row.innerHTML = `
                     <span class="bubble-time">${this._formatTime(timestamp)}</span>
-                    <div class="bubble me">${this.escapeHtml(text)}</div>`;
+                    <div class="bubble me">${this._formatText(text)}</div>`;
                 container.appendChild(row);
             },
 
@@ -276,10 +281,11 @@
                     container.appendChild(row);
                     const bubble = row.querySelector('.bubble.ai');
 
-                    // SSE 스트리밍 수신 (textContent로 직접 누적 — pre-wrap 적용됨)
+                    // SSE 스트리밍 수신 — \n을 <br>로 변환하며 누적
                     const reader = response.body.getReader();
                     const decoder = new TextDecoder();
                     let buffer = '';
+                    let rawText = ''; // 원본 누적 (변환 전)
 
                     while (true) {
                         const { done, value } = await reader.read();
@@ -294,7 +300,8 @@
                                 // trim() 금지 — 공백 토큰 소실 방지
                                 const text = line.startsWith('data: ') ? line.slice(6) : line.slice(5);
                                 if (text && text !== '[DONE]') {
-                                    bubble.textContent += text;
+                                    rawText += text;
+                                    bubble.innerHTML = this._formatText(rawText);
                                     this.scrollToBottom();
                                 }
                             }
