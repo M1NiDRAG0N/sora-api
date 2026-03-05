@@ -198,22 +198,6 @@
                 finance.loadData();
             },
 
-            showToast: (message) => {
-                const oldToast = document.querySelector('.toast-box');
-                if (oldToast) oldToast.remove();
-
-                const toast = document.createElement('div');
-                toast.className = 'toast-box';
-                toast.innerHTML = message;
-                document.body.appendChild(toast);
-
-                requestAnimationFrame(() => { toast.classList.add('show'); });
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 400);
-                }, 2500);
-            },
-
             loadData: () => {
                 const yearMonth = `${finance.currentDate.getFullYear()}-${String(finance.currentDate.getMonth() + 1).padStart(2, '0')}`;
 
@@ -416,7 +400,7 @@
                 const budgetVal = Number(rawVal);
 
                 if (isNaN(budgetVal) || budgetVal < 0) {
-                    finance.showToast("올바른 금액을 입력해주세요!");
+                    Utils.notify("올바른 금액을 입력해주세요!", 'error');
                     return;
                 }
                 const yearMonth = `${finance.currentDate.getFullYear()}-${String(finance.currentDate.getMonth() + 1).padStart(2, '0')}`;
@@ -426,9 +410,9 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ amount: budgetVal, yearMonth: yearMonth })
                 }).then(res => {
-                    if (res.ok) { finance.showToast("예산이 설정되었습니다! 💰"); finance.closeBudgetModal(); finance.loadData(); }
-                    else finance.showToast("설정에 실패했습니다.");
-                }).catch(err => finance.showToast("서버 오류가 발생했습니다."));
+                    if (res.ok) { Utils.notify("예산이 설정되었습니다! 💰", 'success'); finance.closeBudgetModal(); finance.loadData(); }
+                    else Utils.notify("설정에 실패했습니다.", 'error');
+                }).catch(err => Utils.notify("서버 오류가 발생했습니다.", 'error'));
             },
 
             updateCharts: (list, thisStats, thisTotal) => {
@@ -683,7 +667,7 @@
             },
 
             openModal: (editIndex) => {
-                if (!finance.selectedDay) { finance.showToast("날짜를 먼저 선택해주세요! 📅"); return; }
+                if (!finance.selectedDay) { Utils.notify("날짜를 먼저 선택해주세요! 📅", 'warning'); return; }
 
                 finance.editingIndex = editIndex;
                 const chkFixed = document.getElementById('inpFixed'), durationArea = document.getElementById('durationArea'), inpDuration = document.getElementById('inpDuration');
@@ -722,7 +706,7 @@
 
                 let duration = isFixed ? (parseInt(document.getElementById('inpDuration').value) || 12) : 0;
 
-                if (!rawAmtStr || rawAmt < 0) { finance.showToast("금액을 정확히 입력해주세요! 💸"); return; }
+                if (!rawAmtStr || rawAmt < 0) { Utils.notify("금액을 정확히 입력해주세요! 💸", 'error'); return; }
 
                 const dateStr = `${finance.selectedYear}-${String(finance.selectedMonth + 1).padStart(2, '0')}-${String(finance.selectedDay).padStart(2, '0')}`;
                 const now = new Date();
@@ -737,7 +721,7 @@
                     })
                 }).then(res => {
                     if (res.ok) {
-                        finance.showToast('저장되었습니다! 🎉');
+                        Utils.notify('저장되었습니다! 🎉', 'success');
                         finance.closeModal();
 
                         if (finance.selectedYear === finance.currentDate.getFullYear() && finance.selectedMonth === finance.currentDate.getMonth()) {
@@ -746,8 +730,8 @@
                             finance.loadData();
                             setTimeout(() => finance.refreshDetailOnly(), 200);
                         }
-                    } else { res.text().then(msg => finance.showToast('실패: ' + msg)); }
-                }).catch(err => finance.showToast('서버 오류가 발생했습니다.'));
+                    } else { res.text().then(msg => Utils.notify('실패: ' + msg, 'error')); }
+                }).catch(err => Utils.notify('서버 오류가 발생했습니다.', 'error'));
             },
 
             deleteData: (id) => {
@@ -769,7 +753,7 @@
                     body: JSON.stringify({ financeIdx: finance.pendingDeleteId })
                 }).then(res => {
                     if (res.ok) {
-                        finance.showToast("삭제되었습니다. 🗑️");
+                        Utils.notify("삭제되었습니다. 🗑️", 'success');
                         finance.closeDeleteModal();
 
                         if (finance.selectedYear === finance.currentDate.getFullYear() && finance.selectedMonth === finance.currentDate.getMonth()) {
@@ -778,7 +762,7 @@
                             finance.loadData();
                             setTimeout(() => finance.refreshDetailOnly(), 200);
                         }
-                    } else { finance.showToast("삭제 실패!"); }
+                    } else { Utils.notify("삭제 실패!", 'error'); }
                 });
             },
         };
