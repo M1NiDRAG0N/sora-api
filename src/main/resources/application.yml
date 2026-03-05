@@ -41,6 +41,8 @@ spring:
 
   session:
     store-type: redis
+    redis:
+      repository-type: indexed
 
   mail:
     host: ${MAIL_HOST}

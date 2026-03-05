@@ -140,95 +140,131 @@ const Utils = {
      * @param {number} duration - 표시 시간 (ms, 기본값 3000)
      */
     notify: (message, type = 'info', duration = 3000) => {
-        // Toast 컨테이너 찾기 또는 생성
-        let container = document.getElementById('toast-container');
-        if (!container) {
-            container = document.createElement('div');
-            container.id = 'toast-container';
-            container.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                z-index: 10000;
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-                pointer-events: none;
-            `;
-            document.body.appendChild(container);
-        }
-
-        // Toast 요소 생성
-        const toast = document.createElement('div');
-
-        // 타입별 색상 지정
-        const colors = {
-            success: { bg: '#10b981', icon: '✓' },
-            error: { bg: '#ef4444', icon: '✕' },
-            like: { bg: '#ff72e5', icon: '✕' },
-            info: { bg: '#3b82f6', icon: 'ℹ' },
-            warning: { bg: '#f59e0b', icon: '⚠' }
-        };
-
-        const color = colors[type] || colors.info;
-
-        toast.style.cssText = `
-            background: ${color.bg};
-            color: white;
-            padding: 12px 16px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            font-size: 14px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            animation: slideIn 0.3s ease-out;
-            pointer-events: auto;
-            max-width: 350px;
-            word-break: break-word;
-        `;
-
-        toast.innerHTML = `<span style="font-weight: bold; font-size: 18px;">${color.icon}</span><span>${message}</span>`;
-
-        container.appendChild(toast);
-
-        // 애니메이션 정의
+        // 애니메이션 정의 (최초 1회)
         if (!document.getElementById('toast-animation')) {
             const style = document.createElement('style');
             style.id = 'toast-animation';
             style.textContent = `
-                @keyframes slideIn {
-                    from {
-                        transform: translateX(100%);
-                        opacity: 0;
-                    }
-                    to {
-                        transform: translateX(0);
-                        opacity: 1;
-                    }
+                @keyframes toastIn {
+                    from { opacity: 0; transform: scale(0.85) translateX(20px); }
+                    to   { opacity: 1; transform: scale(1) translateX(0); }
                 }
-                @keyframes slideOut {
-                    from {
-                        transform: translateX(0);
-                        opacity: 1;
-                    }
-                    to {
-                        transform: translateX(100%);
-                        opacity: 0;
-                    }
+                @keyframes toastOut {
+                    from { opacity: 1; transform: scale(1) translateX(0); }
+                    to   { opacity: 0; transform: scale(0.85) translateX(20px); }
                 }
             `;
             document.head.appendChild(style);
         }
 
+        // app-container 우측 경계 기준으로 위치 계산
+        const appEl = document.querySelector('.app-container');
+        const appRect = appEl ? appEl.getBoundingClientRect() : null;
+        const rightOffset = appRect ? Math.max(20, window.innerWidth - appRect.right + 20) : 20;
+
+        // Toast 컨테이너 찾기 또는 생성
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            document.body.appendChild(container);
+        }
+        container.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: ${rightOffset}px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+            pointer-events: none;
+        `;
+
+        // 타입별 색상 지정
+        const colors = {
+            success: { bg: '#10b981', icon: '✓' },
+            error:   { bg: '#ef4444', icon: '✕' },
+            like:    { bg: '#ff72e5', icon: '✕' },
+            info:    { bg: '#3b82f6', icon: 'ℹ' },
+            warning: { bg: '#f59e0b', icon: '⚠' }
+        };
+        const color = colors[type] || colors.info;
+
+        // Toast 요소 생성
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            background: ${color.bg};
+            color: white;
+            padding: 14px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            font-size: 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
+            animation: toastIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            pointer-events: auto;
+        `;
+        toast.innerHTML = `<span style="font-weight:bold;font-size:18px;">${color.icon}</span><span>${message}</span>`;
+        container.appendChild(toast);
+
         // 자동 제거
         setTimeout(() => {
-            toast.style.animation = 'slideOut 0.3s ease-out';
-            setTimeout(() => {
-                toast.remove();
-            }, 300);
+            toast.style.animation = 'toastOut 0.2s ease-in forwards';
+            setTimeout(() => container.remove(), 200);
         }, duration);
+    },
+
+    _loadingCount: 0,
+
+    showLoading: () => {
+        Utils._loadingCount++;
+        let overlay = document.getElementById('loading-overlay');
+        if (!overlay) {
+            if (!document.getElementById('loading-style')) {
+                const style = document.createElement('style');
+                style.id = 'loading-style';
+                style.textContent = `
+                    @keyframes spin {
+                        to { transform: rotate(360deg); }
+                    }
+                    #loading-overlay .spinner {
+                        width: 48px;
+                        height: 48px;
+                        border: 4px solid rgba(255,255,255,0.35);
+                        border-top-color: #fff;
+                        border-radius: 50%;
+                        animation: spin 0.75s linear infinite;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            overlay = document.createElement('div');
+            overlay.id = 'loading-overlay';
+            overlay.style.cssText = `
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.35);
+                z-index: 9998;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+            overlay.innerHTML = '<div class="spinner"></div>';
+            document.body.appendChild(overlay);
+        }
+        overlay.style.display = 'flex';
+    },
+
+    hideLoading: () => {
+        Utils._loadingCount = Math.max(0, Utils._loadingCount - 1);
+        if (Utils._loadingCount === 0) {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) overlay.style.display = 'none';
+        }
     },
 
     /**

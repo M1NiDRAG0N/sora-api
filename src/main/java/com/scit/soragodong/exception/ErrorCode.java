@@ -32,7 +32,9 @@ public enum ErrorCode {
 
     // ===== 공통 =====
     INTERNAL_ERROR(500, "시스템 오류가 발생했습니다. 잠시 후 다시 시도해주세요."),
-    NOT_FOUND(404, "요청한 리소스를 찾을 수 없습니다.");
+    NOT_FOUND(404, "요청한 리소스를 찾을 수 없습니다."),
+    DUPLICATE_KEYWORD(409, "이미 등록된 키워드입니다."),
+    MAX_KEYWORD(400, "키워드는 최대 10개까지 등록 가능합니다.");
 
     private final int status;
     private final String message;

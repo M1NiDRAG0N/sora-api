@@ -9,6 +9,7 @@ const API = {
      * @returns {Promise} 응답 데이터
      */
     get: async (url) => {
+        Utils.showLoading();
         try {
             const response = await fetch(url, {
                 method: 'GET',
@@ -20,6 +21,8 @@ const API = {
         } catch (error) {
             console.error(`GET 요청 실패: ${error.message}`);
             throw new Error(`${error.message}`);
+        } finally {
+            Utils.hideLoading();
         }
     },
 
@@ -30,6 +33,7 @@ const API = {
      * @returns {Promise} 응답 데이터
      */
     post: async (url, data = {}) => {
+        Utils.showLoading();
         try {
             const response = await fetch(url, {
                 method: 'POST',
@@ -42,6 +46,8 @@ const API = {
         } catch (error) {
             console.error(`POST 요청 실패: ${error.message}`);
             throw new Error(`${error.message}`);
+        } finally {
+            Utils.hideLoading();
         }
     },
 
@@ -52,6 +58,7 @@ const API = {
      * @returns {Promise} 응답 데이터
      */
     put: async (url, data = {}) => {
+        Utils.showLoading();
         try {
             const response = await fetch(url, {
                 method: 'PUT',
@@ -64,6 +71,8 @@ const API = {
         } catch (error) {
             console.error(`PUT 요청 실패: ${error.message}`);
             throw new Error(`${error.message}`);
+        } finally {
+            Utils.hideLoading();
         }
     },
 
@@ -74,6 +83,7 @@ const API = {
      * @returns {Promise} 응답 데이터
      */
     patch: async (url, data = {}) => {
+        Utils.showLoading();
         try {
             const response = await fetch(url, {
                 method: 'PATCH',
@@ -86,6 +96,8 @@ const API = {
         } catch (error) {
             console.error(`PATCH 요청 실패: ${error.message}`);
             throw new Error(`${error.message}`);
+        } finally {
+            Utils.hideLoading();
         }
     },
 
@@ -95,6 +107,7 @@ const API = {
      * @returns {Promise} 응답 데이터
      */
     delete: async (url) => {
+        Utils.showLoading();
         try {
             const response = await fetch(url, {
                 method: 'DELETE',
@@ -106,6 +119,8 @@ const API = {
         } catch (error) {
             console.error(`DELETE 요청 실패: ${error.message}`);
             throw new Error(`${error.message}`);
+        } finally {
+            Utils.hideLoading();
         }
     },
 
@@ -116,6 +131,7 @@ const API = {
      * @returns {Promise} 응답 데이터
      */
     postFormData: async (url, formData) => {
+        Utils.showLoading();
         try {
             const response = await fetch(url, {
                 method: 'POST',
@@ -126,6 +142,8 @@ const API = {
         } catch (error) {
             console.error(`FormData POST 요청 실패: ${error.message}`);
             throw new Error(`${error.message}`);
+        } finally {
+            Utils.hideLoading();
         }
     },
 

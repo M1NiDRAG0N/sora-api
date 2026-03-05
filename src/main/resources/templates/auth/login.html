@@ -13,6 +13,10 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             login.init();
+            const params = new URLSearchParams(location.search);
+            if (params.has('sessionExpired')) {
+                Utils.notify('다른 기기에서 로그인되어 접속이 종료되었습니다.', 'warning', 5000);
+            }
         });
 
         const login = {
@@ -36,6 +40,7 @@
                     return;
                 }
 
+                Utils.showLoading();
                 try {
                     // FormData로 form-based 인증 요청
                     const formData = new FormData();
@@ -54,7 +59,7 @@
                     }
 
                     Utils.notify('로그인되었습니다!', 'success', 4000);
-                    
+
                     // 1.5초 후 홈으로 이동
                     setTimeout(() => {
                         window.location.href = '/main';
@@ -62,6 +67,8 @@
                 } catch (error) {
                     console.error('로그인 실패:', error);
                     Utils.notify('로그인 실패: ' + error.message, 'error');
+                } finally {
+                    Utils.hideLoading();
                 }
             }
         };

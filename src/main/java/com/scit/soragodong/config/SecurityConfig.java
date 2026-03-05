@@ -8,6 +8,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.session.FindByIndexNameSessionRepository;
+import org.springframework.session.Session;
+import org.springframework.session.security.SpringSessionBackedSessionRegistry;
 
 import com.scit.soragodong.handler.CustomAuthenticationFailureHandler;
 import com.scit.soragodong.handler.CustomAuthenticationSuccessHandler;
@@ -23,6 +26,13 @@ public class SecurityConfig {
         private final CustomUserDetailsService userDetailsService;
         private final CustomAuthenticationSuccessHandler successHandler;
         private final CustomAuthenticationFailureHandler failureHandler;
+
+        @org.springframework.beans.factory.annotation.Autowired(required = false)
+        private FindByIndexNameSessionRepository<? extends Session> sessionRepository;
+
+        private SpringSessionBackedSessionRegistry<?> sessionRegistry() {
+                return new SpringSessionBackedSessionRegistry<>(this.sessionRepository);
+        }
 
         @Bean
         public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
@@ -58,6 +68,14 @@ public class SecurityConfig {
                                     .logoutUrl("/logout")
                                     .logoutSuccessUrl("/login"))
                     .userDetailsService(userDetailsService);
+
+                if (sessionRepository != null) {
+                    http.sessionManagement(session -> session
+                                    .maximumSessions(1)
+                                    .sessionRegistry(sessionRegistry())
+                                    .maxSessionsPreventsLogin(false)
+                                    .expiredUrl("/auth/login?sessionExpired=true"));
+                }
 
                 return http.build();
         }
