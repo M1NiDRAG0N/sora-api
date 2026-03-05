@@ -232,6 +232,51 @@ const Utils = {
     },
 
     /**
+     * 카카오톡 스타일 채팅 목록 시간 표시
+     * - 오늘: 오전/오후 H:MM
+     * - 어제: 어제
+     * - 이번 주: 요일 (월요일)
+     * - 올해: M월 D일
+     * - 이전 연도: YYYY년 M월 D일
+     * @param {string|Array} dateString - 날짜
+     * @returns {string}
+     */
+    chatTime: (dateString) => {
+        if (!dateString) return '';
+
+        let date;
+        if (Array.isArray(dateString)) {
+            const [y, m, d, h=0, min=0, s=0] = dateString;
+            date = new Date(y, m - 1, d, h, min, s);
+        } else {
+            let safeStr = String(dateString).replace('T', ' ').split('.')[0].replace(/-/g, '/');
+            date = new Date(safeStr);
+            if (isNaN(date.getTime())) date = new Date(dateString);
+        }
+        if (isNaN(date.getTime())) return '';
+
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const diffDays = Math.floor((today - target) / 86400000);
+
+        if (diffDays === 0) {
+            const h = date.getHours();
+            const m = String(date.getMinutes()).padStart(2, '0');
+            return `${h < 12 ? '오전' : '오후'} ${h === 0 ? 12 : h > 12 ? h - 12 : h}:${m}`;
+        }
+        if (diffDays === 1) return '어제';
+        if (diffDays < 7) {
+            const days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+            return days[date.getDay()];
+        }
+        if (date.getFullYear() === now.getFullYear()) {
+            return `${date.getMonth() + 1}월 ${date.getDate()}일`;
+        }
+        return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+    },
+
+    /**
      * N시간 전, N일 전 등 반환 (Java 로직 JS로 포팅)
      * @param {string|Date|Array} dateString - 날짜 문자열 (ex: '2026-02-11T14:30:00')
      * @returns {string} 방금 전, N분 전 등

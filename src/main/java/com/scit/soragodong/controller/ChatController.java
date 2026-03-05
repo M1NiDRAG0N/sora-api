@@ -8,6 +8,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -150,6 +151,14 @@ public class ChatController {
         if (userDetails == null) return ApiResponse.success(0);
         Integer unreadCount = chatService.getTotalUnreadCount(userDetails.getUserIdx());
         return ApiResponse.success(unreadCount);
+    }
+
+    @ResponseBody
+    @DeleteMapping("/api/chat/room/{roomId}")
+    public ApiResponse<?> leaveChatRoom(@PathVariable(name = "roomId") Integer roomId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        chatService.leaveChatRoom(roomId, userDetails.getUserIdx());
+        return ApiResponse.success("채팅방이 삭제되었습니다.");
     }
 
     @ResponseBody

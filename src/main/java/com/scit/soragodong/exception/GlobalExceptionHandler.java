@@ -178,12 +178,16 @@ public class GlobalExceptionHandler {
 
     /**
      * 파일 처리 예외 처리
+     * SSE Broken pipe는 클라이언트가 연결을 끊은 정상적인 상황이므로 무시
      */
     @ExceptionHandler(IOException.class)
     public ResponseEntity<ApiResponse<?>> handleIOException(
             IOException ex, WebRequest request) {
+        if (ex.getMessage() != null && ex.getMessage().contains("Broken pipe")) {
+            log.debug("[SSE] 클라이언트 연결 해제 (Broken pipe) - 정상 종료");
+            return null; // 응답이 이미 커밋된 SSE 스트림 - Spring이 자동 처리
+        }
         log.error("[{}] IOException: {}", locate(ex), ex.getMessage());
-        
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error(ErrorCode.INTERNAL_ERROR)

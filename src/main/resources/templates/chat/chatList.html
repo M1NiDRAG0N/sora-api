@@ -26,6 +26,7 @@
                 chatList.load();
                 chatList.bindEvents();
                 chatList.connectWebSocket();
+                SwipeManager.init(document.querySelector('.chat-list-content'));
             },
 
             load: async () => {
@@ -64,6 +65,34 @@
                     if (dto.type === 'USED') return Renderer.createUsedCardHTML(dto);
                     else return Renderer.createNormalCardHtml(dto);
                 }).join('');
+
+                container.querySelectorAll('.chat-delete-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        chatList.deleteRoom(btn.closest('.chat-swipe-wrap'));
+                    });
+                });
+            },
+
+            deleteRoom: async (wrap) => {
+                const roomIdx = wrap.dataset.roomIdx;
+                try {
+                    await API.delete(`/api/chat/room/${roomIdx}`);
+                    wrap.classList.add('removing');
+                    setTimeout(() => {
+                        wrap.classList.add('removed');
+                        wrap.addEventListener('transitionend', () => {
+                            wrap.remove();
+                            chatList.data = chatList.data.filter(d => String(d.chatRoomIdx) !== String(roomIdx));
+                            if (!document.querySelector('.chat-swipe-wrap')) {
+                                document.querySelector('.chat-list-content').innerHTML =
+                                    '<div style="padding: 50px; text-align: center; color: #aaa;">채팅 내역이 없습니다.</div>';
+                            }
+                        }, { once: true });
+                    }, 50);
+                } catch (e) {
+                    Utils.notify('삭제에 실패했습니다.', 'error');
+                }
             },
 
             bindEvents: () => {
@@ -96,48 +125,120 @@
             createUsedCardHTML: (dto) => {
                 const profileImg = dto.otherUserProfileIdx != null ? `/img/${dto.otherUserProfileIdx}` : '/images/default-profile.png';
                 const productImg = dto.productImg != null ? `/img/${dto.productImg}` : '/images/default-store.jpg';
-                const timeAgo = Utils.timeAgo(dto.lastMessageAt);
+                const time = Utils.chatTime(dto.lastMessageAt);
 
                 return `
-                        <div class="chat-item market" onclick="location.href='/chat/room/${dto.chatRoomIdx}'">
-                            <div class="chat-thumb-wrap">
-                                <img src="${productImg}" class="chat-thumb">
-                                <img src="${profileImg}" class="profile-badge">
+                        <div class="chat-swipe-wrap" data-room-idx="${dto.chatRoomIdx}">
+                            <div class="chat-item market" onclick="if(!this.closest('.swiped'))location.href='/chat/room/${dto.chatRoomIdx}'">
+                                <div class="chat-thumb-wrap">
+                                    <img src="${productImg}" class="chat-thumb">
+                                    <img src="${profileImg}" class="profile-badge">
+                                </div>
+                                <div class="chat-info">
+                                    <div class="chat-top">
+                                        <span class="chat-name">${dto.otherUserNickname}</span>
+                                        <span class="chat-time">${time}</span>
+                                    </div>
+                                    <div class="chat-bottom">
+                                        <div class="chat-preview">${dto.lastMessage || '대화 내용이 없습니다.'}</div>
+                                        ${dto.unreadCount > 0 ? `<div class="unread-badge">${dto.unreadCount}</div>` : ''}
+                                    </div>
+                                </div>
                             </div>
-                            <div class="chat-info">
-                                <div class="chat-top">
-                                    <span class="chat-name">${dto.otherUserNickname}</span>
-                                    <span class="chat-time">${timeAgo}</span>
-                                </div>
-                                <div class="chat-bottom">
-                                    <div class="chat-preview">${dto.lastMessage || '대화 내용이 없습니다.'}</div>
-                                    ${dto.unreadCount > 0 ? `<div class="unread-badge">${dto.unreadCount}</div>` : ''}
-                                </div>
+                            <div class="chat-delete-btn">
+                                <ion-icon name="exit-outline"></ion-icon>나가기
                             </div>
                         </div>
                 `;
             },
             createNormalCardHtml: (dto) => {
                 const profileImg = dto.otherUserProfileIdx != null ? `/img/${dto.otherUserProfileIdx}` : '/images/default-profile.png';
-                const timeAgo = Utils.timeAgo(dto.lastMessageAt);
+                const time = Utils.chatTime(dto.lastMessageAt);
 
                 return `
-                        <div class="chat-item" onclick="location.href='/chat/room/${dto.chatRoomIdx}'">
-                            <div class="chat-thumb-wrap">
-                                <img src="${profileImg}" class="chat-thumb">
+                        <div class="chat-swipe-wrap" data-room-idx="${dto.chatRoomIdx}">
+                            <div class="chat-item" onclick="if(!this.closest('.swiped'))location.href='/chat/room/${dto.chatRoomIdx}'">
+                                <div class="chat-thumb-wrap">
+                                    <img src="${profileImg}" class="chat-thumb">
+                                </div>
+                                <div class="chat-info">
+                                    <div class="chat-top">
+                                        <span class="chat-name">${dto.otherUserNickname}</span>
+                                        <span class="chat-time">${time}</span>
+                                    </div>
+                                    <div class="chat-bottom">
+                                        <div class="chat-preview">${dto.lastMessage || '대화 내용이 없습니다.'}</div>
+                                        ${dto.unreadCount > 0 ? `<div class="unread-badge">${dto.unreadCount}</div>` : ''}
+                                    </div>
+                                </div>
                             </div>
-                            <div class="chat-info">
-                                <div class="chat-top">
-                                    <span class="chat-name">${dto.otherUserNickname}</span>
-                                    <span class="chat-time">${timeAgo}</span>
-                                </div>
-                                <div class="chat-bottom">
-                                    <div class="chat-preview">${dto.lastMessage || '대화 내용이 없습니다.'}</div>
-                                    ${dto.unreadCount > 0 ? `<div class="unread-badge">${dto.unreadCount}</div>` : ''}
-                                </div>
+                            <div class="chat-delete-btn">
+                                <ion-icon name="exit-outline"></ion-icon>나가기
                             </div>
                         </div>
                 `;
+            }
+        }
+
+        const SwipeManager = {
+            init(container) {
+                if (!container) return;
+                const MAX = 80, THRESHOLD = 40;
+                const SNAP = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                let startX = 0, startY = 0, target = null, isSwiping = false;
+
+                const snapTo = (wrap, open) => {
+                    const item = wrap.querySelector('.chat-item');
+                    const del  = wrap.querySelector('.chat-delete-btn');
+                    if (!item || !del) return;
+                    if (open) wrap.classList.add('swiped'); else wrap.classList.remove('swiped');
+                    item.style.transition = `transform ${open ? '0.3s' : '0.25s'} ${SNAP}`;
+                    del.style.transition  = `transform ${open ? '0.3s' : '0.25s'} ${SNAP}`;
+                    item.style.transform  = open ? `translateX(-${MAX}px)` : 'translateX(0)';
+                    del.style.transform   = open ? 'translateX(0%)'        : 'translateX(100%)';
+                    item.addEventListener('transitionend', () => {
+                        item.style.transition = item.style.transform = '';
+                        del.style.transition  = del.style.transform  = '';
+                    }, { once: true });
+                };
+
+                container.addEventListener('pointerdown', (e) => {
+                    const wrap = e.target.closest('.chat-swipe-wrap');
+                    if (!wrap) return;
+                    startX = e.clientX; startY = e.clientY;
+                    target = wrap; isSwiping = false;
+                });
+
+                container.addEventListener('pointermove', (e) => {
+                    if (!target) return;
+                    const dx = e.clientX - startX, dy = e.clientY - startY;
+                    if (!isSwiping) {
+                        if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+                        if (Math.abs(dy) >= Math.abs(dx)) { target = null; return; }
+                        isSwiping = true;
+                    }
+                    e.preventDefault();
+                    const item = target.querySelector('.chat-item');
+                    const del  = target.querySelector('.chat-delete-btn');
+                    const tx    = dx < -MAX ? -MAX + (dx + MAX) * 0.15 : Math.min(dx, 0);
+                    const ratio = Math.min(Math.abs(tx) / MAX, 1);
+                    item.style.transition = del.style.transition = 'none';
+                    item.style.transform  = `translateX(${tx}px)`;
+                    del.style.transform   = `translateX(${(1 - ratio) * 100}%)`;
+                }, { passive: false });
+
+                container.addEventListener('pointerup', (e) => {
+                    if (!target || !isSwiping) { target = null; isSwiping = false; return; }
+                    const shouldOpen = e.clientX - startX < -THRESHOLD;
+                    if (shouldOpen) document.querySelectorAll('.chat-swipe-wrap.swiped').forEach(w => { if (w !== target) snapTo(w, false); });
+                    snapTo(target, shouldOpen);
+                    target = null; isSwiping = false;
+                });
+
+                container.addEventListener('click', (e) => {
+                    if (!e.target.closest('.chat-swipe-wrap.swiped'))
+                        document.querySelectorAll('.chat-swipe-wrap.swiped').forEach(w => snapTo(w, false));
+                });
             }
         }
     </script>
