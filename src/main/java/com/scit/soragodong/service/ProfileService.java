@@ -19,27 +19,13 @@ import java.util.stream.Collectors;
 
 import com.scit.soragodong.domain.dto.FileRes;
 import com.scit.soragodong.domain.dto.ProfileUpdateDto;
-import com.scit.soragodong.domain.entity.Board;
-import com.scit.soragodong.domain.entity.BoardReply;
-import com.scit.soragodong.domain.entity.LikeCount;
-import com.scit.soragodong.domain.entity.Users;
 import com.scit.soragodong.domain.enums.FileRefType;
 import com.scit.soragodong.exception.CustomException;
 import com.scit.soragodong.exception.ErrorCode;
-import com.scit.soragodong.repository.BoardReplyRepository;
-import com.scit.soragodong.repository.BoardRepository;
-import com.scit.soragodong.repository.LikeCountRepository;
-import com.scit.soragodong.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

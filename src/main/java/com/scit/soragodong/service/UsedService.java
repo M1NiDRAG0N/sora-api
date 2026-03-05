@@ -37,7 +37,6 @@ import com.scit.soragodong.repository.UsedLikeRepository;
 import com.scit.soragodong.repository.UsedRepository;
 
 import com.scit.soragodong.domain.dto.FinanceDto;
-import com.scit.soragodong.service.FinanceService;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
