@@ -91,13 +91,9 @@
                 <label class="modal-label">카테고리</label>
                 <div class="input-relative">
                     <select id="inpCategory" class="modal-input">
-                        <option value="월급">월급</option>
-                        <option value="식비">식비</option>
-                        <option value="교통비">교통비</option>
-                        <option value="쇼핑">쇼핑</option>
-                        <option value="경조사">경조사</option>
-                        <option value="저축">저축</option>
-                        <option value="기타">기타</option>
+                        <option th:each="cat : ${T(com.scit.soragodong.domain.enums.FinanceCategory).values()}"
+                                th:value="${cat.label}"
+                                th:text="${cat.label}"></option>
                     </select>
                 </div>
             </div>

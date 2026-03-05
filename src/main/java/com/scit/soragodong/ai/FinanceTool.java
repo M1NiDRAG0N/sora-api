@@ -1,6 +1,7 @@
 package com.scit.soragodong.ai;
 
 import com.scit.soragodong.domain.dto.FinanceDto;
+import com.scit.soragodong.domain.enums.FinanceCategory;
 import com.scit.soragodong.service.FinanceService;
 import org.springframework.ai.tool.annotation.Tool;
 
@@ -20,7 +21,20 @@ public class FinanceTool {
         this.userIdx = userIdx;
     }
 
-    @Tool(description = "가계부 내역을 등록합니다. date는 날짜(yyyy-MM-dd 형식, 예: 2026-03-03), time은 시간(HH:mm 형식, 예: 14:30), type은 반드시 'plus'(수입) 또는 'minus'(지출) 문자열. 날짜/시간이 없으면 오늘 날짜와 현재 시간을 사용하세요.")
+    @Tool(description = """
+        가계부 내역을 등록합니다.
+        - date: 날짜 (yyyy-MM-dd 형식, 예: 2026-03-03). 없으면 오늘 날짜 사용.
+        - time: 시간 (HH:mm 형식, 예: 14:30). 없으면 현재 시간 사용.
+        - type: 반드시 'plus'(수입) 또는 'minus'(지출) 문자열.
+        - category: 아래 목록 중 가장 적합한 한국어 카테고리명을 선택하세요.
+          * 월급 - 급여, 임금, 알바비, 보너스, 수당 등 수입
+          * 식비 - 밥, 식사, 카페, 커피, 배달, 외식, 편의점, 마트, 장보기 등
+          * 교통비 - 버스, 지하철, 택시, 기차, KTX, 주유, 주차, 고속도로 등
+          * 쇼핑 - 옷, 의류, 신발, 가방, 온라인쇼핑, 구매 등
+          * 경조사 - 결혼, 장례, 돌잔치, 축의금, 선물, 생일, 명절 등
+          * 저축 - 적금, 예금, 투자, 펀드, 주식, 코인 등
+          * 기타 - 공과금, 월세, 관리비, 보험, 의료비, 병원, 약국, 학원 등 위에 해당 없는 경우
+    """)
     public String recordFinance(String date, String time, String category, String type, Long amount, String memo) {
         // AI가 date 자리에 type 값("plus"/"minus")을 넣은 경우 교정
         if ("plus".equals(date) || "minus".equals(date)) {
@@ -57,10 +71,13 @@ public class FinanceTool {
             type = "minus"; // 불명확한 경우 지출로 기본 처리
         }
 
+        // category 정규화: FinanceCategory enum으로 매칭 후 label 사용
+        String normalizedCategory = FinanceCategory.fromAI(category).getLabel();
+
         FinanceDto dto = FinanceDto.builder()
                 .date(date)
                 .time(time)
-                .category(category)
+                .category(normalizedCategory)
                 .type(type)
                 .amount(amount)
                 .memo(memo)
