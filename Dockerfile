@@ -7,13 +7,14 @@ COPY build/libs/*.jar app.jar
 EXPOSE 8080
 
 ENTRYPOINT ["java", \
-  "-XX:MaxRAMPercentage=60.0", \
-  "-XX:InitialRAMPercentage=30.0", \
+  "-XX:MaxRAMPercentage=55.0", \
+  "-XX:InitialRAMPercentage=25.0", \
   "-XX:+UseG1GC", \
   "-XX:MaxGCPauseMillis=200", \
-  "-XX:MaxMetaspaceSize=128m", \
+  "-XX:MaxMetaspaceSize=192m", \
+  "-XX:MetaspaceSize=96m", \
   "-XX:ReservedCodeCacheSize=64m", \
-  "-Xss256k", \
+  "-Xss512k", \
   "-XX:+ExitOnOutOfMemoryError", \
   "-Djava.security.egd=file:/dev/./urandom", \
   "-Duser.timezone=Asia/Seoul", \
