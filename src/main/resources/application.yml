@@ -100,8 +100,8 @@ server:
   tomcat:
     connection-timeout: 20000
     threads:
-      max: 200
-      min-spare: 10
+      max: 50
+      min-spare: 5
   error:
     include-message: always
     include-stacktrace: on_param

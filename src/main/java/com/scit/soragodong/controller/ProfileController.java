@@ -3,13 +3,16 @@ package com.scit.soragodong.controller;
 import com.scit.soragodong.domain.dto.ProfileDto;
 import com.scit.soragodong.domain.dto.ProfileUpdateDto;
 import com.scit.soragodong.domain.dto.UserOrderDto;
+import com.scit.soragodong.domain.entity.Users;
 import com.scit.soragodong.security.CustomUserDetails;
 import com.scit.soragodong.service.ProfileService;
 import com.scit.soragodong.service.TimesaleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -67,7 +70,14 @@ public class ProfileController {
             @RequestPart("data") ProfileUpdateDto data,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        profileService.updateProfile(userDetails.getUserIdx(), data, profileImage);
+        Users updatedUser = profileService.updateProfile(userDetails.getUserIdx(), data, profileImage);
+
+        // 세션(Redis)의 인증 정보 갱신 - 변경된 닉네임/프로필 이미지가 즉시 반영됨
+        CustomUserDetails newDetails = CustomUserDetails.of(updatedUser);
+        UsernamePasswordAuthenticationToken newAuth =
+                new UsernamePasswordAuthenticationToken(newDetails, null, newDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(newAuth);
+
         return ResponseEntity.ok("Profile updated successfully");
     }
 
