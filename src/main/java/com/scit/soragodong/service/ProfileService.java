@@ -168,7 +168,7 @@ public class ProfileService {
     }
 
     @Transactional
-    public void updateProfile(Integer userIdx, ProfileUpdateDto dto, MultipartFile profileImage) {
+    public Users updateProfile(Integer userIdx, ProfileUpdateDto dto, MultipartFile profileImage) {
         Users user = userRepository.findById(userIdx)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
@@ -201,6 +201,7 @@ public class ProfileService {
                 throw new CustomException(ErrorCode.INTERNAL_ERROR);
             }
         }
+        return user;
     }
 
     private ProfileDto.ProfileItemDto convertToItem(Board board) {
