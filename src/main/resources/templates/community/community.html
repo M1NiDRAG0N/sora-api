@@ -1,4 +1,3 @@
-
 <div class="page-wrapper community-page" th:fragment="div">
 
     <div class="community-scroll-area" id="communityMain">
@@ -36,7 +35,7 @@
 
 
     <!-- 글쓰기 페이지 시작 -->
-    <div class="bg-gradient" id="writeForm">
+    <div class="bg-gradient no-scrollbar" id="writeForm">
 
         <div class="write-header">
             <div class="btn-cancel">취소</div>
@@ -57,7 +56,9 @@
         <div class="write-card">
             <input type="text" id="title-input" placeholder="제목을 입력하세요.">
             <div class="divider"></div>
-            <textarea id="content-textarea" placeholder="내용을 입력하세요."></textarea>
+            <textarea id="content-textarea" placeholder="내용을 입력하세요." maxlength="1000"></textarea>
+            <div style="text-align: right; color: #888; font-size: 0.8rem; margin-top: 5px; margin-bottom: 10px;"
+                id="charCount">0 / 1000</div>
 
             <div class="image-attach-row" id="imageRow">
                 <div class="camera-btn">
@@ -125,6 +126,9 @@
                     </div>
                     <span class="category-badge" id="view-category"></span>
                 </div>
+
+                <h2 class="post-title" id="view-title"
+                    style="margin: 15px 0 10px; font-size: 0.9rem; font-weight: bold; word-break: break-all;"></h2>
 
                 <div class="post-text" id="view-content"></div>
 
@@ -315,9 +319,19 @@
                     }
                 });
 
-                // 텍스트박스 자동조절
+                // 텍스트박스 자동조절 및 글자수 세기
                 document.getElementById('content-textarea').addEventListener('input', function () {
                     CommunityWrite.autoResize(this);
+                    const currentLength = this.value.length;
+                    const charCountEl = document.getElementById('charCount');
+                    if (charCountEl) {
+                        charCountEl.innerText = `${currentLength} / 1000`;
+                        if (currentLength >= 1000) {
+                            charCountEl.style.color = 'red';
+                        } else {
+                            charCountEl.style.color = '#888';
+                        }
+                    }
                 });
 
                 // ------------------------------ 상세보기 (View) ------------------------------
@@ -787,6 +801,12 @@
                 textarea.value = '';
                 textarea.style.height = 'auto';
 
+                const charCountEl = document.getElementById('charCount');
+                if (charCountEl) {
+                    charCountEl.innerText = '0 / 1000';
+                    charCountEl.style.color = '#888';
+                }
+
                 CommunityWrite.state.selectedFiles = [];
                 CommunityWrite.state.deletedFileIdxs = [];
 
@@ -995,6 +1015,8 @@
 
                     document.querySelector('#view-time').innerText = Utils.timeAgo(board.createdAt);
                     document.querySelector('#view-category').innerText = board.boardCategory;
+                    const viewTitleEl = document.querySelector('#view-title');
+                    if (viewTitleEl) viewTitleEl.innerText = board.boardTitle;
                     document.querySelector('#view-content').innerText = board.boardContent;
                     document.querySelector('#view-like').innerText = board.likeCount;
                     document.querySelector('#view-view').innerText = board.viewCount;

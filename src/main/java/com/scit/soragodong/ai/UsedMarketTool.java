@@ -19,7 +19,7 @@ public class UsedMarketTool {
     private final String userAddress;
 
     public UsedMarketTool(UsedService usedService, Integer userIdx,
-                          Double userLat, Double userLng, String userAddress) {
+            Double userLat, Double userLng, String userAddress) {
         this.usedService = usedService;
         this.userIdx = userIdx;
         this.userLat = userLat;
@@ -42,7 +42,7 @@ public class UsedMarketTool {
 
     @Tool(description = "내 중고 물품의 상태를 변경합니다. state는 TRADING(판매중), SALE(판매중), RESERVED(예약중), SOLD(판매완료) 중 하나입니다.")
     public String updateUsedState(Integer usedIdx, String state) {
-        usedService.updateState(usedIdx, UsedState.valueOf(state.toUpperCase()), userIdx);
+        usedService.updateState(usedIdx, UsedState.valueOf(state.toUpperCase()), null, userIdx);
         String stateName = switch (state.toUpperCase()) {
             case "TRADING", "SALE" -> "판매중";
             case "RESERVED" -> "예약중";
