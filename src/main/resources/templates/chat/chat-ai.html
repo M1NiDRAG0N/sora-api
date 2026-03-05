@@ -82,7 +82,7 @@
         }
     </style>
 
-    <script>
+    <script th:inline="none">
         const AiChat = {
             isStreaming: false,
             lastDateKey: null,
@@ -148,10 +148,11 @@
 
             /* ── \n → <br>, [text](url) → <a> 변환 ── */
             _formatText(text) {
+                // RegExp 생성자 사용: Thymeleaf가 [] 를 표현식으로 파싱하는 문제 회피
+                const mdLink = new RegExp('\\[([^\\]]+)\\]\\((\\/[^)]+)\\)', 'g');
                 return this.escapeHtml(text)
                     .replace(/\\n/g, '<br>')
-                    .replace(/\[([^\]]+)\]\((\/[^)]+)\)/g,
-                        '<a href="$2" class="chat-link">$1</a>');
+                    .replace(mdLink, '<a href="$2" class="chat-link">$1</a>');
             },
 
             /* ── 말풍선 DOM 생성 ── */
