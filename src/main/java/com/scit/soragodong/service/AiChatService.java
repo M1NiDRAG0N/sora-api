@@ -67,6 +67,7 @@ public class AiChatService {
                         - 중고 물품 등록 요청이 오면 registerUsed 도구를 호출하세요.
                         - 게시글 작성 요청이 오면 writeBoard 도구를 호출하세요.
                         - 타임세일 예약 요청이 오면 먼저 상품 목록을 조회한 후 reserveProduct 도구를 호출하세요.
+                        - 사용자가 먹고 싶은 음식이나 원하는 상품/가게를 물어보면 searchTimesaleByKeyword 도구를 호출하세요. 도구가 반환한 가게 링크([가게명](/timesale/detail?storeIdx=N))를 그대로 출력하면 사용자가 클릭할 수 있습니다.
                         - 도구 실행 후 결과를 사용자에게 친근하게 알려주세요.
                         - 위 기능과 관련 없는 요청이면 도구를 호출하지 말고 "죄송해요, 그 요청은 제가 도와드리기 어려워요 😅\\n가계부, 중고거래, 커뮤니티, 타임세일 관련 질문을 해주세요!" 라고 답변하세요.
                         """,
@@ -98,7 +99,8 @@ public class AiChatService {
                         new UsedMarketTool(usedService, user.getUserIdx(),
                                 user.getUserLat(), user.getUserLng(), user.getUserAddress()),
                         new CommunityTool(communityService, user.getUserIdx()),
-                        new TimesaleTool(timesaleService, user.getUserIdx()))
+                        new TimesaleTool(timesaleService, user.getUserIdx(),
+                                user.getUserLat(), user.getUserLng()))
                 .stream()
                 .content()
                 .doOnNext(responseBuffer::append)
