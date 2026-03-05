@@ -264,10 +264,10 @@ public class UsedService {
                 FinanceDto income = FinanceDto.builder()
                         .date(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
                         .time(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")))
-                        .category("중고수입")
+                        .category("기타")
                         .type("plus")
                         .amount(used.getUsedPrice() != null ? used.getUsedPrice().longValue() : 0L)
-                        .memo(used.getUsedTitle() + " 판매")
+                        .memo("중고거래 수입 - " + used.getUsedTitle())
                         .isFixed(false)
                         .build();
                 financeService.write(income, userIdx);
@@ -278,10 +278,10 @@ public class UsedService {
                     FinanceDto expense = FinanceDto.builder()
                             .date(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
                             .time(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")))
-                            .category("중고지출")
+                            .category("기타")
                             .type("minus")
                             .amount(used.getUsedPrice() != null ? used.getUsedPrice().longValue() : 0L)
-                            .memo(used.getUsedTitle() + " 구매")
+                            .memo("중고거래 지출 - " + used.getUsedTitle())
                             .isFixed(false)
                             .build();
                     financeService.write(expense, buyerIdx);
