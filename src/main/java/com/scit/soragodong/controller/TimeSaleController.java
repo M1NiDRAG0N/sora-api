@@ -6,8 +6,8 @@ import com.scit.soragodong.domain.dto.UserDto;
 import com.scit.soragodong.domain.dto.UserOrderDto;
 import com.scit.soragodong.repository.UserRepository;
 import com.scit.soragodong.service.TimesaleService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +20,6 @@ import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
-@Transactional
 @Slf4j
 @RequestMapping("/timesale")
 public class TimeSaleController {
@@ -206,6 +205,7 @@ public class TimeSaleController {
      */
     @PostMapping("/reserve")
     @ResponseBody
+    @Transactional
     public ResponseEntity<?> reserveProduct(@RequestBody UserOrderDto orderDto) {
         log.info("상품 예약 요청 - userIdx: {}, productNum: {}, quantity: {}", 
                 orderDto.userIdx(), orderDto.productNum(), orderDto.orderQuantity());
