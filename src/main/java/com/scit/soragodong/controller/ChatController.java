@@ -138,11 +138,12 @@ public class ChatController {
 
     @ResponseBody
     @PostMapping("/api/chat/read/{roomId}")
-    public void markAsRead(@PathVariable("roomId") Integer roomId,
+    public ApiResponse<?> markAsRead(@PathVariable("roomId") Integer roomId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         if (userDetails != null) {
             chatService.markAsRead(roomId, userDetails.getUserIdx());
         }
+        return ApiResponse.success(null);
     }
 
     @ResponseBody

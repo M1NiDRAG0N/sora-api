@@ -15,8 +15,6 @@ const SSEClient = {
      */
     init: function (userId) {
         this.userId = userId;
-        console.log('[SSE] 초기화 시작 - 사용자:', userId);
-
         // 이미 연결이 있으면 종료
         if (this.eventSource) {
             this.disconnect();
@@ -33,8 +31,6 @@ const SSEClient = {
             console.error('[SSE] 사용자 ID가 없습니다');
             return;
         }
-
-        console.log('[SSE] 연결 중...');
 
         try {
             // SSE 구독 엔드포인트에 연결
@@ -69,8 +65,6 @@ const SSEClient = {
     handleNotification: function (event) {
         try {
             const data = JSON.parse(event.data);
-            console.log('[SSE] 알림 수신:', data);
-
             // 알림 타입별 처리
             switch (data.type) {
                 case 'USED_KEYWORD_MATCH':
@@ -110,7 +104,6 @@ const SSEClient = {
      * 중고거래 상품 상태 변경 알림 처리
      */
     handleUsedStateChange: function (data) {
-        console.log('[SSE] 상품 상태 변경 알림:', data);
         if (typeof Utils !== 'undefined' && Utils.notify) {
             Utils.notify(data.message, 'info');
         } else {
@@ -122,8 +115,6 @@ const SSEClient = {
      * 중고거래 키워드 매칭 알림 처리
      */
     handleUsedKeywordMatch: function (data) {
-        console.log('[SSE] 중고거래 키워드 매칭 알림:', data);
-
         // Toast 표시
         if (typeof Utils !== 'undefined' && Utils.notify) {
             Utils.notify(data.message, 'success');
@@ -139,7 +130,6 @@ const SSEClient = {
      * 키워드 알림 처리
      */
     handleKeywordNotification: function (data) {
-        console.log('[SSE] 키워드 알림:', data);
         if (typeof Utils !== 'undefined' && Utils.notify) {
             Utils.notify(data.message, 'info');
         }
@@ -149,7 +139,6 @@ const SSEClient = {
      * 좋아요 알림 처리
      */
     handleLikeNotification: function (data) {
-        console.log('[SSE] 좋아요 알림:', data);
         if (typeof Utils !== 'undefined' && Utils.notify) {
             Utils.notify(data.message, 'info');
         }
@@ -159,16 +148,14 @@ const SSEClient = {
      * 채팅 알림 처리
      */
     handleChatNotification: function (data) {
-        console.log('[SSE] 채팅 알림:', data);
         if (typeof Utils !== 'undefined' && Utils.notify) {
-            Utils.notify(data.message, 'warning');
+            Utils.notify(data.message, 'info');
         }
     },
     /**
          * 예산 초과 알림 처리
          */
     handleBudgetWarning: function (data) {
-        console.log('[SSE] 예산 초과 알림', data);
     },
 
     /**

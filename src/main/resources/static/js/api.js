@@ -153,18 +153,18 @@ const API = {
      * @returns {Promise} JSON 데이터
      */
     handleResponse: async (response) => {
+        const text = await response.text();
+        if (!text) {
+            if (response.ok) return null;
+            throw new Error(`HTTP ${response.status} 에러`);
+        }
         try {
-            const data = await response.json();
-
-            // 서버가 성공 응답을 보낸 경우
-            if (response.ok) {
-                return data;
-            }
-
-            // 서버가 에러 응답을 보낸 경우 (ApiResponse 형식)
+            const data = JSON.parse(text);
+            if (response.ok) return data;
             throw new Error(data.message || `HTTP ${response.status} 에러`);
         } catch (error) {
-            throw error;
+            if (response.ok) return null;
+            throw new Error(`HTTP ${response.status} 에러`);
         }
     }
 };
