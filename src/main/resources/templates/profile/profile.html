@@ -845,7 +845,16 @@
                     if (response.ok) {
                         Utils.notify('프로필이 수정되었습니다.', 'success');
                         ProfileEdit.close();
-                        ProfileApp.loadData(); // Reload data
+                        await ProfileApp.loadData();
+
+                        // 헤더 닉네임/프로필 이미지 즉시 반영
+                        const updatedData = ProfileApp.state.data;
+                        if (updatedData) {
+                            const headerNickname = document.getElementById('headerNickname');
+                            const headerProfile = document.getElementById('headerProfile');
+                            if (headerNickname) headerNickname.textContent = updatedData.nickname + '님';
+                            if (headerProfile) headerProfile.src = updatedData.profileImg || '/images/default-profile.png';
+                        }
                     } else {
                         const errorText = await response.text();
                         // ErrorCode에 따라 메시지 분기 가능
