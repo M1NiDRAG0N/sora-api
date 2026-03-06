@@ -1,6 +1,7 @@
 package com.scit.soragodong.ai;
 
 import com.scit.soragodong.domain.dto.BoardDto;
+import com.scit.soragodong.domain.enums.BoardCategory;
 import com.scit.soragodong.service.CommunityService;
 import org.springframework.ai.tool.annotation.Tool;
 
@@ -16,11 +17,12 @@ public class CommunityTool {
         this.userIdx = userIdx;
     }
 
-    @Tool(description = "커뮤니티 게시글을 작성합니다. category는 DISTRIBUTION(나눔/분배), TIP(팁/정보), HUMOR(유머), COOK(요리), QUESTION(질문) 중 하나입니다.")
+    @Tool(description = "커뮤니티 게시글을 작성합니다. category는 DISTRIBUTION(소분/나눔), TIP(꿀팁/정보), HUMOR(자유/수다), COOK(요리/집밥), QUESTION(질문/고민) 중 하나입니다.")
     public String writeBoard(String category, String title, String content) {
+        BoardCategory boardCategory = BoardCategory.fromAI(category);
         BoardDto dto = BoardDto.builder()
                 .userIdx(userIdx)
-                .boardCategory(category.toUpperCase())
+                .boardCategory(boardCategory.name())
                 .boardTitle(title)
                 .boardContent(content)
                 .build();
