@@ -811,6 +811,43 @@
     margin-bottom: 2px;
 }
 
+/* 연속 메시지 그룹핑 — 같은 발신자·같은 분이면 간격 줄임 */
+.chat-room-container .bubble-row.grouped {
+    margin-bottom: 2px;
+}
+
+/* 그룹핑 시 프로필 자리 확보용 투명 스페이서 */
+.chat-room-container .chat-profile-space {
+    width: 32px;
+    height: 1px;
+    flex-shrink: 0;
+}
+
+/* 그룹 중간 메시지의 시간 숨김 */
+.chat-room-container .time-hidden {
+    display: none !important;
+}
+
+/* 미읽음 카운트 뱃지 ("1") — 모던 스타일 */
+.chat-room-container .unread-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    background: #f59e0b;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 8px;
+    align-self: flex-end;
+    margin-bottom: 4px;
+    line-height: 1;
+    flex-shrink: 0;
+    letter-spacing: -0.2px;
+}
+
 /* ?낅젰李??꾩슜 ?ㅽ???(ai-chat怨??숈씪) */
 .chat-room-container .chat-input-box {
     background: rgba(255, 255, 255, 0.82);

@@ -148,10 +148,13 @@
                     location.href = `/used-market?openDetail=${refId}`;
                 } else if (communityTypes.includes(type) && validRefId) {
                     this.close();
-                    location.href = `/community?detail=${refId}`;
+                    location.href = `/community?openBoard=${refId}`;
                 } else if (noticeTypes.includes(type) && validRefId) {
                     this.close();
                     window.openNoticeModal?.(refId);
+                } else if (type === 'BUDGET_WARNING') {
+                    this.close();
+                    location.href = '/finance';
                 }
             },
 
@@ -266,6 +269,7 @@
                     KEYWORD:            { icon: 'pricetag',          bg: '#e6fcf5', color: '#0ca678' },
                     REPORT_RESULT:      { icon: 'megaphone',         bg: '#fff4e6', color: '#fd7e14' },
                     ADMIN_NOTICE:       { icon: 'shield-checkmark',  bg: '#eef2ff', color: '#4f46e5' },
+                    BUDGET_WARNING:     { icon: 'wallet-outline',    bg: '#fff3e0', color: '#e65100' },
                 };
                 return map[type] ?? { icon: 'notifications', bg: '#f0f0f0', color: '#888' };
             },

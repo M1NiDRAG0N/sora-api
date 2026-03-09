@@ -93,6 +93,11 @@
             stompClient: null,
             partnerImg: partnerProfileImg ? `/img/${partnerProfileImg}` : '/images/default-profile.png',
             lastDateKey: null,
+            lastSenderId: null,
+            lastMinuteKey: null,
+            lastBubbleRow: null,
+            totalMessageCount: 0,
+            partnerReadCount: 0,
 
             init() {
                 const modal = document.getElementById('statusConfirmModal');
@@ -185,6 +190,10 @@
                     this.stompClient.subscribe(`/sub/chat/room/${roomId}`, (message) => {
                         const chat = JSON.parse(message.body);
                         this.appendMessage(chat);
+                        // 상대방이 메시지를 보냈다면 → 상대방이 방에 있으므로 readCount 갱신
+                        if (Number(chat.senderIdx) !== Number(loginUserIdx)) {
+                            this.refreshPartnerReadCount();
+                        }
                     });
                 }, (error) => {
                     console.error('WebSocket Connection Error:', error);
@@ -195,12 +204,46 @@
             async loadHistory() {
                 try {
                     this.lastDateKey = null;
+                    this.lastSenderId = null;
+                    this.lastMinuteKey = null;
+                    this.lastBubbleRow = null;
+                    this.totalMessageCount = 0;
                     const data = await API.get(`/api/chat/history/${roomId}`);
                     data.forEach(chat => this.appendMessage(chat));
+                    // 히스토리 로드 후 파트너 readCount 조회 → 미읽음 뱃지 갱신
+                    const res = await fetch(`/api/chat/room/${roomId}/read-count`);
+                    const json = await res.json();
+                    this.partnerReadCount = json.data ?? 0;
+                    this.updateUnreadBadges();
                     this.scrollToBottom();
                 } catch (e) {
                     console.error('History Load Error:', e);
                 }
+            },
+
+            async refreshPartnerReadCount() {
+                try {
+                    const res = await fetch(`/api/chat/room/${roomId}/read-count`);
+                    const json = await res.json();
+                    this.partnerReadCount = json.data ?? 0;
+                    this.updateUnreadBadges();
+                } catch (e) {}
+            },
+
+            updateUnreadBadges() {
+                document.querySelectorAll('.msg-mine').forEach(row => {
+                    const pos = parseInt(row.dataset.msgPos);
+                    const badge = row.querySelector('.unread-badge');
+                    if (badge) badge.style.display = pos > this.partnerReadCount ? 'inline' : 'none';
+                });
+            },
+
+            getMinuteKey(dateString) {
+                if (!dateString) return null;
+                let safeStr = String(dateString).replace('T', ' ').split('.')[0].replace(/-/g, '/');
+                const d = new Date(safeStr);
+                if (isNaN(d.getTime())) return null;
+                return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${d.getHours()}-${d.getMinutes()}`;
             },
 
             send() {
@@ -224,11 +267,14 @@
                 const container = document.getElementById('roomChatContainer');
                 const isMe = Number(chat.senderIdx) === Number(loginUserIdx);
 
-                // 날짜 구분선 삽입
+                // 날짜 구분선 삽입 (날짜 바뀌면 그룹도 리셋)
                 if (chat.createdAt) {
                     const dateKey = this.getDateKey(chat.createdAt);
                     if (dateKey && dateKey !== this.lastDateKey) {
                         this.lastDateKey = dateKey;
+                        this.lastSenderId = null;
+                        this.lastMinuteKey = null;
+                        this.lastBubbleRow = null;
                         const sep = document.createElement('div');
                         sep.className = 'date-separator';
                         sep.innerHTML = `<span>${dateKey}</span>`;
@@ -236,27 +282,56 @@
                     }
                 }
 
+                // 같은 발신자 + 같은 분(minute)이면 그룹
+                const minuteKey = this.getMinuteKey(chat.createdAt);
+                const isSameGroup = String(chat.senderIdx) === String(this.lastSenderId)
+                    && minuteKey !== null && minuteKey === this.lastMinuteKey;
+
+                // 이전 메시지가 같은 그룹이면 이전 메시지의 시간 숨김
+                if (isSameGroup && this.lastBubbleRow) {
+                    this.lastBubbleRow.querySelector('.bubble-time')?.classList.add('time-hidden');
+                }
+
+                // 메시지 위치(1-based) 추적 — 미읽음 뱃지 계산용
+                this.totalMessageCount++;
+                const msgPos = this.totalMessageCount;
+
                 const row = document.createElement('div');
-                row.className = isMe ? 'bubble-row me' : 'bubble-row';
+                row.className = `bubble-row${isMe ? ' me' : ''}${isSameGroup ? ' grouped' : ''}`;
+                if (isMe) {
+                    row.classList.add('msg-mine');
+                    row.dataset.msgPos = msgPos;
+                }
 
                 const timeStr = chat.createdAt ? Utils.chatTime(chat.createdAt) : '';
 
                 let html = '';
                 if (!isMe) {
-                    html += `<img src="${this.partnerImg}" class="chat-profile" onclick="window.openProfile(${chat.senderIdx})" style="cursor:pointer;">`;
+                    if (!isSameGroup) {
+                        html += `<img src="${this.partnerImg}" class="chat-profile" onclick="window.openProfile(${chat.senderIdx})" style="cursor:pointer;">`;
+                    } else {
+                        html += `<div class="chat-profile-space"></div>`;
+                    }
                     html += `<div class="bubble other">${this.escapeHtml(chat.message)}</div>`;
                     if (timeStr) html += `<span class="bubble-time">${timeStr}</span>`;
                 } else {
                     if (timeStr) html += `<span class="bubble-time">${timeStr}</span>`;
+                    const showBadge = msgPos > this.partnerReadCount;
+                    html += `<span class="unread-badge"${showBadge ? '' : ' style="display:none;"'}>1</span>`;
                     html += `<div class="bubble me">${this.escapeHtml(chat.message)}</div>`;
                 }
 
                 row.innerHTML = html;
                 container.appendChild(row);
+
+                this.lastSenderId = String(chat.senderIdx);
+                this.lastMinuteKey = minuteKey;
+                this.lastBubbleRow = row;
+
                 this.scrollToBottom();
 
-                // 새로 메시지가 추가될 때마다 읽음 처리 (서버 부하가 우려되면 디바운스 적용 가능)
-                API.post(`/api/chat/read/${roomId}`).catch(console.error);
+                // 읽음 처리 (로딩 스피너 없이 silent 호출)
+                fetch(`/api/chat/read/${roomId}`, { method: 'POST' }).catch(console.error);
             },
 
             getDateKey(dateString) {

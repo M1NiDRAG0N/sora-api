@@ -279,7 +279,7 @@
                         const barRed = document.querySelector('.bar-segment.bg-red');
                         const barGreen = document.querySelector('.bar-segment.bg-green');
 
-                        if (budgetAmtEl) budgetAmtEl.innerText = finance.currentBudget.toLocaleString();
+                        if (budgetAmtEl) budgetAmtEl.innerText = `${finance.currentBudget.toLocaleString()}원`;
                         if (expenseAmtEl) {
                             expenseAmtEl.innerText = thisMonthExpense > 0 ? `${thisMonthExpense.toLocaleString()}원` : "0원";
                             expenseAmtEl.classList.add('text-red');
@@ -488,30 +488,64 @@
 
                 applyToChart(finance.chartLast, lastMonthStats, lastTotal, 'chartLastBox');
                 applyToChart(finance.chartThis, thisStats, thisTotal, 'chartThisBox');
-                // 충고 영역 제거, 전월 대비 금액만 출력
+                // 전월 대비 토스 스타일 강조 문구
                 const compareEl = document.getElementById('compareText');
                 if (compareEl) {
                     const diff = thisTotal - lastTotal;
-                    let resultText = '';
-                    let colorClass = '';
+                    let emoji, mainText, mainClass, subText;
 
-                    if (diff > 0) {
-                        resultText = `+${diff.toLocaleString()}원`;
-                        colorClass = 'text-red';
+                    if (thisTotal === 0 && lastTotal === 0) {
+                        emoji = '📊';
+                        mainText = '이번 달 아직 지출이 없어요';
+                        mainClass = '';
+                        subText = '오늘부터 기록을 시작해봐요!';
+                    } else if (thisTotal === 0) {
+                        emoji = '📊';
+                        mainText = '이번 달 아직 지출이 없어요';
+                        mainClass = '';
+                        subText = `지난달은 ${lastTotal.toLocaleString()}원 지출했어요`;
+                    } else if (lastTotal === 0) {
+                        emoji = '📊';
+                        mainText = '지난달 데이터가 없어요';
+                        mainClass = '';
+                        subText = `이번 달 ${thisTotal.toLocaleString()}원 지출 중이에요`;
+                    } else if (diff > 0) {
+                        emoji = '💸';
+                        mainText = `전월보다 ${diff.toLocaleString()}원 더 지출했어요`;
+                        mainClass = 'text-red';
+                        const budget = finance.currentBudget || 0;
+                        subText = (budget > 0 && thisTotal >= budget * 0.7)
+                            ? '이번 달 예산의 70%를 넘었어요. 주의하세요!'
+                            : '이번 달 지출을 조금 줄여봐요!';
                     } else if (diff < 0) {
-                        resultText = `-${Math.abs(diff).toLocaleString()}원`;
-                        colorClass = 'text-green';
+                        emoji = '🎉';
+                        mainText = `전월보다 ${Math.abs(diff).toLocaleString()}원 아꼈어요!`;
+                        mainClass = 'text-green';
+                        subText = '이번 달도 잘 하고 있어요!';
                     } else {
-                        resultText = '0원';
-                        colorClass = '';
+                        emoji = '👌';
+                        mainText = '지난달과 지출이 같아요';
+                        mainClass = '';
+                        subText = '꾸준하게 관리하고 있어요!';
                     }
 
                     compareEl.innerHTML = `
                         <div class="ledger-wrap">
-                            <div class="ledger-header">월간 지출 비교 분석</div>
-                            <div class="ledger-row ledger-total ${colorClass}">
-                                <span class="ledger-label">전월 대비</span>
-                                <span class="ledger-val">${resultText}</span>
+                            <div class="ledger-header">월간 지출 비교</div>
+                            <div class="ledger-insight">
+                                <div class="ledger-insight-emoji">${emoji}</div>
+                                <div class="ledger-insight-main ${mainClass}">${mainText}</div>
+                                <div class="ledger-insight-sub">${subText}</div>
+                            </div>
+                            <div class="ledger-amounts">
+                                <div class="ledger-amount-row">
+                                    <span class="ledger-amount-label">이번 달 지출</span>
+                                    <span class="ledger-amount-val text-red">${thisTotal.toLocaleString()}원</span>
+                                </div>
+                                <div class="ledger-amount-row">
+                                    <span class="ledger-amount-label">지난 달 지출</span>
+                                    <span class="ledger-amount-val" style="color:#636e72;">${lastTotal.toLocaleString()}원</span>
+                                </div>
                             </div>
                         </div>
                     `;
@@ -762,9 +796,5 @@
                 });
             },
         };
-        // 🚨 기존 DOMContentLoaded 이벤트 안에 OCR 이벤트 핸들러 추가
-        document.addEventListener('DOMContentLoaded', () => {
-            finance.init();
-        });
     </script>
 </div>

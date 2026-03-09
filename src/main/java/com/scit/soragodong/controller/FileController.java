@@ -46,7 +46,7 @@ public class FileController {
      * 예: /img/1
      */
     @GetMapping("/{fileIdx}")
-    public ResponseEntity<byte[]> getFileByIdx(@PathVariable int fileIdx) {
+    public ResponseEntity<byte[]> getFileByIdx(@PathVariable(name = "fileIdx") int fileIdx) {
         try {
             File file = fileCache.computeIfAbsent(fileIdx, id ->
                     fileRepository.findById(id).orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND)));
@@ -62,7 +62,7 @@ public class FileController {
      * 예: /img/group/1
      */
     @GetMapping("/group/{fileGrpIdx}")
-    public ResponseEntity<byte[]> getThumbnailByGroupIdx(@PathVariable int fileGrpIdx) {
+    public ResponseEntity<byte[]> getThumbnailByGroupIdx(@PathVariable(name = "fileGrpIdx") int fileGrpIdx) {
         try {
             int fileIdx = groupThumbnailCache.computeIfAbsent(fileGrpIdx, id -> {
                 FileGrp fileGrp = fileGrpRepository.findById(id)

@@ -89,6 +89,20 @@ public class ChatService {
         }
     }
 
+    public long getPartnerReadCount(Integer roomId, Integer loginUserIdx) {
+        ChatRoom room = chatRoomRepository.findById(roomId).orElse(null);
+        if (room == null) return 0;
+        Integer partnerIdx = room.getUser1Idx().equals(loginUserIdx) ? room.getUser2Idx() : room.getUser1Idx();
+        String readKey = "chat:room:" + roomId + ":read:" + partnerIdx;
+        Object readCountObj = redisTemplate.opsForValue().get(readKey);
+        if (readCountObj == null) return 0;
+        try {
+            if (readCountObj instanceof Integer i) return i.longValue();
+            else if (readCountObj instanceof Long l) return l;
+            else return Long.parseLong(readCountObj.toString());
+        } catch (Exception e) { return 0; }
+    }
+
     public Integer getTotalUnreadCount(Integer userId) {
         List<ChatRoom> rooms = chatRoomRepository.findByUserId(userId);
         int totalUnread = 0;
