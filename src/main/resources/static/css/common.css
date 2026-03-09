@@ -130,6 +130,7 @@ button {
     height: 40px;
     border-radius: 50%;
     border: 1px solid #eee;
+    object-fit:cover;
 }
 
 .header-profile-info {
