@@ -403,16 +403,29 @@ public class CommunityService {
 
         // 5. 새 파일 업로드
         if (newFiles != null && !newFiles.isEmpty()) {
-            // 파일 그룹 ID가 없으면(기존 파일 0개) 새로 생성
-            Integer fileGrpIdx = board.getFileGrp().getFileGrpIdx();
-            if (fileGrpIdx == null) {
-                // 예: 시퀀스나 UUID로 그룹 ID 생성 로직
-                // fileGrpIdx = fileService.createFileGroup();
-                // board.updateFileGrpIdx(fileGrpIdx); // 엔티티에 그룹ID 업데이트 필요
-            }
+            // 파일 업로드 (FileGrp 생성 포함)
+            fileService.upload(FileRefType.BOARD, board.getBoardIdx(), newFiles);
 
-            // 파일 저장 로직 호출 (기존 write 때 썼던 것 재사용)
-            // fileService.saveFiles(newFiles, fileGrpIdx);
+            if (board.getFileGrp() == null) {
+                // 생성된 FileGrp 조회
+                Optional<FileGrp> fileGrpOpt = fileGrpRepository.findByRefTypeAndRefId(FileRefType.BOARD,
+                        board.getBoardIdx());
+
+                if (fileGrpOpt.isPresent()) {
+                    FileGrp fileGrp = fileGrpOpt.get();
+                    log.info("FileGrp found during update: {}", fileGrp.getFileGrpIdx());
+
+                    // Reflection을 사용하여 fileGrp 설정 (Setter가 없으므로)
+                    try {
+                        java.lang.reflect.Field field = Board.class.getDeclaredField("fileGrp");
+                        field.setAccessible(true);
+                        field.set(board, fileGrp);
+                        br.save(board);
+                    } catch (Exception e) {
+                        log.error("Failed to set fileGrp: {}", e.getMessage());
+                    }
+                }
+            }
         }
     }
 
