@@ -86,7 +86,7 @@ public class CommunityController {
     // 상세보기 데이터 불러오기
     @GetMapping("/community/view/{boardIdx}")
     @ResponseBody
-    public BoardDto view(@PathVariable("boardIdx") Integer boardIdx,
+    public BoardDto view(@PathVariable(name = "boardIdx") Integer boardIdx,
             @AuthenticationPrincipal CustomUserDetails userDetails,
             HttpServletRequest request,
             HttpServletResponse response) {
@@ -122,14 +122,14 @@ public class CommunityController {
     // 커뮤니티 파일 불러오기
     @GetMapping("/community/files/{boardIdx}")
     @ResponseBody
-    public List<FileRes> getBoardFiles(@PathVariable("boardIdx") Integer boardIdx) {
+    public List<FileRes> getBoardFiles(@PathVariable(name = "boardIdx") Integer boardIdx) {
         return cs.getBoardFiles(boardIdx);
     }
 
     // 댓글 리스트 조회
     @GetMapping("/community/reply/{boardIdx}")
     @ResponseBody
-    public List<BoardReplyDto> reply(@PathVariable("boardIdx") Integer boardIdx) {
+    public List<BoardReplyDto> reply(@PathVariable(name = "boardIdx") Integer boardIdx) {
         log.info("댓글 boardIdx {}", boardIdx);
         List<BoardReplyDto> replyList = cs.getReplyList(boardIdx);
         log.info("댓글 리스트 {}", replyList);
@@ -139,7 +139,7 @@ public class CommunityController {
     // 댓글 작성
     @PostMapping("/community/reply/{boardIdx}")
     @ResponseBody
-    public BoardReplyDto writeReply(@PathVariable("boardIdx") Integer boardIdx,
+    public BoardReplyDto writeReply(@PathVariable(name = "boardIdx") Integer boardIdx,
             @RequestBody BoardReplyDto replyDto,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         log.info("댓글 작성용 boardIdx {}", boardIdx);
@@ -162,7 +162,7 @@ public class CommunityController {
     // 댓글 하나만 불러오기
     @GetMapping("/community/replyOne/{replyIdx}")
     @ResponseBody
-    public BoardReplyDto readReplyOneForUpdate(@PathVariable("replyIdx") Integer replyIdx) {
+    public BoardReplyDto readReplyOneForUpdate(@PathVariable(name = "replyIdx") Integer replyIdx) {
         log.info("댓글 수정 replyIdx {}", replyIdx);
 
         BoardReplyDto boardReplyDto = cs.getReplyOne(replyIdx);
@@ -172,7 +172,7 @@ public class CommunityController {
 
     // 게시글 삭제
     @DeleteMapping("/community/delete/{boardIdx}")
-    public ResponseEntity<ApiResponse<?>> delete(@PathVariable("boardIdx") Integer boardIdx) {
+    public ResponseEntity<ApiResponse<?>> delete(@PathVariable(name = "boardIdx") Integer boardIdx) {
         log.info("삭제 요청 boardIdx: {}", boardIdx);
 
         // 서비스 호출 (여기서 에러 나면 GlobalExceptionHandler로 자동 이동)
@@ -184,7 +184,7 @@ public class CommunityController {
 
     // 댓글 삭제
     @DeleteMapping("/community/deleteReply/{replyIdx}")
-    public ResponseEntity<ApiResponse<?>> deleteReply(@PathVariable("replyIdx") Integer replyIdx) {
+    public ResponseEntity<ApiResponse<?>> deleteReply(@PathVariable(name = "replyIdx") Integer replyIdx) {
         log.info("삭제 요청 replyIdx: {}", replyIdx);
 
         cs.replyDelete(replyIdx);
@@ -195,7 +195,7 @@ public class CommunityController {
 
     // 댓글 수정
     @PutMapping("/community/reply/update/{replyIdx}")
-    public ResponseEntity<ApiResponse<?>> putMethodName(@PathVariable("replyIdx") Integer replyIdx,
+    public ResponseEntity<ApiResponse<?>> putMethodName(@PathVariable(name = "replyIdx") Integer replyIdx,
             @RequestBody BoardReplyDto boardReplyDto) {
         log.info("댓글 수정 요청 replyIdx: {}", replyIdx);
         log.info("댓글 수정 요청 boardReplydto: {}", boardReplyDto);
@@ -224,7 +224,7 @@ public class CommunityController {
 
     @GetMapping("/community/like/{boardIdx}")
     @ResponseBody
-    public ResponseEntity<ApiResponse<?>> toggleLike(@PathVariable("boardIdx") Integer boardIdx,
+    public ResponseEntity<ApiResponse<?>> toggleLike(@PathVariable(name = "boardIdx") Integer boardIdx,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         log.info("좋아요 토글 boardIdx: {}, userIdx: {}", boardIdx, userDetails.getUserIdx());
 

@@ -42,7 +42,7 @@ public class ProfileController {
     @GetMapping("/api/{userIdx}")
     @ResponseBody
     public ResponseEntity<ProfileDto> getProfileData(
-            @PathVariable("userIdx") Integer targetUserIdx,
+            @PathVariable(name = "userIdx") Integer targetUserIdx,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         Integer loginUserIdx = userDetails.getUserIdx();

@@ -77,7 +77,11 @@ const SSEClient = {
                     this.handleKeywordNotification(data);
                     break;
                 case 'LIKE':
+                case 'COMMUNITY_LIKE':
                     this.handleLikeNotification(data);
+                    break;
+                case 'COMMENT':
+                    this.handleCommentNotification(data);
                     break;
                 case 'CHAT':
                     this.handleChatNotification(data);
@@ -145,6 +149,15 @@ const SSEClient = {
     },
 
     /**
+     * 댓글 알림 처리 — 토스트 클릭 시 해당 게시물로 이동
+     */
+    handleCommentNotification: function (data) {
+        if (typeof Utils !== 'undefined' && Utils.notify) {
+            Utils.notify(data.message, 'info');
+        }
+    },
+
+    /**
      * 채팅 알림 처리
      */
     handleChatNotification: function (data) {
@@ -153,9 +166,12 @@ const SSEClient = {
         }
     },
     /**
-         * 예산 초과 알림 처리
-         */
+     * 예산 초과 알림 처리
+     */
     handleBudgetWarning: function (data) {
+        if (typeof Utils !== 'undefined' && Utils.notify) {
+            Utils.notify(data.message, 'warning');
+        }
     },
 
     /**
