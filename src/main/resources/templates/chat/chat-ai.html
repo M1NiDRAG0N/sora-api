@@ -80,6 +80,29 @@
         .chat-link:hover {
             color: #3a6fd8;
         }
+
+        /* AI 말풍선 내 마크다운 스타일 */
+        .bubble.ai strong {
+            font-weight: 700;
+            color: inherit;
+        }
+
+        .bubble.ai .ai-list-item {
+            display: block;
+            padding-left: 4px;
+            margin-top: 2px;
+        }
+
+        .bubble.ai .ai-list-item::before {
+            content: '• ';
+            color: #8F7DF5;
+            font-weight: 700;
+        }
+
+        .bubble.ai .ai-section-break {
+            display: block;
+            height: 6px;
+        }
     </style>
 
     <script th:inline="none">
@@ -87,6 +110,7 @@
             isStreaming: false,
             lastDateKey: null,
             historyLoaded: false,
+            _rafPending: false,
 
             init() {
                 document.getElementById('aiChatCloseBtn').addEventListener('click', () => {
@@ -146,13 +170,35 @@
                 }
             },
 
-            /* ── \n → <br>, [text](url) → <a> 변환 ── */
+            /* ── 마크다운 → HTML 변환 ── */
             _formatText(text) {
                 // RegExp 생성자 사용: Thymeleaf가 [] 를 표현식으로 파싱하는 문제 회피
                 const mdLink = new RegExp('\\[([^\\]]+)\\]\\((\\/[^)]+)\\)', 'g');
-                return this.escapeHtml(text)
-                    .replace(/\\n/g, '<br>')
-                    .replace(mdLink, '<a href="$2" class="chat-link">$1</a>');
+
+                // 1) HTML 이스케이프
+                let html = this.escapeHtml(text);
+
+                // 2) 리터럴 \n(백슬래시+n) → 실제 줄바꿈 (히스토리 로드 시 Redis에 저장된 포맷 호환)
+                html = html.replace(/\\n/g, '\n');
+                // 실제 \r\n(Windows 줄바꿈) → \n 통일
+                html = html.replace(/\r\n/g, '\n');
+
+                // 3) **bold** → <strong>
+                html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+                // 4) 빈 줄(단락 구분) → section-break
+                html = html.replace(/\n{2,}/g, '\n<span class="ai-section-break"></span>\n');
+
+                // 5) "- 항목" 리스트 → ai-list-item
+                html = html.replace(/^[-•]\s(.+)$/gm, '<span class="ai-list-item">$1</span>');
+
+                // 6) 남은 단일 줄바꿈 → <br>
+                html = html.replace(/\n/g, '<br>');
+
+                // 7) 마크다운 링크 → <a>
+                html = html.replace(mdLink, '<a href="$2" class="chat-link">$1</a>');
+
+                return html;
             },
 
             /* ── 말풍선 DOM 생성 ── */
@@ -308,20 +354,37 @@
                         if (done) break;
 
                         buffer += decoder.decode(value, { stream: true });
-                        const lines = buffer.split('\n');
-                        buffer = lines.pop(); // 마지막 불완전 라인 보존
 
-                        for (const line of lines) {
-                            if (line.startsWith('data:')) {
-                                // trim() 금지 — 공백 토큰 소실 방지
-                                const text = line.startsWith('data: ') ? line.slice(6) : line.slice(5);
-                                if (text && text !== '[DONE]') {
-                                    rawText += text;
-                                    bubble.innerHTML = this._formatText(rawText);
-                                    this.scrollToBottom();
+                        // SSE는 \n\n 이 하나의 이벤트 구분자.
+                        // 이벤트 단위로 파싱해야 같은 이벤트 내 여러 data: 라인을 \n으로 복원할 수 있음.
+                        const events = buffer.split('\n\n');
+                        buffer = events.pop(); // 마지막 미완성 이벤트 보존
+
+                        for (const event of events) {
+                            // 하나의 이벤트 내 data: 라인들을 \n으로 join → 줄바꿈 복원
+                            const dataLines = event.split('\n').filter(l => l.startsWith('data:'));
+                            if (dataLines.length === 0) continue;
+
+                            const text = dataLines
+                                .map(l => l.slice(5)) // "data:" is 5 chars — preserve leading space (GPT-4o BPE tokens like " 하세요")
+                                .join('\n');
+
+                            if (text !== '[DONE]') {
+                                rawText += text;
+                                // rAF로 쓰로틀링 — 급격한 innerHTML 재설정으로 인한 렌더링 아티팩트 방지
+                                if (!this._rafPending) {
+                                    this._rafPending = true;
+                                    requestAnimationFrame(() => {
+                                        bubble.innerHTML = this._formatText(rawText);
+                                        this.scrollToBottom();
+                                        this._rafPending = false;
+                                    });
                                 }
                             }
                         }
+                        // 스트림 종료 후 최종 렌더링 보장
+                        bubble.innerHTML = this._formatText(rawText);
+                        this.scrollToBottom();
                     }
                 } catch (e) {
                     this.hideTyping();
