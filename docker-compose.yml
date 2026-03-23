@@ -24,6 +24,7 @@ services:
       - app-network
     volumes:
       - /opt/sora-api/upload:/upload
+      - /opt/sora-api/logs:/app/logs
     mem_limit: 768m
     mem_reservation: 512m
 

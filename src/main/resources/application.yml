@@ -107,13 +107,6 @@ server:
     include-stacktrace: on_param
 
 logging:
+  # 레벨/파일 설정은 logback-spring.xml 에서 프로필별로 관리
   level:
     root: WARN
-    com.scit.soragodong: INFO   # prod 기본값, local에서 DEBUG로 오버라이드
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-  file:
-    name: logs/soragodong.log
-    max-size: 10MB
-    max-history: 30
