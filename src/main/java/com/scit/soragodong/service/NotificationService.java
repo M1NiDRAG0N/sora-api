@@ -81,7 +81,7 @@ public class NotificationService {
                 .message(message)
                 .isRead(false)
                 .build();
-        Notification saved = notificationRepository.save(notification);
+        notificationRepository.save(notification);
 
         // SSE는 현재 연결된 모든 사용자에게 보냄
         sseService.broadcast(refId, message);

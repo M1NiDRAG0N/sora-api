@@ -158,7 +158,7 @@ public class UserService {
      */
     public void sendPasswordResetCode(String email) {
         // 이메일 존재 확인
-        Users user = ur.findByUserEmail(email)
+        ur.findByUserEmail(email)
             .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         
         // 인증 코드 생성
@@ -208,7 +208,7 @@ public class UserService {
         }
         
         // 사용자 존재 확인
-        Users user = ur.findByUserEmail(email)
+        ur.findByUserEmail(email)
             .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         
         // 비밀번호 암호화 및 업데이트

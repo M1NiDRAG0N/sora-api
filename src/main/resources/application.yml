@@ -85,6 +85,7 @@ spring:
       chat:
         options:
           model: ${AI_MODEL:llama-3.3-70b-versatile}
+          max-tokens: 1024
 
 server:
   port: 8080

@@ -87,10 +87,10 @@ public class AiChatService {
                         """,
                 nickname, today, currentYearMonth, address);
 
-        // 이전 대화 이력 로드 (Tomcat 스레드에서 동기 호출 — 블로킹 허용)
+        // 이전 대화 이력 로드 - 최근 20개만 (토큰 절약)
         List<Message> history = List.of();
         try {
-            history = chatMemory.get(conversationId);
+            history = chatMemory.get(conversationId, 20);
         } catch (Exception e) {
             log.warn("[AI] 대화 이력 로드 실패 - conversationId={}, error={}", conversationId, e.getMessage());
         }
