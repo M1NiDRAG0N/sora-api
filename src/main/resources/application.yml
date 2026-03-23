@@ -80,11 +80,11 @@ spring:
 
   ai:
     openai:
-      api-key: ${OPENAI_API_KEY}
-      base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+      api-key: ${GROQ_API_KEY}
+      base-url: https://api.groq.com/openai
       chat:
         options:
-          model: ${AI_MODEL:gpt-4o}
+          model: ${AI_MODEL:llama-3.3-70b-versatile}
 
 server:
   port: 8080
