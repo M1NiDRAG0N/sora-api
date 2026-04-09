@@ -22,6 +22,7 @@ const TEST_EMAIL  = __ENV.TEST_EMAIL    || 'test@example.com';
 const TEST_PASS   = __ENV.TEST_PASSWORD || 'password';
 const PRODUCT_NUM = parseInt(__ENV.PRODUCT_NUM || '1');
 const USER_IDX    = parseInt(__ENV.USER_IDX    || '1');
+const STORE_IDX   = parseInt(__ENV.STORE_IDX   || '1');
 
 const reserveSuccess  = new Counter('reserve_success');
 const reserveConflict = new Counter('reserve_conflict');   // 409 재고 부족
@@ -84,6 +85,7 @@ export default function ({ sessionCookie }) {
   const payload = JSON.stringify({
     userIdx:       USER_IDX,
     productNum:    PRODUCT_NUM,
+    storeIdx:      STORE_IDX,
     orderQuantity: 1,
   });
 
