@@ -26,11 +26,7 @@ public class InternalStatsController {
     private final DataSource dataSource;
 
     @GetMapping("/stats")
-    public ResponseEntity<Map<String, Object>> getStats(jakarta.servlet.http.HttpServletRequest request) {
-        // 유틸리티를 호출해 현재 리소스 상태를 가져옵니다.
-        request.getSession(true);
-
-
+    public ResponseEntity<Map<String, Object>> getStats() {
         Map<String, Object> stats = SystemResourceUtil.getSystemStats();
         stats.put("activeUsers", sseService.getConnectedUserCount());
 
