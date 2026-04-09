@@ -37,20 +37,30 @@ export default function () {
   const statsRes = http.get(`${BASE_URL}/api/internal/stats`);
   statsLatency.add(statsRes.timings.duration);
 
+  // 안전하게 JSON 파싱
+  let body = null;
+  try {
+    body = JSON.parse(statsRes.body);
+  } catch (e) {
+    console.error(`JSON 파싱 실패 - status: ${statsRes.status}, body 앞부분: ${statsRes.body?.slice(0, 100)}`);
+    requestsFailed.add(1);
+    sleep(1);
+    return;
+  }
+
   const ok = check(statsRes, {
-    'stats status 200':           (r) => r.status === 200,
-    'stats has cpuUsage':         (r) => JSON.parse(r.body).cpuUsage !== undefined,
-    'stats has hikari_active':    (r) => JSON.parse(r.body).hikari_active !== undefined,
-    'stats hikari_pending < 5':   (r) => JSON.parse(r.body).hikari_pending < 5,
+    'stats status 200':          (r) => r.status === 200,
+    'stats has cpuUsage':        () => body.cpuUsage !== undefined,
+    'stats has hikari_active':   () => body.hikari_active !== undefined,
+    'stats hikari_pending < 5':  () => body.hikari_pending < 5,
   });
 
   if (!ok) requestsFailed.add(1);
 
-  // 파싱해서 콘솔에 출력 (k6 --console-output 으로 파일 저장 가능)
-  if (__ITER % 50 === 0) {
-    const body = JSON.parse(statsRes.body);
+  // 10번째 iter마다 출력 (원인 파악용으로 빈도 높임)
+  if (__ITER % 10 === 0) {
     console.log(`[iter ${__ITER}] CPU: ${body.cpuUsage}% | MEM: ${body.memoryUsage}% | ` +
-                `HikariActive: ${body.hikari_active}/${body.hikari_total} | Pending: ${body.hikari_pending}`);
+                `HikariCP: ${body.hikari_active}/${body.hikari_total} active, ${body.hikari_pending} pending`);
   }
 
   sleep(1);
