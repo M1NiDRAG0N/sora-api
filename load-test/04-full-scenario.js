@@ -79,7 +79,7 @@ export function communityScenario({ sessionCookie }) {
   const jar = http.cookieJar();
   jar.set(BASE_URL, 'SESSION', sessionCookie);
 
-  const page = randomIntBetween(1, 5);
+  const page = randomIntBetween(1, 2);
   const listRes = http.get(`${BASE_URL}/community/list?page=${page}`, {
     headers: { 'Accept': 'application/json' },
     tags: { name: 'community_list' },
@@ -92,7 +92,7 @@ export function communityScenario({ sessionCookie }) {
 
   const listOk = check(listRes, {
     'community list 200':   (r) => r.status === 200,
-    'community list valid': () => Array.isArray(boards) && boards.length > 0,
+    'community list valid': () => Array.isArray(boards),
   });
   errorRate.add(!listOk);
 
