@@ -34,7 +34,7 @@ export const options = {
 
 export default function () {
   // 서버 리소스 상태 조회 (HikariCP 포함)
-  const statsRes = http.get(`${BASE_URL}/api/internal/stats`);
+  const statsRes = http.get(`${BASE_URL}/api/internal/stats`, { redirects: 0 });
   statsLatency.add(statsRes.timings.duration);
 
   // 안전하게 JSON 파싱
@@ -42,7 +42,7 @@ export default function () {
   try {
     body = JSON.parse(statsRes.body);
   } catch (e) {
-    console.error(`JSON 파싱 실패 - status: ${statsRes.status}, body 앞부분: ${statsRes.body?.slice(0, 100)}`);
+    console.error(`JSON 파싱 실패 - status: ${statsRes.status} | location: ${statsRes.headers['Location']} | body: ${statsRes.body?.slice(0, 150)}`);
     requestsFailed.add(1);
     sleep(1);
     return;
