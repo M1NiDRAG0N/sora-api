@@ -36,6 +36,12 @@ public interface StoreProductRepository extends JpaRepository<StoreProduct, Inte
      * 상품 번호로 조회 (재고 확인용)
      */
     Optional<StoreProduct> findById(Integer productNum);
+
+    /**
+     * 상품 + 가게 JOIN FETCH 조회 (별도 store 쿼리 제거용)
+     */
+    @Query("SELECT p FROM StoreProduct p JOIN FETCH p.store WHERE p.productNum = :productNum")
+    Optional<StoreProduct> findByIdWithStore(@Param("productNum") Integer productNum);
     
     /**
      * 재고 감소 (예약 시)

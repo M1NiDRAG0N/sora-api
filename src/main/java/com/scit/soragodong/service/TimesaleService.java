@@ -161,36 +161,26 @@ public class TimesaleService {
         log.info("[reserveProduct] 예약 처리 시작 - userIdx: {}, productNum: {}, quantity: {}", 
                 orderDto.userIdx(), orderDto.productNum(), orderDto.orderQuantity());
         
-        // 1. 상품 조회
-        StoreProduct product = storeProductRepository.findById(orderDto.productNum())
+        // 1. 상품 조회 (store JOIN FETCH로 별도 store 조회 제거)
+        StoreProduct product = storeProductRepository.findByIdWithStore(orderDto.productNum())
                 .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다."));
-        
-        // 2. 재고 확인
-        if (product.getProductQuantity() < orderDto.orderQuantity()) {
-            log.error("[reserveProduct] 재고 부족 - 요청: {}, 재고: {}", 
-                    orderDto.orderQuantity(), product.getProductQuantity());
-            throw new IllegalStateException("재고가 부족합니다.");
-        }
-        
-        // 3. 가게 조회
-        Store store = storeRepository.findById(orderDto.storeIdx())
-                .orElseThrow(() -> new IllegalArgumentException("가게를 찾을 수 없습니다."));
-        
-        // 4. 재고 감소 (PESSIMISTIC LOCK 사용하여 동시성 제어)
+
+        // 2. 재고 원자적 감소 - WHERE quantity >= :quantity 조건으로 동시성 보장
         int updatedRows = storeProductRepository.decreaseStock(
-                orderDto.productNum(), 
+                orderDto.productNum(),
                 orderDto.orderQuantity()
         );
-        
+
         if (updatedRows == 0) {
-            log.error("[reserveProduct] 재고 감소 실패 - 동시 예약으로 재고 부족");
-            throw new IllegalStateException("재고가 부족합니다. 다시 시도해주세요.");
+            log.warn("[reserveProduct] 재고 부족 - productNum: {}", orderDto.productNum());
+            throw new IllegalStateException("재고가 부족합니다.");
         }
-        
-        log.info("[reserveProduct] 재고 감소 완료 - productNum: {}, quantity: {}", 
+
+        log.info("[reserveProduct] 재고 감소 완료 - productNum: {}, quantity: {}",
                 orderDto.productNum(), orderDto.orderQuantity());
-        
-        // 5. USER_ORDER 테이블에 주문 정보 저장
+
+        // 3. 주문 저장 (store는 product에서 직접 참조)
+        Store store = product.getStore();
         UserOrder order = UserOrder.builder()
                 .users(userRepository.findById(orderDto.userIdx())
                         .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다.")))
