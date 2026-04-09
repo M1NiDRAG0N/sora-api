@@ -205,7 +205,6 @@ public class TimeSaleController {
      */
     @PostMapping("/reserve")
     @ResponseBody
-    @Transactional
     public ResponseEntity<?> reserveProduct(@RequestBody UserOrderDto orderDto) {
         log.info("상품 예약 요청 - userIdx: {}, productNum: {}, quantity: {}", 
                 orderDto.userIdx(), orderDto.productNum(), orderDto.orderQuantity());
