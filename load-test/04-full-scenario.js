@@ -163,7 +163,7 @@ export function timesaleScenario({ sessionCookie }) {
 // 시나리오 C: 서버 상태 모니터링 (30초마다)
 export function monitorScenario() {
   const res = http.get(`${BASE_URL}/api/internal/stats`, {
-    headers: { 'Accept': 'application/json' },
+    headers: { 'Accept': 'application/json', 'X-Monitor-Token': 'sora-monitor-2025' },
   });
 
   if (res.status === 200) {

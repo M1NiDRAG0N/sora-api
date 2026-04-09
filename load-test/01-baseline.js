@@ -29,7 +29,7 @@ export const options = {
 
 export default function () {
   const res = http.get(`${BASE_URL}/api/internal/stats`, {
-    headers: { 'Accept': 'application/json' },
+    headers: { 'Accept': 'application/json', 'X-Monitor-Token': 'sora-monitor-2025' },
   });
   statsLatency.add(res.timings.duration);
 
