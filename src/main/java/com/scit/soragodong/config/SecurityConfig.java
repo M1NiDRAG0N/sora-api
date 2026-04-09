@@ -54,7 +54,8 @@ public class SecurityConfig {
                                                     "/landing", "/auth/**", "/"
                                                     , "/css/**", "/js/**", "/images/**", "/static/**"
                                             //모니터링 용 추가
-                                            , "/api/internal/**")
+                                            , "/api/internal/**"
+                                            , "/actuator/health", "/actuator/metrics/**")
                                     .permitAll()
                                     .anyRequest().authenticated())
                     .formLogin(form -> form

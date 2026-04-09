@@ -5,11 +5,13 @@ import com.scit.soragodong.service.NoticeService;
 import com.scit.soragodong.service.NotificationService;
 import com.scit.soragodong.service.SseService;
 import com.scit.soragodong.util.SystemResourceUtil;
+import com.zaxxer.hikari.HikariDataSource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.sql.DataSource;
 import java.util.Map;
 
 @RestController
@@ -21,6 +23,7 @@ public class InternalStatsController {
     private final SseService sseService;
     private final NotificationService notificationService;
     private final NoticeService noticeService;
+    private final DataSource dataSource;
 
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getStats(jakarta.servlet.http.HttpServletRequest request) {
@@ -30,6 +33,18 @@ public class InternalStatsController {
 
         Map<String, Object> stats = SystemResourceUtil.getSystemStats();
         stats.put("activeUsers", sseService.getConnectedUserCount());
+
+        // HikariCP 커넥션 풀 상태
+        if (dataSource instanceof HikariDataSource hikariDs) {
+            var poolBean = hikariDs.getHikariPoolMXBean();
+            if (poolBean != null) {
+                stats.put("hikari_active", poolBean.getActiveConnections());
+                stats.put("hikari_idle", poolBean.getIdleConnections());
+                stats.put("hikari_pending", poolBean.getThreadsAwaitingConnection());
+                stats.put("hikari_total", poolBean.getTotalConnections());
+            }
+        }
+
         log.debug("보내는 데이터: " + stats);
 
         // JSON 형태로 반환합니다.
