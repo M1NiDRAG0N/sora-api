@@ -34,7 +34,9 @@ export const options = {
 
 export default function () {
   // 서버 리소스 상태 조회 (HikariCP 포함)
-  const statsRes = http.get(`${BASE_URL}/api/internal/stats`);
+  const statsRes = http.get(`${BASE_URL}/api/internal/stats`, {
+    headers: { 'Accept': 'application/json' },
+  });
   statsLatency.add(statsRes.timings.duration);
 
   // 안전하게 JSON 파싱
