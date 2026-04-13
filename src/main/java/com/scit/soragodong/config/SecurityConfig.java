@@ -3,10 +3,10 @@ package com.scit.soragodong.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.session.FindByIndexNameSessionRepository;
@@ -35,13 +35,6 @@ public class SecurityConfig {
                 return new SpringSessionBackedSessionRegistry<>(this.sessionRepository);
         }
 
-        // 모니터링 엔드포인트는 Security 필터 체인 자체를 건너뜀
-        @Bean
-        public WebSecurityCustomizer webSecurityCustomizer() {
-                return (web) -> web.ignoring()
-                        .requestMatchers("/api/internal/**", "/actuator/health", "/actuator/metrics/**");
-        }
-
         @Bean
         public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
                 AuthenticationManagerBuilder authenticationManagerBuilder = http
@@ -58,6 +51,14 @@ public class SecurityConfig {
                 http
                     .csrf(csrf -> csrf.disable())
                     .authorizeHttpRequests(auth -> auth
+                                    // 모니터링 API: X-Monitor-Token 헤더 필수 (nginx 1차 + Spring 2차 이중 검증)
+                                    .requestMatchers("/api/internal/**")
+                                    .access((authentication, context) -> {
+                                            String token = context.getRequest().getHeader("X-Monitor-Token");
+                                            return new AuthorizationDecision("sora-monitor-2025".equals(token));
+                                    })
+                                    // Actuator: health만 공개 (CI/CD 헬스체크용)
+                                    .requestMatchers("/actuator/health").permitAll()
                                     .requestMatchers(
                                                     "/landing", "/auth/**", "/"
                                                     , "/css/**", "/js/**", "/images/**", "/static/**")
