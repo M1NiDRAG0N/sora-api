@@ -22,7 +22,7 @@ public class CommunityTool {
         BoardCategory boardCategory = BoardCategory.fromAI(category);
         BoardDto dto = BoardDto.builder()
                 .userIdx(userIdx)
-                .boardCategory(boardCategory.name())
+                .boardCategory(boardCategory.getLabel())
                 .boardTitle(title)
                 .boardContent(content)
                 .build();
